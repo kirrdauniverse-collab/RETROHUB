@@ -1,4 +1,4 @@
-# RETROHUB v9.1
+# RETROHUB v9.2
 
 **Egyfájlos retro emulátor-platform** — 23 gép, 9 emulátormag, egységes menürendszer (RHGEN), gépenkénti virtuális billentyűzet, beépített AI. Minden egyetlen HTML-fájlban, teljesen offline.
 
@@ -25,7 +25,7 @@
 |---|---|
 | `RETROHUB.html` | a teljes platform — ez az egyetlen futtatható fájl |
 | `index.html` | átirányítás a RETROHUB.html-re (GitHub Pages-hez) |
-| `DOKUMENTACIO_v9.1_valtozaslista.txt` | teljes v8→v9.1 forrásdokumentáció, változáslista és használati útmutató |
+| `DOKUMENTACIO_valtozaslista.txt` | teljes v8→v9.2 forrásdokumentáció, változáslista és használati útmutató |
 | `fejlesztes/build_v9.py` | az összeállító script — ez építi a RETROHUB.html-t |
 | `fejlesztes/v9/` | a build komponensei (menümotor, magok, billentyűzetek, AI, CSS) |
 | `fejlesztes/*.py` | ellenőrző és hibakereső scriptek (Playwright-alapú végponti tesztek) |
@@ -38,3 +38,4 @@ A `RETROHUB.html` nem kézzel szerkesztett dokumentum: a `fejlesztes/build_v9.py
 
 - **v9** — teljes újjáépítés: központi, csoportosított menürendszer (RHGEN) mind a 23 gépen, billentyűzet minden maggéphez, opcionális lehetőségek mindenhol; méret 90,7 MB → kb. 4,5 MB.
 - **v9.1** — billentyűzet és vezérlősáv láthatósága kis felbontáson is (görgethető színpad, összehúzható CRT-keret), C64: CIA Timer-A + VIC raster, HT1080Z: memórialeképezett billentyűzet, Amiga: SAE konfig-javítás, RHASM export.
+- **v9.2** — fájlmentés minden környezetben (automatikus Blob + letöltés-fallback a claude.use nélküli oldalakon: GitHub Pages, sima böngésző), dupla `<body>` javítás, a „Claude (beépített)” AI-szolgáltató biztonságos kezelése, súgószöveg-korrekciók.

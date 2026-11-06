@@ -114,3 +114,63 @@ billentyűzet, és az opcionális lehetőségek hiányoztak. A v9 ezért NEM fol
      billentyűzete (⌨ gombbal ki/be — elrejtve a CRT megnő).
   4. F12 = fejlesztői központ a 6 egységes csoporttal; 🤖 = AI beállítások.
   5. Fájl: FÁJL / KAZETTA gomb vagy a VEZÉRLÉS csoport.
+═══════════════════════════════════════════════════════════════════════════════
+  V9.2 — JAVÍTÁSLISTA (2026-11-06 · a Claude által ellenőrzött hibajelentés alapján)
+═══════════════════════════════════════════════════════════════════════════════
+
+1) FÁJLMENTÉS MINDEN KÖRNYEZETBEN (a legfontosabb javítás)
+   Korábban a TAP/SNA/SCR/WAV/PRG mentés a claude.use('downloads') kapacitásra
+   épült, ami csak az AI-elemző felületén létezik — GitHub Pages-en és közvetlen
+   megnyitáskor „a fájlmentés ebben a nézetben nem érhető el” üzenet jött.
+   Mostantól: ha a kapacitás nem érhető el, AUTOMATIKUS FALLBACK lép — Blob +
+   <a download> (sima böngészős letöltés). A Paint PNG és a tracker WAV már
+   eddig is így mentett; innentől MINDEN mentés működik minden környezetben.
+   Ellenőrizve: Playwright, claude nélküli böngésző — .tap (bájtszintű
+   tartalom-egyeztetés) és .txt mentés, nulla JS-hiba.
+
+2) AI-PROGRAMOZÓ: A „CLAUDE (BEÉPÍTETT)” OPCIÓ KEZELÉSE
+   A beépített szolgáltató a futtató környezet saját Claude-fiókját használja
+   (claude.use('sample')). Ahol ez nem létezik (GitHub Pages, sima böngésző),
+   mostantól automatikusan eltűnik a szolgáltatólistából, és a választóban
+   letiltott felirat jelzi: „csak AI-elemző felületen”. A többi szolgáltató
+   (Anthropic, OpenAI, OpenRouter, Groq, Ollama, LM Studio + a 🤖 globális
+   RHMS AI: Pollinations stb.) minden környezetben működik.
+
+3) DUPLA <body> TAG ELTÁVOLÍTVA
+   A forrás-szegmens és a build-sablon is tartalmazta; a generált HTML most
+   már pontosan egy <body>-t ad ki.
+
+4) PONTATLAN SÚGÓSZÖVEG JAVÍTVA
+   A régi szöveg azt állította, hogy a külső API-k publikált oldalról
+   „nem érhetők el” — valótlan: az OpenAI/OpenRouter/Groq/Ollama/Pollinations
+   végpontok böngészőből is hívhatók (a Pollinations kulcs nélkül is).
+
+5) VERZIÓBÉLYEG: v9.2 (lapszám, fejléc, üdvözlés).
+
+A CLAUDE-FÉLE ELLENŐRZÉSRE VÁLASZUL — PONTOSÍTÁSOK
+   • A „súgószöveg a ROM-ot tagadja” észrevétel nem replikálódik: a súgó
+     („Beágyazott ROM: … — letöltés nélkül fut”) és a napló („beágyazott ROM
+     betöltve”) a valóságnak megfelel.
+   • A .piano/.pk/.mc CSS-duplikátumok az eredeti RETROSHELL-bázisból
+     származnak; a későbbi szabályok felülírják az előzőeket, működési
+     hatásuk nincs. Nem bántjuk: a build sorszám-alapú szegmensekkel
+     dolgozik, a bázis átírása minden későbbi szegmenst eltolna.
+   • A 13 script-blokk node --check eredménye a v9.2-ben is hibátlan (a
+     build minden komponenst újra ellenőriz feltöltés előtt).
+   • Megfigyelt, régebben meglévő tétel a hibalistára: „sae.start() error
+     50” konzolüzenet Amiga-indításkor — a mag ettől függetlenül elindul.
+
+ROM-JOGI MEGJEGYZÉS (tájékoztató, nem jogi tanács)
+   • ZX81 / ZX Spectrum ROM: az Amstrad 1997-es nyilatkozata alapján
+     emulátorokhoz terjeszthető — ez a legbiztonságosabb rész.
+   • C64 BASIC/KERNAL/CHAR ROM: a Commodore jogutódjainál (pl. Cloanto)
+     van; általános, ingyenes terjesztési engedély nincs — ez a kockázatos
+     rész egy publikus repóban.
+   • TVC, Primo, Enterprise, HT1080Z ROM: jogi helyzet tisztázatlan.
+   • AROS (Amiga): szabad szoftver — ez oké.
+   • Terv (v9.3): ROM-feltöltés opcionálissá tétele + ROM-mentes
+     build-változat, hogy aki akarja, saját ROM-mal futtassa.
+
+KÖVETKEZŐ NAGY TÉTEL (v9.3)
+   • C64: a BASIC-prompt megjelenítése (CIA/VIC részletek) — a dokumentáció
+     ezt őszintén jelzi RÉSZLEGES státusszal.

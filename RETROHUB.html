@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETROHUB v9 — Retro emulátor platform AI támogatással</title>
+<title>RETROHUB v9.2 — Retro emulátor platform AI támogatással</title>
 <style>
 :root{--bg:#0b0f0b;--panel:#101810;--line:#2a5a2a;--fg:#5dff7a;--dim:#2f9a45;--hi:#d8ffe0;--warn:#ffb000;--glow:0 0 6px rgba(93,255,122,.55);--screen:#031003;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -290,10 +290,9 @@ section.stage{gap:8px;padding:10px 12px}
 </style>
 </head>
 <body>
-<body>
 <div id="app">
 <header>
- <div class="logo">RETRO<b>HUB</b> <span style="font-size:18px;color:var(--dim)">v9</span></div>
+ <div class="logo">RETRO<b>HUB</b> <span style="font-size:18px;color:var(--dim)">v9.2</span></div>
  <div class="row"><span style="color:var(--dim)">SZÍN:</span>
   <button data-t="green" class="on">Zöld</button><button data-t="amber">Borostyán</button><button data-t="ice">Jég</button><button data-t="light">Papír</button>
   <button id="rh-aibtn" title="Globális AI-programozó beállítások">🤖 AI</button><button id="devbtn" disabled>Fejlesztői központ [F12]</button></div>
@@ -409,7 +408,7 @@ section.stage{gap:8px;padding:10px 12px}
 <div class="row"><label><input checked="" id="ai-autorun" type="checkbox"/> futtatás + önjavítás</label><label><input id="ai-vision" type="checkbox"/> képernyőkép küldése</label></div>
 <textarea id="ai-prompt" placeholder="Haver, dobj már össze egy GTA 5 gamét a Spectrumra, amíg elszívok egy cigit! (Ctrl+Enter = küldés)" spellcheck="false" style="height:70px"></textarea>
 <div class="btn-row" style="margin-top:6px"><button class="primary" id="ai-go">🚀 Mehet</button><button disabled="" id="ai-stop">■ Stop</button><button id="ai-new">Új beszélgetés</button></div>
-<p class="help">A „Claude (beépített)” szolgáltató a megnyitó saját Claude-fiókját használja (első híváskor engedélyt kér). A külső API-k (OpenAI, helyi modellek…) ebből a publikált oldalból a böngésző tűzfala miatt nem érhetők el.</p><div class="log" id="ai-chat" style="height:200px;color:var(--hi)"></div>
+<p class="help">A „Claude (beépített)” szolgáltató a megnyitó saját Claude-fiókját használja (első híváskor engedélyt kér). A külső API-k (OpenAI, OpenRouter, Groq, Ollama, Pollinations…) böngészőből is működnek — a 🤖 fejléc-gombbal (globális RHMS AI) konfigurálhatók; a Pollinations kulcs nélkül is elérhető.</p><div class="log" id="ai-chat" style="height:200px;color:var(--hi)"></div>
 <p class="help">A kulcs csak a böngésződ localStorage-ában él, közvetlenül a szolgáltatónak megy. Az Anthropic-hívás használatalapú díjas. Ollama: <code>OLLAMA_ORIGINS=*</code>, kis kontextusnál emeld a <code>num_ctx</code>-et. A kép küldéséhez látó (vision) modell kell.</p>
 </div>
 <div class="tab" id="dev-studio">
@@ -601,7 +600,7 @@ function tools(m){return (window.RHGEN?RHGEN.TOOLS:[]).slice();}
 var cur=null,loaded=null,filter='all',bootT=null,$=function(s){return document.querySelector(s)};
 var term=$('#term');
 function show(t,cursor){term.innerHTML='';term.appendChild(document.createTextNode(t));if(cursor!==false){var c=document.createElement('span');c.className='blk';term.appendChild(c)}}
-function home(){show('\n  RETROHUB  v9\n  ================\n\n  Válassz modult a bal oldali listából,\n  majd nyomd meg a ▶ gombot.\n\n  Moduláris, 8 és 16 bites gépekhez.\n\n  READY.\n')}
+function home(){show('\n  RETROHUB  v9.2\n  ================\n\n  Válassz modult a bal oldali listából,\n  majd nyomd meg a ▶ gombot.\n\n  Moduláris, 8 és 16 bites gépekhez.\n\n  READY.\n')}
 function renderList(){var l=$('#list');l.innerHTML='';MODS.filter(function(m){return filter==='all'||m.k===filter}).forEach(function(m){var d=document.createElement('div');d.className='mod'+(cur===m?' sel':'');
  d.innerHTML='<span class="n"></span><span class="badge"></span><span class="m"></span>';
  d.children[0].textContent=m.n;d.children[1].textContent=loaded===m?'FUT':(m.st||((m.k==='con'?'KONZOL':m.k+' BIT')));if(loaded===m)d.children[1].className='badge run';d.children[1].title=m.st||'';
@@ -658,7 +657,17 @@ const ZX_DL_OK = ['gif', 'png', 'jpg', 'jpeg', 'webp', 'mp4', 'webm', 'mov', 'tx
 async function download(name, data) {
   try {
     const u8 = data instanceof Blob ? new Uint8Array(await data.arrayBuffer()) : (typeof data === 'string' ? new TextEncoder().encode(data) : (data instanceof Uint8Array ? data : new Uint8Array(data)));
-    const dl = await zxCap('downloads'); if (!dl) { log('Mentés: a fájlmentés ebben a nézetben nem érhető el'); return; }
+    const dl = await zxCap('downloads');
+    if (!dl) {
+      const __blob = (data instanceof Blob) ? data : new Blob([u8], { type: 'application/octet-stream' });
+      const __url = URL.createObjectURL(__blob);
+      const __a = document.createElement('a');
+      __a.href = __url; __a.download = name;
+      document.body.appendChild(__a); __a.click(); __a.remove();
+      setTimeout(() => URL.revokeObjectURL(__url), 4000);
+      log('Mentve: ' + name + ' (böngészős letöltés)');
+      return;
+    }
     const ext = name.split('.').pop().toLowerCase(); let fn = name, out = u8;
     if (!ZX_DL_OK.includes(ext)) { out = zipStore(name, u8); fn = name + '.zip'; }
     await dl.save({ filename: fn, data: out }); log('Mentve: ' + fn + (fn !== name ? ' (ZIP-be csomagolva – a böngésző csak ismert kiterjesztéseket enged; csomagold ki)' : ''));
@@ -1690,7 +1699,7 @@ $('ai-go').onclick = () => { const t = $('ai-prompt').value.trim(); if (t) { $('
 $('ai-prompt').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); $('ai-go').click(); } });
 $('ai-stop').onclick = () => { if (aiAbort) aiAbort.abort(); };
 $('ai-new').onclick = () => { aiHist = []; $('ai-chat').innerHTML = ''; };
-if (!aiProv.some(p => p.type === 'shell')) { aiProv.unshift({ name: 'Claude (beépített, saját fiókod)', type: 'shell', url: '', key: '', model: 'claude', models: [] }); aiSel = 0; }
+if (window.claude && claude.use) { if (!aiProv.some(p => p.type === 'shell')) { aiProv.unshift({ name: 'Claude (beépített, saját fiókod)', type: 'shell', url: '', key: '', model: 'claude', models: [] }); aiSel = 0; } } else { aiProv = aiProv.filter(function (p) { return p.type !== 'shell'; }); if (aiSel >= aiProv.length) aiSel = 0; const __shopt = document.querySelector('#ai-type option[value="shell"]'); if (__shopt) { __shopt.disabled = true; __shopt.textContent = 'Claude (beépített) — csak AI-elemző felületen'; } }
 aiRender();
 
 // ===== Z80 assembler (kétmenetes, címkék, kifejezések, ORG/EQU/DB/DW/DS/INCLUDE) =====

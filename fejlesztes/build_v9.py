@@ -274,7 +274,7 @@ s = re.sub(r'function tools\(m\)\{var g=m\.gfx;return \[.*?\]\}\n',
            'function tools(m){return (window.RHGEN?RHGEN.TOOLS:[]).slice();}\n', s, count=1, flags=re.S)
 assert 'RHGEN.TOOLS' in s, 'tools csere sikertelen'
 # 6) üdvözlés + cím
-s = s.replace("RETROSHELL  v0.1", "RETROHUB  v9")
+s = s.replace("RETROSHELL  v0.1", "RETROHUB  v9.2")
 s = s.replace("Válassz modult a bal oldali listából,\n  majd nyomd meg a ▶ gombot.\n\n  Moduláris, 8 és 16 bites gépekhez.",
   "Válassz gépet a bal oldali listából, majd nyomd meg\n  a ▶ gombot. A fejlesztői központ (F12) minden gépen\n  azonos menüszerkezetet ad: Vezérlés · Hardver ·\n  Fejlesztés · Paint · Hang · Napló.\n\n  23 gép, 9 emulátor-maggal.")
 
@@ -283,7 +283,7 @@ shell1 = s
 # ---------------------------------------------------------------- body javítások
 b = body
 b = b.replace('RETRO<b>SHELL</b> <span style="font-size:18px;color:var(--dim)">v0.5</span>',
-              'RETRO<b>HUB</b> <span style="font-size:18px;color:var(--dim)">v9</span>')
+              'RETRO<b>HUB</b> <span style="font-size:18px;color:var(--dim)">v9.2</span>')
 b = b.replace('<button id="devbtn" disabled>Fejlesztői központ [F12]</button>',
               '<button id="rh-aibtn" title="Globális AI-programozó beállítások">🤖 AI</button>'
               '<button id="devbtn" disabled>Fejlesztői központ [F12]</button>')
@@ -344,7 +344,7 @@ html = f'''<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETROHUB v9 — Retro emulátor platform AI támogatással</title>
+<title>RETROHUB v9.2 — Retro emulátor platform AI támogatással</title>
 <style>
 {css}
 
@@ -406,5 +406,46 @@ html = f'''<!DOCTYPE html>
 </body>
 </html>
 '''
+# ---------------------------------------------------------------- v9.2: célzott javítások a generált HTML-en
+def vpatch(html, old, new, tag):
+    n = html.count(old)
+    if n != 1:
+        print(f'!!! PATCH HIBA ({tag}): {n} egyezés (1 várt)'); sys.exit(1)
+    print(f'PATCH OK: {tag}')
+    return html.replace(old, new)
+
+# 1) Fájlmentés fallback — ha nincs claude.use('downloads') (GitHub Pages, közvetlen
+#    megnyitás, sima böngésző), sima Blob + <a download> mentést használunk.
+html = vpatch(html,
+    "const dl = await zxCap('downloads'); if (!dl) { log('Mentés: a fájlmentés ebben a nézetben nem érhető el'); return; }",
+    """const dl = await zxCap('downloads');
+    if (!dl) {
+      const __blob = (data instanceof Blob) ? data : new Blob([u8], { type: 'application/octet-stream' });
+      const __url = URL.createObjectURL(__blob);
+      const __a = document.createElement('a');
+      __a.href = __url; __a.download = name;
+      document.body.appendChild(__a); __a.click(); __a.remove();
+      setTimeout(() => URL.revokeObjectURL(__url), 4000);
+      log('Mentve: ' + name + ' (böngészős letöltés)');
+      return;
+    }""",
+    'save-fallback')
+
+# 2) Az AI-programozó „Claude (beépített)” szolgáltatója csak claude.use-os környezetben él;
+#    máshol (GitHub Pages, sima böngésző) eltávolítjuk a listából és letiltjuk a menüpontot.
+html = vpatch(html,
+    "if (!aiProv.some(p => p.type === 'shell')) { aiProv.unshift({ name: 'Claude (beépített, saját fiókod)', type: 'shell', url: '', key: '', model: 'claude', models: [] }); aiSel = 0; }",
+    '''if (window.claude && claude.use) { if (!aiProv.some(p => p.type === 'shell')) { aiProv.unshift({ name: 'Claude (beépített, saját fiókod)', type: 'shell', url: '', key: '', model: 'claude', models: [] }); aiSel = 0; } } else { aiProv = aiProv.filter(function (p) { return p.type !== 'shell'; }); if (aiSel >= aiProv.length) aiSel = 0; const __shopt = document.querySelector('#ai-type option[value="shell"]'); if (__shopt) { __shopt.disabled = true; __shopt.textContent = 'Claude (beépített) — csak AI-elemző felületen'; } }''',
+    'ai-shell-guard')
+
+# 3) Pontatlan súgószöveg: a külső API-k böngészőből MŰKÖDNEK (az RHMS AI / Pollinations bizonyítja)
+html = vpatch(html,
+    'A külső API-k (OpenAI, helyi modellek…) ebből a publikált oldalból a böngésző tűzfala miatt nem érhetők el.',
+    'A külső API-k (OpenAI, OpenRouter, Groq, Ollama, Pollinations…) böngészőből is működnek — a 🤖 fejléc-gombbal (globális RHMS AI) konfigurálhatók; a Pollinations kulcs nélkül is elérhető.',
+    'help-text')
+
+# 4) A forrás-szegmens <body>-t is tartalmaz, a sablon mellé rakja — duplikáció megszűnt
+html = vpatch(html, '<body>\n<body>', '<body>', 'body-dup')
+
 open(OUT, 'w', encoding='utf-8').write(html)
 print('KÉSZ:', OUT, f'{len(html.encode("utf-8")):,} bytes')
