@@ -1,0 +1,180 @@
+/**
+ * Enterprise keyboard — 10 rows x 8 bits, ACTIVE LOW (pressed = 0).
+ * Mapping from the MAME ep64 INPUT_PORTS (Y0-Y9).
+ */
+
+
+const EP_SHIFT_L = { label: 'SHIFT', row: 0, bit: 7, wide: true, word: true };
+const EP_SHIFT_R = { label: 'SHIFT', row: 8, bit: 5, wide: true, word: true };
+
+/** On-screen layout in the spirit of the physical EP128 keyboard. */
+const EP_LAYOUT = [
+  [
+    { label: 'F1', row: 4, bit: 7, word: true },
+    { label: 'F2', row: 4, bit: 6, word: true },
+    { label: 'F3', row: 4, bit: 2, word: true },
+    { label: 'F4', row: 4, bit: 0, word: true },
+    { label: 'F5', row: 4, bit: 4, word: true },
+    { label: 'F6', row: 4, bit: 3, word: true },
+    { label: 'F7', row: 4, bit: 5, word: true },
+    { label: 'F8', row: 4, bit: 1, word: true },
+  ],
+  [
+    { label: 'ESC', row: 3, bit: 7, word: true },
+    { label: '1', sub: '!', row: 3, bit: 1 },
+    { label: '2', sub: '"', row: 3, bit: 6 },
+    { label: '3', sub: '£', row: 3, bit: 5 },
+    { label: '4', sub: '$', row: 3, bit: 3 },
+    { label: '5', sub: '%', row: 3, bit: 4 },
+    { label: '6', sub: '&', row: 3, bit: 2 },
+    { label: '7', sub: "'", row: 3, bit: 0 },
+    { label: '8', sub: '(', row: 5, bit: 0 },
+    { label: '9', sub: ')', row: 5, bit: 2 },
+    { label: '0', sub: '_', row: 5, bit: 4 },
+    { label: '-', sub: '=', row: 5, bit: 3 },
+    { label: '^', sub: '~', row: 5, bit: 5 },
+    { label: 'ERASE', row: 5, bit: 6, word: true },
+  ],
+  [
+    { label: 'TAB', row: 2, bit: 7, wide: true, word: true },
+    { label: 'Q', row: 2, bit: 1 },
+    { label: 'W', row: 2, bit: 6 },
+    { label: 'E', row: 2, bit: 5 },
+    { label: 'R', row: 2, bit: 3 },
+    { label: 'T', row: 2, bit: 4 },
+    { label: 'Y', row: 2, bit: 2 },
+    { label: 'U', row: 2, bit: 0 },
+    { label: 'I', row: 9, bit: 0 },
+    { label: 'O', row: 9, bit: 2 },
+    { label: 'P', row: 9, bit: 4 },
+    { label: '@', sub: '`', row: 9, bit: 3 },
+    { label: '[', sub: '{', row: 9, bit: 5 },
+  ],
+  [
+    { label: 'CTRL', row: 1, bit: 7, wide: true, word: true },
+    { label: 'A', row: 1, bit: 6 },
+    { label: 'S', row: 1, bit: 5 },
+    { label: 'D', row: 1, bit: 3 },
+    { label: 'F', row: 1, bit: 4 },
+    { label: 'G', row: 1, bit: 2 },
+    { label: 'H', row: 1, bit: 0 },
+    { label: 'J', row: 6, bit: 0 },
+    { label: 'K', row: 6, bit: 2 },
+    { label: 'L', row: 6, bit: 4 },
+    { label: ';', sub: '+', row: 6, bit: 3 },
+    { label: ':', sub: '*', row: 6, bit: 5 },
+    { label: ']', sub: '}', row: 6, bit: 6 },
+    { label: 'ENTER', row: 7, bit: 6, wide: true, word: true },
+  ],
+  [
+    EP_SHIFT_L,
+    { label: '\\', sub: '|', row: 0, bit: 1 },
+    { label: 'Z', row: 0, bit: 6 },
+    { label: 'X', row: 0, bit: 5 },
+    { label: 'C', row: 0, bit: 3 },
+    { label: 'V', row: 0, bit: 4 },
+    { label: 'B', row: 0, bit: 2 },
+    { label: 'N', row: 0, bit: 0 },
+    { label: 'M', row: 8, bit: 0 },
+    { label: ',', sub: '<', row: 8, bit: 2 },
+    { label: '.', sub: '>', row: 8, bit: 4 },
+    { label: '/', sub: '?', row: 8, bit: 3 },
+    EP_SHIFT_R,
+  ],
+  [
+    { label: 'ALT', row: 7, bit: 7, word: true },
+    { label: 'STOP', row: 7, bit: 0, word: true },
+    { label: 'HOLD', row: 7, bit: 4, word: true },
+    { label: 'DEL', row: 8, bit: 1, word: true },
+    { label: 'INS', row: 8, bit: 7, word: true },
+    { label: '←', row: 7, bit: 5, word: true },
+    { label: '↑', row: 7, bit: 3, word: true },
+    { label: '↓', row: 7, bit: 1, word: true },
+    { label: '→', row: 7, bit: 2, word: true },
+    { label: 'SPACE', row: 8, bit: 6, wide: true, word: true },
+  ],
+];
+
+/** Browser KeyboardEvent.code -> matrix position (MAME keycodes). */
+const EP_PHYSICAL_MAP = {
+  // function keys
+  F1: { row: 4, bit: 7 },
+  F2: { row: 4, bit: 6 },
+  F3: { row: 4, bit: 2 },
+  F4: { row: 4, bit: 0 },
+  F5: { row: 4, bit: 4 },
+  F6: { row: 4, bit: 3 },
+  F7: { row: 4, bit: 5 },
+  F8: { row: 4, bit: 1 },
+  // digits
+  Digit1: { row: 3, bit: 1 },
+  Digit2: { row: 3, bit: 6 },
+  Digit3: { row: 3, bit: 5 },
+  Digit4: { row: 3, bit: 3 },
+  Digit5: { row: 3, bit: 4 },
+  Digit6: { row: 3, bit: 2 },
+  Digit7: { row: 3, bit: 0 },
+  Digit8: { row: 5, bit: 0 },
+  Digit9: { row: 5, bit: 2 },
+  Digit0: { row: 5, bit: 4 },
+  // letters
+  KeyQ: { row: 2, bit: 1 },
+  KeyW: { row: 2, bit: 6 },
+  KeyE: { row: 2, bit: 5 },
+  KeyR: { row: 2, bit: 3 },
+  KeyT: { row: 2, bit: 4 },
+  KeyY: { row: 2, bit: 2 },
+  KeyU: { row: 2, bit: 0 },
+  KeyI: { row: 9, bit: 0 },
+  KeyO: { row: 9, bit: 2 },
+  KeyP: { row: 9, bit: 4 },
+  KeyA: { row: 1, bit: 6 },
+  KeyS: { row: 1, bit: 5 },
+  KeyD: { row: 1, bit: 3 },
+  KeyF: { row: 1, bit: 4 },
+  KeyG: { row: 1, bit: 2 },
+  KeyH: { row: 1, bit: 0 },
+  KeyJ: { row: 6, bit: 0 },
+  KeyK: { row: 6, bit: 2 },
+  KeyL: { row: 6, bit: 4 },
+  KeyZ: { row: 0, bit: 6 },
+  KeyX: { row: 0, bit: 5 },
+  KeyC: { row: 0, bit: 3 },
+  KeyV: { row: 0, bit: 4 },
+  KeyB: { row: 0, bit: 2 },
+  KeyN: { row: 0, bit: 0 },
+  KeyM: { row: 8, bit: 0 },
+  // punctuation (MAME keycode positions)
+  Backquote: { row: 0, bit: 1 },   // '\' key
+  Minus: { row: 5, bit: 3 },       // '-'
+  Equal: { row: 5, bit: 5 },       // '^'
+  BracketLeft: { row: 9, bit: 3 }, // '@'
+  BracketRight: { row: 9, bit: 5 },// '['
+  Backslash: { row: 6, bit: 6 },   // ']'
+  Semicolon: { row: 6, bit: 3 },   // ';'
+  Quote: { row: 6, bit: 5 },       // ':'
+  Comma: { row: 8, bit: 2 },
+  Period: { row: 8, bit: 4 },
+  Slash: { row: 8, bit: 3 },
+  // controls
+  Tab: { row: 2, bit: 7 },
+  CapsLock: { row: 1, bit: 1 },
+  ControlLeft: { row: 1, bit: 7 },
+  ControlRight: { row: 1, bit: 7 },
+  AltLeft: { row: 7, bit: 7 },
+  AltRight: { row: 7, bit: 7 },
+  ShiftLeft: { row: 0, bit: 7 },
+  ShiftRight: { row: 8, bit: 5 },
+  Enter: { row: 7, bit: 6 },
+  Backspace: { row: 5, bit: 6 },
+  Escape: { row: 3, bit: 7 },
+  Space: { row: 8, bit: 6 },
+  Insert: { row: 8, bit: 7 },
+  Delete: { row: 8, bit: 1 },
+  Home: { row: 7, bit: 4 },
+  End: { row: 7, bit: 0 },
+  ArrowUp: { row: 7, bit: 3 },
+  ArrowDown: { row: 7, bit: 1 },
+  ArrowLeft: { row: 7, bit: 5 },
+  ArrowRight: { row: 7, bit: 2 },
+};

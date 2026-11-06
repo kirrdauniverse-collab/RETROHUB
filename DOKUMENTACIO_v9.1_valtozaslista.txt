@@ -1,0 +1,116 @@
+═══════════════════════════════════════════════════════════════════════════════
+  RETROHUB v9.1 — FORRÁSDOKUMENTÁCIÓ, VÁLTOZÁSLISTA ÉS HASZNÁLATI ÚTMUTATÓ
+  Készült: 2026-11-06 · Fájl: RETROHUB.html · Méret: kb. 4,53 MB
+  (Egyetlen HTML-fájl: böngészőben nyitva azonnal fut — nincs telepítés, szerver)
+═══════════════════════════════════════════════════════════════════════════════
+
+0. MI VÁLTOZOTT A v8-HOZ KÉPEST — A HÁROM KÉRT ÉS AZOK MEGOLDÁSA
+───────────────────────────────────────────────────────────────────────────────
+A v8 a javításokat egymás utáni felülíró blokkokkal (v4…v8) oldotta meg; a
+menük így is gépenként különbözőek maradtak, a legtöbb géphez nem tartozott
+billentyűzet, és az opcionális lehetőségek hiányoztak. A v9 ezért NEM foltoz —
+ÚJJÁÉPÍTETT, KÖZPONTOSÍTOTT rendszert ad:
+
+  1) KÖZPONTOSÍTOTT, CSOPORTOSÍTOTT MENÜRENDSZER
+     A v8-ban minden gép eszközeit külön kód építette. A v9-ben EGY közös
+     menümotor (RHGEN — scripts/v9/engine.js) szerkeszti az összes gép
+     fejlesztői központját. Mind a 23 gépen AZONOS a menüszerkezet — a
+     Spectrum-modell szerint:
+
+        VEZÉRLÉS   → fájl/kazetta/lemez (gépenkénti kiterjesztések),
+                     begépelés, joystick/gamepad-teszt, reset
+        HARDVER    → CPU/RAM/felbontás/szín-chipek, paletta, ROM-összetevők,
+                     billentyűzet-méret tájékoztató
+        FEJLESZTÉS → alcímkék: BASIC · Assembler (Z80) · Memória (élő
+                     nézet) · AI programozó · Játékstúdió (8×8 sprite +
+                     DATA-export)
+        PAINT      → 32×16 karakteres rajzoló, PNG-mentés, képernyőre írás
+        HANG       → 4 csatornás tracker (WebAudio, MINDEN gépen szól),
+                     WAV-mentés, hangfájl-lejátszás
+        NAPLÓ      → egységes eseménynapló
+
+     Amit az adott hardver nem tud, az nem tűnik el: helyette érthető
+     magyarázat jelenik meg (pl. a profil-gépeknél: „emulátor-mag nélkül a
+     kód nem gépelhető be — az AI-programozó és a mentés ennek ellenére él”).
+
+  2) BILLENTYŰZET MINDEN MAGGÉPHEZ
+     A virtuális billentyűzet a FŐ KÉPERNYŐ ALATT jelenik meg, gépváltásnál
+     a központi szinkron (250 ms) mindig csak az aktuális gépét mutatja.
+     A mátrix-adatok a valódi gépekből származnak:
+        C64: a KERNAL $EB81-es kulcstáblájából (pontos sor/oszlop
+             pozíciók, a CTRL a $7C2-n, a N a $4C7-en — a tábla diktálta);
+        TVC: a MAME-mátrix (TVC_ROWS, 62 gomb);
+        Primo: 4×16-os csoport (PRIMO_LAYOUT, 55 gomb);
+        Enterprise: 10×8 soros EP-mátrix (EP_LAYOUT);
+        HT1080Z: a TRS-80 Model I MEMÓRIALEKÉPEZETT billentyűzete
+             ($3800-$3FFF, A8-A10 = sor, A0-A2 = oszlop; 52 gomb);
+        Amiga: 74 gomb KeyboardEvent-kódokkal (SAE keyPress);
+        C16/Plus4: 60 gombos elrendezés a begépelő-koordinátákkal.
+     A SHIFT/CTRL/CAPS/SYM jellegű gombok RAGADÓSAK (első katt = lenyomva,
+     újabb katt = felengedve). A 14 profil-gépnél a billentyűzet helyett
+     őszinte tájékoztató látható (nincs mag → nincs hova gépelni).
+
+  3) MINDEN GÉPNÉL ELÉRHETŐK AZ OPCIONÁLIS LEHETŐSÉGEK
+     Fájlcsatorna gépenként (C64: PRG/P00/T64, C16: PRG, Primo: PP/PTP
+     quickload, HT: CMD/BAS, TVC: CAS, Amiga: ADF behelyezés/kiadás DF0:),
+     begépelés, joystick/gamepad-teszt, memória-szerkesztő élő nézettel,
+     Z80-assembler (ORG + címkek + kétmenetes fordítás, betöltés a
+     memóriába), 4 csatornás tracker WAV-mentéssel, AI-programozó
+     gépenkénti rendszerprompttal, globális AI-beállító (🤖 gomb).
+
+1. A 23 GÉP ÉS ÁLLAPOTUK (őszinte jelöléssel)
+───────────────────────────────────────────────────────────────────────────────
+  MAGGEL RENDELKEZŐK (9):
+    ZX81            MŰKÖDIK          — örökölt Z80-mag, WRX hi-res, AY
+    ZX Spectrum 48K MŰKÖDIK          — teljes eszközkészlet (referencia-menü)
+    Commodore 64    RÉSZLEGES        — 6502 mag + CIA Timer-A + VIC raster
+                                       emuláció; a KERNAL él, de a
+                                       BASIC-prompt még nem jelenik meg
+                                       (a teljes boot további CIA/VIC
+                                       részleteket igényel)
+    Commodore 16/+4 RÉSZLEGES        — közös 6502 mag, C16 memóriatérkép
+    HT1080Z         BETA             — Level II ROM fut, memóriateszt után
+                                       élesedik; memórialeképezett
+                                       billentyűzet; karakteres kijelző
+    Videoton TVC    RÉSZLEGES        — valódi TVC-mag (CRTC, bankolás,
+                                       paletta), CAS-quickload
+    Primo B-64      MŰKÖDIK (közelítő kijelzés) — PP quickload
+    Enterprise 64/128 RÉSZLEGES      — EXOS+BASIC ROM, EP-billentyűzet
+    Amiga 500       MŰKÖDIK (SAE)    — AROS ROM, ADF DF0-be, 74 gombos
+                                       billentyűzet
+  PROFIL-GÉPEK (14, teljes fejlesztői központtal, mag nélkül):
+    C128 · VIC-20 · ABC 80 · Jupiter ACE · Atari 800XL · Atari 2600 ·
+    Atari 520ST · CPC 464 · MSX1 · Mega Drive · SNES · SMS · NES · Game Boy
+
+2. V9.1 JAVÍTÁSOK (a v9 után)
+───────────────────────────────────────────────────────────────────────────────
+  • Billentyűzet-láthatóság: a vezérlősáv és a billentyűzet most a
+    görgethető színpadon van (korábban a body végén, levágva); a CRT kerete
+    összehúzható (min-height: clamp(160px,22vh,560px)), kompakt gombok.
+    Ellenőrizve 1366×768 és 1400×950 felbontásban minden maggépen.
+  • C64: CIA1 Timer-A (latch/IER/ICR) + VIC raster-sor ($D012) emuláció —
+    a KERNAL eltörölték a raster-várakozás csapdájából.
+  • HT1080Z: memórialeképezett billentyűzet ($3800-$3FFF) — a port-orientált
+    próbálkozás helyett a valódi Model I mechanizmus.
+  • Amiga: az SAE konfig-fájl-objektum helyes mezői (clr/name/data/size).
+  • Assembler (RHASM): window.RHASM exportálva.
+
+3. AI-RETEG (RHMS AI)
+───────────────────────────────────────────────────────────────────────────────
+  A fejlécben lévő 🤖 AI gomb: szolgáltatóválasztó (Pollinations — ingyenes,
+  kulcs nélküli alapértelmezés · OpenAI · OpenRouter · Ollama · LM Studio ·
+  egyéni), API-cím/kulcs/modell tárolása a böngészőben (localStorage),
+  modelllista-lekérés (sosem blokkol — a modellnév kézzel is beírható),
+  kapcsolat-teszt, 🌙 éjszakai mód (tartalék-lánccal). Gépenkénti
+  AI-programozó: a FEJLESZTÉS csoportban, gépspecifikus rendszerprompttal,
+  a válasz begépelhető a gépre.
+
+4. HASZNÁLAT
+───────────────────────────────────────────────────────────────────────────────
+  1. Nyisd meg a RETROHUB.html-t böngészőben (dupla kattintás — minden
+     beágyazott, offline fut).
+  2. Bal oldalt válassz gépet, majd ▶ MODUL BETÖLTÉSE.
+  3. A képernyő alatt: vezérlősáv (▶/⏸/↻, FPS) + az aktuális gép
+     billentyűzete (⌨ gombbal ki/be — elrejtve a CRT megnő).
+  4. F12 = fejlesztői központ a 6 egységes csoporttal; 🤖 = AI beállítások.
+  5. Fájl: FÁJL / KAZETTA gomb vagy a VEZÉRLÉS csoport.

@@ -1,0 +1,100 @@
+#crt{position:relative}
+/* ===== RETROHUB v9 kiegészítő stílusok ===== */
+
+/* fejléc AI gomb */
+#rh-aibtn{background:var(--panel);color:var(--hi);border:2px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer;font-family:inherit}
+#rh-aibtn:hover{background:var(--line)}
+
+/* generikus fejlesztői panelek (a 6 csoport minden gépen azonos) */
+#rh-devpane{padding:8px}
+#rh-devpane .rh-chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+#rh-devpane .rh-chips .pchip{font-size:14px;padding:0 8px}
+#rh-groupr{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+#rh-groupr button{background:var(--panel);color:var(--hi);border:2px solid var(--line);border-radius:8px;padding:5px 12px;cursor:pointer;font-family:inherit}
+#rh-groupr button.on{background:var(--hi);color:var(--screen);border-color:var(--hi)}
+#rh-content .subtabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}
+#rh-content .subtabs button{background:var(--panel);color:var(--hi);border:1px solid var(--line);border-radius:6px;padding:3px 10px;cursor:pointer;font-family:inherit;font-size:.9em}
+#rh-content .subtabs button.on{background:var(--hi);color:var(--screen);border-color:var(--hi)}
+#rh-content h3{color:var(--hi);margin:6px 0}
+#rh-content .help{color:var(--dim);font-size:.85em}
+#rh-content textarea{background:var(--screen);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:6px;font-family:'Courier New',monospace;width:100%;box-sizing:border-box}
+#rh-content select,#rh-content input[type=text],#rh-content input[type=password]{background:var(--screen);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:4px;font-family:inherit}
+#rh-content .btn-row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+#rh-content .btn-row button{background:var(--panel);color:var(--hi);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:inherit}
+#rh-content .btn-row button.primary{background:var(--hi);color:var(--screen)}
+#rh-content .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:4px 0}
+#rh-content .note{border:1px dashed var(--dim);border-radius:6px;padding:6px;color:var(--dim);font-size:.85em;margin:6px 0}
+
+/* billentyűzet rács (a .kb-key osztály az eredeti CSS-ből jön) */
+#rh-kb-grid{display:flex;flex-direction:column;gap:4px}
+#rh-kb-grid .kbrow{display:flex;gap:4px;justify-content:center}
+#rh-kb-grid .kb-key{min-height:52px;font-size:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2}
+#rh-kb-grid .kb-key .sub{color:var(--dim);font-size:10px}
+#rh-kb-grid .kb-key.w4{flex:4 1 0}
+#rh-kb-grid .kb-key.w6{flex:6 1 0}
+#rh-kb-grid .kb-key.w8{flex:8 1 0}
+#rh-kb-grid .kb-key.w10{flex:10 1 0}
+#rh-kb-grid .kb-key.w12{flex:12 1 0}
+#rh-kb-grid .kb-key.stuck{background:var(--hi);color:var(--screen)}
+
+/* RHMS AI párbeszédablak */
+#rh-ai-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:900;display:flex;align-items:center;justify-content:center}
+#rh-ai-modal .box{background:var(--panel);border:2px solid var(--line);border-radius:10px;max-width:680px;width:94%;max-height:88vh;overflow:auto;padding:12px;color:var(--fg)}
+#rh-ai-modal h3{margin:0 0 8px;color:var(--hi)}
+#rh-ai-modal .row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:4px 0}
+#rh-ai-modal select,#rh-ai-modal input{background:var(--screen);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:4px;font-family:inherit}
+#rh-ai-modal textarea{background:var(--screen);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:6px;font-family:'Courier New',monospace;width:100%;box-sizing:border-box}
+#rh-ai-modal .btn-row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+#rh-ai-modal button{background:var(--panel);color:var(--hi);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:inherit}
+#rh-ai-modal button.primary{background:var(--hi);color:var(--screen)}
+
+/* AI chat log */
+.rh-ai-log{background:var(--screen);border:1px solid var(--line);border-radius:6px;padding:6px;height:180px;overflow:auto;font-size:.85em;margin:6px 0}
+.rh-ai-log .you{color:var(--hi)}
+.rh-ai-log .bot{color:var(--fg)}
+.rh-ai-log .err{color:#f66}
+.rh-ai-log .sys{color:var(--dim)}
+
+/* tracker */
+.rh-trk textarea{height:120px}
+.rh-trk .pads{display:flex;gap:4px;flex-wrap:wrap}
+
+/* memória rács (generikus) */
+.rh-memgrid{font-family:'Courier New',monospace;font-size:.9em;line-height:1.5;overflow-x:auto;background:var(--screen);border:1px solid var(--line);border-radius:6px;padding:6px;white-space:pre}
+.rh-memgrid b{color:var(--hi);font-weight:normal}
+.rh-memgrid input{width:26px;background:transparent;border:none;color:inherit;font:inherit;text-transform:uppercase}
+.rh-svtab{font-size:.82em;color:var(--dim)}
+.rh-svtab b{color:var(--hi);font-weight:normal}
+
+/* paint */
+.rh-paint-wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
+.rh-paint-wrap canvas{background:var(--screen);border:1px solid var(--line);image-rendering:pixelated;cursor:crosshair;touch-action:none}
+.rh-pal{display:flex;gap:3px;flex-wrap:wrap;max-width:220px}
+.rh-pal .sw{width:18px;height:18px;border:1px solid var(--line);cursor:pointer}
+.rh-pal .sw.on{outline:2px solid var(--hi)}
+
+/* profil-jelvény színek */
+#list .badge{font-size:10px}
+
+/* Amiga SAE vászon korlátozása a CRT-n belülre */
+#rh-ami-cv{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden;z-index:2}
+#rh-ami-cv canvas{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important}
+
+/* ===== v9.1: CRT + billentyűzet EGYÜTT látszódjon (görgetés nélkül) ===== */
+/* a bezel eddig flex:1 0 auto + min-height:52vh volt — nem húzódott össze,
+   így a billentyűzet kicsúszott a képernyő alól */
+.bezel{flex:1 1 auto;min-height:clamp(160px,22vh,560px)}
+section.stage{gap:8px;padding:10px 12px}
+/* vezérlősáv: a tvbar és a ⌨ gomb EGY sorban */
+#rh-bar,#rh-kb{flex:0 0 auto}
+#rh-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+#rh-bar .tvbar{margin:0}
+#rh-bar .row{margin:0}
+/* kompakt billentyűzetgombok */
+.zx .keyboard{padding:6px}
+.zx .kb-header{margin-bottom:4px}
+.zx .kb-key{min-height:54px}
+#rh-kb-grid{gap:3px}
+#rh-kb-grid .kb-row{gap:3px}
+#rh-kb-grid .kb-key{min-height:36px}
+#rh-kb-grid .kb-key .sub{font-size:9px}
