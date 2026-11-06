@@ -39,3 +39,4 @@ A `RETROHUB.html` nem kézzel szerkesztett dokumentum: a `fejlesztes/build_v9.py
 - **v9** — teljes újjáépítés: központi, csoportosított menürendszer (RHGEN) mind a 23 gépen, billentyűzet minden maggéphez, opcionális lehetőségek mindenhol; méret 90,7 MB → kb. 4,5 MB.
 - **v9.1** — billentyűzet és vezérlősáv láthatósága kis felbontáson is (görgethető színpad, összehúzható CRT-keret), C64: CIA Timer-A + VIC raster, HT1080Z: memórialeképezett billentyűzet, Amiga: SAE konfig-javítás, RHASM export.
 - **v9.2** — fájlmentés minden környezetben (automatikus Blob + letöltés-fallback a claude.use nélküli oldalakon: GitHub Pages, sima böngésző), dupla `<body>` javítás, a „Claude (beépített)” AI-szolgáltató biztonságos kezelése, súgószöveg-korrekciók.
+- **v9.2.1** — ZX81 ROM-súgó korrekció (a ROM be van ágyazva), Pages-en automatikus Pollinations alapértelmezett AI-szolgáltató, boot9 verzió-jelzés.

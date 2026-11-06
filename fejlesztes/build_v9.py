@@ -447,5 +447,17 @@ html = vpatch(html,
 # 4) A forrás-szegmens <body>-t is tartalmaz, a sablon mellé rakja — duplikáció megszűnt
 html = vpatch(html, '<body>\n<body>', '<body>', 'body-dup')
 
+# 5) v9.2.1: ZX81 súgószöveg a valóságnak megfelelően — a ROM BE van ágyazva
+html = vpatch(html,
+    'A ROM-ot nem &aacute;gyazom be, a saj&aacute;t, jogtiszta p&eacute;ld&aacute;nyodat t&ouml;ltsd be.',
+    'A ROM be van &aacute;gyazva, &iacute;gy offline is fut; ha saj&aacute;t, jogtiszta p&eacute;ld&aacute;nyod van, azt is bet&ouml;ltheted.',
+    'zx81-rom-help')
+
+# 6) v9.2.1: Pages-en (nincs claude.use) legyen alapértelmezett AI-szolgáltató — Pollinations
+html = vpatch(html,
+    "if (aiSel >= aiProv.length) aiSel = 0; const __shopt = document.querySelector('#ai-type option[value=\"shell\"]');",
+    "if (aiSel >= aiProv.length) aiSel = 0; if (!aiProv.length) { aiProv.push({ name: 'Pollinations (ingyenes, kulcs nélküli)', type: 'openai', url: 'https://text.pollinations.ai/openai', key: '', model: 'openai', models: ['openai', 'mistral', 'llama'] }); aiSel = 0; } const __shopt = document.querySelector('#ai-type option[value=\"shell\"]');",
+    'pollinations-default')
+
 open(OUT, 'w', encoding='utf-8').write(html)
 print('KÉSZ:', OUT, f'{len(html.encode("utf-8")):,} bytes')

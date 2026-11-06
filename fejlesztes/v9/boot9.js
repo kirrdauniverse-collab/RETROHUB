@@ -256,6 +256,6 @@
   Q('#rh-aibtn').addEventListener('click', () => RHAIopen());
 
   /* ---------- v9 marker ---------- */
-  RHGEN.log('[RH9] Központosított menürendszer, gépenkénti billentyűzetek, beágyazott ROM-ok és modelllista-javítások aktívak — 23 gép, 9 emulátor-mag.');
+  RHGEN.log('[RH9] Központosított menürendszer, gépenkénti billentyűzetek, beágyazott ROM-ok — 23 gép, 9 emulátor-mag. v9.2: böngésző-mentés fallback (Pages-kompatibilis), AI-szolgáltató környezetfigyelés.');
   console.log('[RH9] RETROHUB v9 aktív: egységes menük + billentyűzetek + RHMS AI');
 })();

@@ -174,3 +174,12 @@ ROM-JOGI MEGJEGYZÉS (tájékoztató, nem jogi tanács)
 KÖVETKEZŐ NAGY TÉTEL (v9.3)
    • C64: a BASIC-prompt megjelenítése (CIA/VIC részletek) — a dokumentáció
      ezt őszintén jelzi RÉSZLEGES státusszal.
+
+V9.2.1 KÖVETKEZÉS (azonnali finomítás)
+   • ZX81 súgókorrekció: a „ROM-ot nem ágyazom be” mondat téves volt — a ROM
+     be van ágyazva, a szöveg most már ezt állítja (Claude 4b pontja).
+   • Pages-en (claude.use nélkül) a gépenkénti AI-programozó alapértelmezett
+     szolgáltatója automatikusan a Pollinations lesz, nem kell kézzel hozzáadni.
+   • boot9 napló: v9.2 verzió-jelzés.
+   • Ellenőrzés: fejlesztes/check_save.py — TAP/TXT mentés fallback-csatornán
+     bájtpontosan működik, nulla JS-hiba (Playwright, claude.use nélküli oldal).
