@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETROHUB v9.2.2 — Retro emulátor platform AI támogatással</title>
+<title>RETROHUB v9.2.3 — Retro emulátor platform AI támogatással</title>
 <style>
 :root{--bg:#0b0f0b;--panel:#101810;--line:#2a5a2a;--fg:#5dff7a;--dim:#2f9a45;--hi:#d8ffe0;--warn:#ffb000;--glow:0 0 6px rgba(93,255,122,.55);--screen:#031003;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -292,7 +292,7 @@ section.stage{gap:8px;padding:10px 12px}
 <body>
 <div id="app">
 <header>
- <div class="logo">RETRO<b>HUB</b> <span style="font-size:18px;color:var(--dim)">v9.2</span></div>
+ <div class="logo">RETRO<b>HUB</b> <span style="font-size:18px;color:var(--dim)">v9.2.3</span></div>
  <div class="row"><span style="color:var(--dim)">SZÍN:</span>
   <button data-t="green" class="on">Zöld</button><button data-t="amber">Borostyán</button><button data-t="ice">Jég</button><button data-t="light">Papír</button>
   <button id="rh-aibtn" title="Globális AI-programozó beállítások">🤖 AI</button><button id="devbtn" disabled>Fejlesztői központ [F12]</button></div>
@@ -573,13 +573,13 @@ var P=function(a){return a};
 var MODS=[
 {id:'zx81',real:1,n:'Sinclair ZX81',y:1981,k:'8',cpu:'Z80 @ 3,25 MHz',ram:'1–64 KB',res:[256,192],txt:'32×24',col:2,gfx:'block',snd:'nincs (opc. ZON X-81 AY)',st:'MŰKÖDIK',pal:['#000','#fff'],boot:'\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n(C) 1981 Sinclair Research Ltd\n\nK'},
 {id:'zxs',real:1,n:'ZX Spectrum 48K',y:1982,k:'8',cpu:'Z80A @ 3,5 MHz',ram:'48 KB',res:[256,192],txt:'32×24',col:15,gfx:'attr',snd:'beeper',st:'MŰKÖDIK',pal:['#000','#0000d7','#d70000','#d700d7','#00d700','#00d7d7','#d7d700','#d7d7d7'],boot:'\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n(C) 1982 Sinclair Research Ltd'},
-{id:'c64',real:1,n:'Commodore 64',y:1982,k:'8',cpu:'6510 @ 1 MHz',ram:'64 KB',res:[320,200],txt:'40×25',col:16,gfx:'pixel',snd:'SID 6581',st:'MŰKÖDIK (BASIC-prompt és begépelés él)',pal:['#000','#fff','#883932','#67b6bd','#8b5429','#55a049','#40318d','#bfce72','#8b5429','#574200','#b86962','#505050','#787878','#94e089','#7869c4','#9f9f9f'],boot:'\n    **** COMMODORE 64 BASIC V2 ****\n\n 64K RAM SYSTEM  38911 BASIC BYTES FREE\n\nREADY.'},
-{id:'c16',real:1,n:'Commodore 16 / Plus/4',y:1984,k:'8',cpu:'7501 @ 1,76 MHz',ram:'16/64 KB',res:[320,200],txt:'40×25',col:16,gfx:'pixel',snd:'TED hang',st:'RÉSZLEGES (boot javítva: BASIC 3.5 felmegy; billentyűzet-mátrix következik)',pal:['#000','#fff','#68372b','#70a4b2','#6f3d86','#588d43','#352879','#b8c76f','#6f4f25','#433900','#9a6759','#444','#6c6c6c','#9ad284','#6c5eb5','#959595'],boot:'\n\n**** COMMODORE BASIC 3.5 ****\n\n 60671 BASIC BYTES FREE\n\nREADY.'},
-{id:'ht',real:1,n:'HT1080Z',y:1983,k:'8',cpu:'Z80 @ 1,77 MHz',ram:'16 KB',res:[384,192],txt:'64×16',col:2,gfx:'text',snd:'kazetta hang',st:'BETA (TRS-80 Model I szint)',pal:['#000','#fff'],boot:'\n\nRADIO SHACK TRS-80 MICROCOMPUTER\nLEVEL II BASIC\nREADY\n>'},
+{id:'c64',real:1,n:'Commodore 64',y:1982,k:'8',cpu:'6510 @ 1 MHz',ram:'64 KB',res:[320,200],txt:'40×25',col:16,gfx:'pixel',snd:'SID 6581',st:'MŰKÖDIK (boot + virtuális ÉS fizikai billentyűzet él)',pal:['#000','#fff','#883932','#67b6bd','#8b5429','#55a049','#40318d','#bfce72','#8b5429','#574200','#b86962','#505050','#787878','#94e089','#7869c4','#9f9f9f'],boot:'\n    **** COMMODORE 64 BASIC V2 ****\n\n 64K RAM SYSTEM  38911 BASIC BYTES FREE\n\nREADY.'},
+{id:'c16',real:1,n:'Commodore 16 / Plus/4',y:1984,k:'8',cpu:'7501 @ 1,76 MHz',ram:'16/64 KB',res:[320,200],txt:'40×25',col:16,gfx:'pixel',snd:'TED hang',st:'RÉSZLEGES (boot él; TED key-index protokoll beépítve, a szerkesztő-visszhang kidolgozás alatt)',pal:['#000','#fff','#68372b','#70a4b2','#6f3d86','#588d43','#352879','#b8c76f','#6f4f25','#433900','#9a6759','#444','#6c6c6c','#9ad284','#6c5eb5','#959595'],boot:'\n\n**** COMMODORE BASIC 3.5 ****\n\n 60671 BASIC BYTES FREE\n\nREADY.'},
+{id:'ht',real:1,n:'HT1080Z',y:1983,k:'8',cpu:'Z80 @ 1,77 MHz',ram:'16 KB',res:[384,192],txt:'64×16',col:2,gfx:'text',snd:'kazetta hang',st:'BETA (boot + billentyűzet él; MEMORY SIZE? prompt) — v9.2.3: videó-RAM olvasás javítva',pal:['#000','#fff'],boot:'\n\nRADIO SHACK TRS-80 MICROCOMPUTER\nLEVEL II BASIC\nREADY\n>'},
 {id:'tvc',real:1,n:'Videoton TVC 64+',y:1986,k:'8',cpu:'Z80 @ 3,5 MHz',ram:'64 KB',res:[512,240],txt:'32×24 / 40×25',col:16,gfx:'text',snd:'beep',st:'RÉSZLEGES (kijelzés korlátozott)',pal:['#000','#f00','#0f0','#ff0','#00f','#f0f','#0ff','#fff'],boot:'\n\n\n\nTVC 64+\nVIDEOTON\n\nREADY'},
 {id:'primo',real:1,n:'Primo B-64',y:1984,k:'8',cpu:'U880D (Z80) @ 3,5 MHz',ram:'64 KB',res:[256,192],txt:'32×24',col:2,gfx:'text',snd:'beep',st:'MŰKÖDIK (kijelzés közelítő)',pal:['#000','#fff'],boot:'\n\n\n\n\n\nPRIMO B64\n\nReady'},
 {id:'ent',real:1,n:'Enterprise 64/128',y:1984,k:'8',cpu:'Z80 @ 4 MHz',ram:'64/128 KB',res:[672,256],txt:'52×26',col:256,gfx:'pixel',snd:'DAVE 4 csat.',st:'RÉSZLEGES (kijelzés korlátozott)',pal:['#000','#fff','#f00','#0f0','#00f','#ff0','#0ff','#f0f'],boot:'\n\n\n\nENTERPRISE COMPUTERS\nEXOS 2.1\n\nREADY'},
-{id:'amiga',real:1,n:'Commodore Amiga 500',y:1987,k:'16',cpu:'68000 @ 7,16 MHz',ram:'512 KB–1 MB',res:[320,256],txt:'80×32',col:4096,gfx:'pixel',snd:'Paula 4×8 bit',st:'MŰKÖDIK (SAE mag)',pal:['#05a','#fff','#000','#f80','#d00','#0a0','#fd0','#aaa'],boot:'\n\n\n\n\n\n\n\n         [ Kickstart 1.3 ]\n\n      Tedd be a Workbench lemezt'},
+{id:'amiga',real:1,n:'Commodore Amiga 500',y:1987,k:'16',cpu:'68000 @ 7,16 MHz',ram:'512 KB–1 MB',res:[320,256],txt:'80×32',col:4096,gfx:'pixel',snd:'Paula 4×8 bit',st:'MŰKÖDIK (SAE mag, csak-ROM boot; ADF kézzel helyezhető)',pal:['#05a','#fff','#000','#f80','#d00','#0a0','#fd0','#aaa'],boot:'\n\n\n\n\n\n\n\n         [ Kickstart 1.3 ]\n\n      Tedd be a Workbench lemezt'},
 {id:'c128',n:'Commodore 128',y:1985,k:'8',cpu:'8502 @ 1–2 MHz',ram:'128 KB',res:[320,200],txt:'40/80×25',col:16,gfx:'pixel',snd:'SID 6581',st:'PROFIL (mag nincs)',pal:['#000','#fff','#883932','#67b6bd','#8b5429','#55a049','#40318d','#bfce72'],boot:'\n\n    **** COMMODORE 128 BASIC V7 ****\n\n 122365 BASIC BYTES FREE\n\nREADY.'},
 {id:'vic20',n:'Commodore VIC-20',y:1980,k:'8',cpu:'6502 @ 1,02 MHz',ram:'5 KB',res:[176,184],txt:'22×23',col:16,gfx:'pixel',snd:'VIC hang',st:'PROFIL (mag nincs)',pal:['#000','#fff','#a4406c','#7fbfc6','#8b5429','#55a049','#40318d','#bfce72'],boot:'\n\n**** COMMODORE VIC-20 ****\n\n 3583 BASIC BYTES FREE\n\nREADY.'},
 {id:'abc80',n:'Luxor ABC 80',y:1978,k:'8',cpu:'Z80 @ 3 MHz',ram:'16–32 KB',res:[240,240],txt:'40×25',col:2,gfx:'text',snd:'nincs',st:'PROFIL (mag nincs)',pal:['#000','#fff'],boot:'\n\nABC 80\nLUXOR\n\nREADY'},
@@ -600,7 +600,7 @@ function tools(m){return (window.RHGEN?RHGEN.TOOLS:[]).slice();}
 var cur=null,loaded=null,filter='all',bootT=null,$=function(s){return document.querySelector(s)};
 var term=$('#term');
 function show(t,cursor){term.innerHTML='';term.appendChild(document.createTextNode(t));if(cursor!==false){var c=document.createElement('span');c.className='blk';term.appendChild(c)}}
-function home(){show('\n  RETROHUB  v9.2.2\n  ================\n\n  Válassz modult a bal oldali listából,\n  majd nyomd meg a ▶ gombot.\n\n  Moduláris, 8 és 16 bites gépekhez.\n\n  READY.\n')}
+function home(){show('\n  RETROHUB  v9.2.3\n  ================\n\n  Válassz modult a bal oldali listából,\n  majd nyomd meg a ▶ gombot.\n\n  Moduláris, 8 és 16 bites gépekhez.\n\n  READY.\n')}
 function renderList(){var l=$('#list');l.innerHTML='';MODS.filter(function(m){return filter==='all'||m.k===filter}).forEach(function(m){var d=document.createElement('div');d.className='mod'+(cur===m?' sel':'');
  d.innerHTML='<span class="n"></span><span class="badge"></span><span class="m"></span>';
  d.children[0].textContent=m.n;d.children[1].textContent=loaded===m?'FUT':(m.st||((m.k==='con'?'KONZOL':m.k+' BIT')));if(loaded===m)d.children[1].className='badge run';d.children[1].title=m.st||'';
@@ -78666,9 +78666,17 @@ function ScriptedAmigaEmulator() {
   /* ================= C16 / Plus/4 ================= */
   function makeC16() {
     const m = new C64Family('c16');
+    m.tedKeyIdx = 0; /* TED key-index: 0 = nincs esemény */
     /* C16 memóriatérkép: $8000-$BFFF BASIC ROM, $C000-$FFFF KERNAL ROM.
        FONTOS: a felülírást a loadRoms() ELŐTT telepítjük, hogy a reset-vektor
        olvasása ($FFFC) már a helyes térképen történjen (a dump $C000-tól indul). */
+    const origSetKey16 = m.setKey.bind(m);
+    m.setKey = function (r, c2, down) {
+      origSetKey16(r, c2, down);
+      /* TED auto-szkenner: lenyomási él → kulcs-index a pufferbe.
+         Index-képlet: sor*8 + oszlop + 1 (a 8×8-as mátrix bejárása). */
+      if (down && !m.tedKeyIdx) m.tedKeyIdx = (r & 7) * 8 + (c2 & 7) + 1;
+    };
     const origRead = m.readMem.bind(m);
     m.readMem = function (a) {
       a &= 0xFFFF;
@@ -78676,6 +78684,12 @@ function ScriptedAmigaEmulator() {
          $FF09 bit1 = TED időzítő-IRQ (a jiffy + kurzor ehhez fut),
          $FF1D = hang-generátor visszolvasás; a KERNAL $CE8A-nál addig vár,
          amíg ≥ $A3 — ROM-bájtot visszaadva örök körbe ragadna. */
+      /* TED billentyűzet (a C16 a TED-be épített auto-szkennert használja):
+         $FD01 olvasás: bit3 = új kulcs-esemény várakozik;
+         $FD00 olvasás: az esemény kulcs-indexe (1-alapú), majd törlődik. */
+      if (a === 0xFD00) { const v = m.tedKeyIdx | 0; m.tedKeyIdx = 0; return v; }
+      /* bit7 = esemény érhető el, bit3 = lenyomás (a KERNAL $CE1D/$EA95 szerint) */
+      if (a === 0xFD01) return (m.tedKeyIdx ? 0x88 : 0x00);
       if (a === 0xFF09) return origRead(a) | 0x02;
       if (a === 0xFF1D) return 0xA3;
       if (a >= 0x8000 && a < 0xC000 && m.romBasic) return m.romBasic[a - 0x8000];
@@ -78697,6 +78711,9 @@ function ScriptedAmigaEmulator() {
     /* a C16 szín-RAM ($0800) alapértelmezése fehér (1) — a KERNAL a színeket
        nem írja felül bootnál, feketén feketén láthatatlan lenne a szöveg */
     m.mem.fill(1, 0x0800, 0x0C00);
+    /* a KERNAL keyscan-kapuja ($07D8 bit7): a cold-start útirányítás miatt a
+       normál init sorozat nem fut le, így a szerkesztő nem engélyezi a
+       TED-billentyűzet olvasást — a futtató hurok kapcsolja be (20 frame után) */
     /* TED jiffy-IRQ: ~1/50 s PAL (1,76 MHz / 35200 ciklus) */
     m.runFrame = function () {
       const cpu = m.cpu;
@@ -78706,6 +78723,7 @@ function ScriptedAmigaEmulator() {
         if (cpu.halted) { cpu.cycles += 1; break; }
         cpu.step();
       }
+      if (m.frames > 20 && !(m.mem[0x07D8] & 0x80)) m.mem[0x07D8] = 0x80;
       cpu.irq();
       m.frames++;
     };
@@ -78758,7 +78776,7 @@ function ScriptedAmigaEmulator() {
         a &= 0xFFFF;
         /* Model I: MEMÓRIALEKÉPEZETT billentyűzet $3800-$3FFF:
            A8-A10 = sor, A0-A2 = oszlopbít (0 = nyomott) */
-        if (a >= 0x3800) {
+        if (a >= 0x3800 && a < 0x3C00) {
           const row = (a >> 8) & 7, col = a & 7;
           const pressed = !(kbRow[row] & (1 << col));
           return pressed ? (0xFF & ~(1 << col)) : 0xFF;
@@ -79016,6 +79034,7 @@ function ScriptedAmigaEmulator() {
            gép nem próbál lemezről indulni — csak a ROM képernyője jelenik meg.
            ADF továbbra is kézzel behelyezhető a VEZÉRLÉS csoportból. */
         cfg.floppy.drive[0].type = 0;
+        if (cfg.floppy.drive[1]) cfg.floppy.drive[1].type = 0;
         this._sae = sae; this._cfg = cfg;
         say('SAE indítása (AROS ROM, A500, lemezes boot nélkül)…');
         const self = this;
@@ -79788,6 +79807,96 @@ function ScriptedAmigaEmulator() {
     return k.rows || [];
   }
 
+  /* ============ fizikai billentyűzet-híd (v9.2.3) ============
+     A window-szintű keydown/keyup eseményeket a virtuális billentyűzet
+     mátrix-koordinátáira képezi le, és a mag matrix() hívására továbbítja.
+     A Shift+szimbólum kombinációkat a gombok sub-címkéi alapján oldja fel. */
+  const PHYS_SPECIAL = {
+    Enter: ['RETURN', 'ENTER', 'BE', '⏎'],
+    Backspace: ['DEL', 'ERASE', '⌫', 'CLS'],
+    Tab: ['TAB'],
+    Escape: ['ESC', 'BRK', 'STOP'],
+    ArrowLeft: ['←', 'LEFT', 'CRSR↔'],
+    ArrowRight: ['→', 'RIGHT', 'CRSR↔'],
+    ArrowUp: ['↑', 'UP', 'CRSR↕'],
+    ArrowDown: ['↓', 'DOWN', 'CRSR↕'],
+    Delete: ['DEL', 'ERASE'],
+    Insert: ['INS'],
+    Home: ['HOME', 'CLR', 'CLS'],
+    ControlLeft: ['CTRL', 'CTR'],
+    ControlRight: ['CTRL', 'CTR'],
+    ShiftLeft: ['SHIFT'],
+    ShiftRight: ['SHIFT'],
+    AltLeft: ['ALT'],
+    AltRight: ['ALT'],
+    CapsLock: ['CAPS'],
+    Space: ['SPACE']
+  };
+  const PHYS_HELD = {};
+  function physFind(mid, label) {
+    try {
+      const rows = kbRows(mid);
+      for (const row of rows) for (const k of row) {
+        if (k && k.r >= 0 && k.l && k.l.toUpperCase() === label) return k;
+      }
+    } catch (e) {}
+    return null;
+  }
+  function physFindSub(mid, ch) {
+    try {
+      const rows = kbRows(mid);
+      for (const row of rows) for (const k of row) {
+        if (k && k.r >= 0 && k.s && k.s.length === 1 && k.s === ch) return k;
+      }
+    } catch (e) {}
+    return null;
+  }
+  function rhPhysKey(e, on) {
+    const mid = (window.RHGEN && window.RHGEN._active) || null;
+    if (!mid || mid === 'amiga') return; /* az Amigát az SAE kezeli */
+    const c = coreOf(mid);
+    if (!c || !c.matrix) return;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    let kk = null, needShift = null;
+    const spec = PHYS_SPECIAL[e.code];
+    if (spec) { for (const lb of spec) { kk = physFind(mid, lb); if (kk) break; } }
+    if (!kk && e.key && e.key.length === 1) {
+      const up = e.key.toUpperCase();
+      kk = physFind(mid, up) || physFind(mid, e.key);
+      if (!kk) {
+        kk = physFindSub(mid, e.key);
+        if (kk) needShift = physFind(mid, 'SHIFT');
+      }
+    }
+    if (!kk) return;
+    if (on) {
+      e.preventDefault();
+      if (e.repeat) return;
+      const entry = { keys: [kk], shift: null };
+      if (needShift) { keyDown(mid, needShift, true); entry.shift = needShift; }
+      keyDown(mid, kk, true);
+      PHYS_HELD[e.code] = entry;
+    } else {
+      const entry = PHYS_HELD[e.code];
+      if (!entry) return;
+      for (const k of entry.keys) keyDown(mid, k, false);
+      if (entry.shift) keyDown(mid, entry.shift, false);
+      delete PHYS_HELD[e.code];
+    }
+  }
+  window.addEventListener('keydown', e => rhPhysKey(e, true), true);
+  window.addEventListener('keyup', e => rhPhysKey(e, false), true);
+  window.addEventListener('blur', () => {
+    const mid = (window.RHGEN && window.RHGEN._active) || null;
+    for (const code in PHYS_HELD) {
+      const en = PHYS_HELD[code];
+      for (const k of en.keys) keyDown(mid, k, false);
+      if (en.shift) keyDown(mid, en.shift, false);
+      delete PHYS_HELD[code];
+    }
+  });
+
   const stuck = {};
   function keyDown(mid, k, on) {
     if (k.code) { if (mid === 'amiga' && window.RH) RH.AMIGA.key(k.code, on); return; }
@@ -80055,6 +80164,7 @@ function ScriptedAmigaEmulator() {
         delete RH.coreOf[mid];
         core = null;
         activeMid = null;
+        RHGEN._active = null;
         setRhUI(false);
       },
       reset() { RH.doReset(mid); },
@@ -80122,7 +80232,7 @@ function ScriptedAmigaEmulator() {
 
   /* ---------- aktív gép követése a mountból ---------- */
   const origSetActive = RHGEN.setActive;
-  RHGEN.setActive = function (mid, prof) { activeMid = mid; origSetActive(mid, prof); };
+  RHGEN.setActive = function (mid, prof) { activeMid = mid; RHGEN._active = mid; origSetActive(mid, prof); };
 
   /* ---------- C16 koordináták (kalibrációig sor-folytonos) ---------- */
   RH.c16Coord = function (ch) {
