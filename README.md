@@ -1,4 +1,4 @@
-# RETROHUB v9.2
+# RETROHUB v9.2.2
 
 **Egyfájlos retro emulátor-platform** — 23 gép, 9 emulátormag, egységes menürendszer (RHGEN), gépenkénti virtuális billentyűzet, beépített AI. Minden egyetlen HTML-fájlban, teljesen offline.
 
@@ -40,3 +40,4 @@ A `RETROHUB.html` nem kézzel szerkesztett dokumentum: a `fejlesztes/build_v9.py
 - **v9.1** — billentyűzet és vezérlősáv láthatósága kis felbontáson is (görgethető színpad, összehúzható CRT-keret), C64: CIA Timer-A + VIC raster, HT1080Z: memórialeképezett billentyűzet, Amiga: SAE konfig-javítás, RHASM export.
 - **v9.2** — fájlmentés minden környezetben (automatikus Blob + letöltés-fallback a claude.use nélküli oldalakon: GitHub Pages, sima böngésző), dupla `<body>` javítás, a „Claude (beépített)” AI-szolgáltató biztonságos kezelése, súgószöveg-korrekciók.
 - **v9.2.1** — ZX81 ROM-súgó korrekció (a ROM be van ágyazva), Pages-en automatikus Pollinations alapértelmezett AI-szolgáltató, boot9 verzió-jelzés.
+- **v9.2.2** — Boot-javítások: **C64** teljes BASIC-boot (SED/BIT/IRQ-maghibák, VIC $D020/$D021 színek, begépelés + RETURN végrehajtás él), **C16/Plus/4** BASIC 3.5 boot (TED-regiszterek, cold start, jiffy-IRQ), **Amiga** csak-ROM boot (lemezes boot kikapcsolva, ADF kézzel helyezhető be). Mind a 9 maggép Playwright-ellenőrzéssel bootol.
