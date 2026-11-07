@@ -183,3 +183,72 @@ V9.2.1 KÖVETKEZÉS (azonnali finomítás)
    • boot9 napló: v9.2 verzió-jelzés.
    • Ellenőrzés: fejlesztes/check_save.py — TAP/TXT mentés fallback-csatornán
      bájtpontosan működik, nulla JS-hiba (Playwright, claude.use nélküli oldal).
+
+═══════════════════════════════════════════════════════════════════════════════
+  V9.2.2 — BOOT-JAVÍTÁSOK: C64, C16/PLUS/4 ÉS AMIGA (2026-11-07)
+═══════════════════════════════════════════════════════════════════════════════
+
+A felhasználói hibajelentés: „a C16 és C64 emulátorok nem bootolnak; az Amiga
+valami lemezzel bootol, azt vedd ki, csak a ROM bootoljon." Mindhárom tétel
+javítva, majd Playwright-végponti teszttel ellenőrizve.
+
+1) C64 — A BASIC-PROMPT MOST MÁR MEGJELENIK (RÉSZLEGES → MŰKÖDIK)
+   Négy 6502-maghiba állította le a KERNAL-t a boot közben:
+   • SED (tizedes összeadás): a 4 bites nibble-átvitel hibásan kezelte a
+     alsó decimális átvitelt — a KERNAL RAM-tesztje és a free-byte számítás
+     rossz értékeket adott.
+   • BIT: a Z/N/V zászlók beállítása operátor-precedencia hiba miatt
+     elferdült (((v & a) === 0 ? ZF : 0 | (...)) — a zárójelezés a Z-t
+     bármilyen nulla eredménynél elvesztette).
+   • IRQ/NMI push-formátum: hardver-interruptnál a B zászlót 0-val, az 5-ös
+     bitet 1-gyel kell a veremre tenni (6502 viselkedés); a régi kód
+     BRK-formátumot (B=1) tolt, a KERNAL IRQ-kezelője ezért nem ismerte fel
+     a hardver-interrupot.
+   • Megjelenítés: a VIC keret ($D020) és háttér ($D021) színét mostantól a
+     RAM-ból veszi — boot után a klasszikus világoskék keret + kék háttér
+     jelenik meg; a szín-RAM 0 kódja fehér szöveget ad (a KERNAL a szín-RAM-
+     ot kinullázza, a TED-színcímke emulálásáig ez a helyes megjelenítés).
+   ELLENŐRZÉS: boot-banner (**** COMMODORE 64 BASIC V2 **** / 64K RAM SYSTEM
+   38911 BASIC BYTES FREE / READY.), begépelés (typeText), virtuális
+   RETURN-gomb: PRINT 2+2 →  4 → új READY. — a teljes BASIC-ciklus él.
+
+2) C16 / PLUS/4 — A BASIC 3.5 FELMENY (RÉSZLEGES → boot javítva)
+   • ROM-térkép felülírás sorrendje: a $8000-$BFFF BASIC / $C000-$FFFF
+     KERNAL felülírást a loadRoms() ELŐTT kell telepíteni, hogy a reset-vektor
+     olvasása ($FFFC) már a helyes térképen történjen.
+   • TED regiszterek a KERNAL ROM fölött: $FF09 bit1 = TED időzítő-IRQ
+     (a jiffy-óra és a kurzor ehhez fut), $FF1D visszolvasás (a KERNAL
+     $CE8A-nál addig vár, amíg ≥ $A3 — ROM-bájttal örök körbe ragadt).
+   • Cold start: a dump $8006-os bájtja miatt a KERNAL a gépnyelvi monitor
+     promptjára lépett ($F49C); most a saját BASIC cold startjára ugrik
+     ($8019) — banner + READY.
+   • Karakterkészlet: a C16 CHAR-ROM a KERNAL dump $D000-$DFFF részén van.
+   • Szín-RAM ($0800) alapérték fehér; 50 Hz-es jiffy-IRQ (35200 ciklus).
+   ELLENŐRZÉS: boot-banner (COMMODORE BASIC 3.5, READY., villogó kurzor),
+   60 gombos billentyűzet látható.
+   ISMERT KOZMETIKAI HATÁR: a szabadbájt-szám nem mindig olvasható jól
+   (a cold-start ugrás miatt a memória-számláló inicializálása nem fut le
+   teljesen) — a gép ezért továbbra is RÉSZLEGES jelölést kap.
+
+3) AMIGA — CSAK ROM BOOT (lemezes boot kikapcsolva)
+   • A SAE-konfig DF0 meghajtójának típusa 0-ra állítva boot előtt: a gép
+     nem próbál lemezről indulni, csak a beágyazott AROS ROM képernyője
+     jelenik meg (Kickstart-stílusú boot, floppy-kérés nélkül).
+   • Az ADF továbbra is kézzel behelyezhető: VEZÉRLÉS csoport → ADF behelyezés
+     a DF0:-ba (pl. Workbench vagy játék lemez), ilyenkor reset után arról
+     tölt.
+   ELLENŐRZÉS: SAE elindul, AROS boot-képernyő (fekete háttér, AROS-logó),
+   „running: true", nincs floppy-kérés.
+
+4) FÜGGELÉK — ELLENŐRZÉSI JEGYZŐKÖNYV (Playwright/Chromium, headless)
+   • Mind a 9 maggép bootol: ZX81, ZX Spectrum 48K, C64, C16, HT1080Z,
+     TVC, Primo, Enterprise, Amiga — „FUT (valódi emulátor-mag)".
+   • A repo smoke_v91-féle végponti lista él: RHGEN 6 csoport, fejlesztési
+     alcímkék (BASIC/Assembler/Memória/AI programozó/Játékstúdió), RHASM
+     fordítás (LD A,2 / INC A / JR → 3E 02 3C 18 FD), AI-modal, C16
+     billentyűzet (60 gomb), Amiga billentyűzet.
+   • 13 script-blokk node --check: hibátlan.
+   • Egyetlen konzol-hiba az Amiga audió-újrakezdésből (SAEE_Audio_
+     RequiresWebAudio=50): hang nélküli környezetben a mag 3. próbára,
+     hang nélkül indul — ez tervezett viselkedés, nem hiba.
+   • Verzióbélyeg: v9.2.2 (lapszám + üdvözlőképernyő).
