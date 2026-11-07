@@ -331,3 +331,58 @@ lemez; a Primo nem csinál semmit."
    • Fájl-betöltés: C64 PRG — „test.prg betöltve a $080B címre (13 bájt)".
    • NAPLÓ: él (412 bejegyzés-karakter a vizsgálatkor).
    • 13 script-blokk node --check: hibátlan; verzióbélyeg v9.2.3.
+
+───────────────────────────────────────────────────────────────────────────────
+v9.2.4 (2026-11-07) — GÉPENKÉNTI BEMENET-JAVÍTÁSOK (felhasználói visszajelzés)
+───────────────────────────────────────────────────────────────────────────────
+Hibajelenségek a v9.2.3 után: a C16 semmire sem reagált, az Enterprise bootolt,
+de nem reagált; a HT1080Z hibát írt és folyamatosan újraindult; az Amiga bootja
+„lemezesnek" tűnt.
+
+1) C16 / PLUS/4 — BEMENET MOST MÁR ÉL (virtuális ÉS fizikai)
+   • Gyökér-ok 1: a TED regiszterterület ($FF00-$FF1F) olvasása ROM-bájtot adott
+     vissza. A KERNAL az IRQ-jában $FF0B-be $CC/$A1-et ír a $CE42-es editor-tick
+     vezérléséhez; ROM-visszaolvasással a BIT mindig V=0-t adott, így a tick
+     (és a $DB11-es jiffy-billentyűszkenner) sosem futott le.
+   • Gyökér-ok 2: hiányzott a TED billentyű-latch (kézi szken mód): a KERNAL
+     $DB70-es rutinja a sor-kiválasztást $FD30/$FF08-ra írja (aktív low), majd
+     $FF08 olvasással kapja az oszlop-állapotot. Ez most már implementált.
+   • A $E026 (unshifted) és $E067 (shifted) KERNAL-táblák alapján újra lett
+     építve a teljes C16 billentyűtérkép és a begépelés (SHIFT-támogatással):
+     PRINT 2+2 → READY. + eredmény, valódi BASIC-futtatás.
+   • Ismert kozmetikai hiba: a CHROUT-olt kimenet egyes számjeleinek/karaktereinek
+     glifusa eltérő lehet (a C16 TED karakterkészlet-térképezése eltér a C64étől).
+
+2) ENTERPRISE 64/128 — BEMENET MOST MÁR ÉL (virtuális ÉS fizikai)
+   • Gyökér-ok: a Dave IRQ-réteg két hibája. (a) A 50 Hz és 1 Hz latch a
+     $B4-engedélytől függetlenül mindig beállt; az EXOS a „legalacsonyabb latch-
+     bit" diszpatchel dolgozik, így a mindig-latchelő 50 Hz (0x02) örökre
+     lenyomta a Nick VIRQ-t (INT1, 0x20) — a billentyűzet-vezérlő sosem kapott
+     időt. Most csak az engedélyezett forrás latchel.
+   • (b) A $B4-be írt acknowledge a biteket eltolva (<<1) törölte — az EXOS
+     közvetlen latch-bitet ír vissza; most közvetlen törlés van.
+
+3) HT1080Z — A FOLYAMATOS ÚJRAINDULÁS MEGSZŰNT, VALÓDI KULCSDEKÓDOLÁS
+   • Gyökér-ok 1: a reset $20-tal töltötte a RAM-ot; a ROM kulcsszkenere a
+     $4036-$403D „előző állapot" bájtokat NEM inicializálja, így minden
+     szkenneléskor fantom „új lenyomást" látott → garbage karakter →
+     ?SN ERROR → végtelen READY/ERROR körforgás. Most: RAM=$00, a
+     $4036-$403D=$FF (nincs lenyomva).
+   • Gyökér-ok 2: a Model I memórialeképezett billentyűzetében A0-A7 EGY-HOT
+     oszlopkiválasztás, a visszaadott bájt bitjei a sorok — a korábbi bináris
+     (A0-A2) dekódolás miatt a ROM nem talált billentyűt. Javítva.
+
+4) AMIGA — CSUPASZ ROM-BOOT (a meghajtók ténylegesen üresek)
+   • A konfig mind a 4 meghajtón type=0 (None), nincs behelyezett ADF —
+     élő mérés igazolja. A képernyőn esetleg látható „lemez" a Kickstart/AROS
+     beépített „helyezz be lemezt" grafikája: ez a lemez nélküli, tisztán ROM-os
+     boot normál képe (valódi Amigán is ez látszik üres meghajtókkal).
+
+5) EGYÉB
+   • A HT core megkapta az egységes core.f fasádot (cpu/mem/frames), a
+     makeLoop pedig kitett frames-számlálót — diagnosztika/UI-kompatibilitás.
+   • Primo: a boot továbbra is a $3894-es RAM-címen akad el (a ROM initje nem
+     fejeződik be) — vizsgálata következő verzió.
+   • 13 script-blokk node --check: hibátlan; verzióbélyeg v9.2.4.
+   • Tesztek: mind a 9 maggép bootol hibajelentés nélkül; C16-on PRINT 2+2
+     begépelve és lefuttatva; HT-n stabil READY prompt.
