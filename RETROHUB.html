@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETROHUB v9.2.3 — Retro emulátor platform AI támogatással</title>
+<title>RETROHUB v9.2.4 — Retro emulátor platform AI támogatással</title>
 <style>
 :root{--bg:#0b0f0b;--panel:#101810;--line:#2a5a2a;--fg:#5dff7a;--dim:#2f9a45;--hi:#d8ffe0;--warn:#ffb000;--glow:0 0 6px rgba(93,255,122,.55);--screen:#031003;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -574,8 +574,8 @@ var MODS=[
 {id:'zx81',real:1,n:'Sinclair ZX81',y:1981,k:'8',cpu:'Z80 @ 3,25 MHz',ram:'1–64 KB',res:[256,192],txt:'32×24',col:2,gfx:'block',snd:'nincs (opc. ZON X-81 AY)',st:'MŰKÖDIK',pal:['#000','#fff'],boot:'\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n(C) 1981 Sinclair Research Ltd\n\nK'},
 {id:'zxs',real:1,n:'ZX Spectrum 48K',y:1982,k:'8',cpu:'Z80A @ 3,5 MHz',ram:'48 KB',res:[256,192],txt:'32×24',col:15,gfx:'attr',snd:'beeper',st:'MŰKÖDIK',pal:['#000','#0000d7','#d70000','#d700d7','#00d700','#00d7d7','#d7d700','#d7d7d7'],boot:'\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n(C) 1982 Sinclair Research Ltd'},
 {id:'c64',real:1,n:'Commodore 64',y:1982,k:'8',cpu:'6510 @ 1 MHz',ram:'64 KB',res:[320,200],txt:'40×25',col:16,gfx:'pixel',snd:'SID 6581',st:'MŰKÖDIK (boot + virtuális ÉS fizikai billentyűzet él)',pal:['#000','#fff','#883932','#67b6bd','#8b5429','#55a049','#40318d','#bfce72','#8b5429','#574200','#b86962','#505050','#787878','#94e089','#7869c4','#9f9f9f'],boot:'\n    **** COMMODORE 64 BASIC V2 ****\n\n 64K RAM SYSTEM  38911 BASIC BYTES FREE\n\nREADY.'},
-{id:'c16',real:1,n:'Commodore 16 / Plus/4',y:1984,k:'8',cpu:'7501 @ 1,76 MHz',ram:'16/64 KB',res:[320,200],txt:'40×25',col:16,gfx:'pixel',snd:'TED hang',st:'RÉSZLEGES (boot él; TED key-index protokoll beépítve, a szerkesztő-visszhang kidolgozás alatt)',pal:['#000','#fff','#68372b','#70a4b2','#6f3d86','#588d43','#352879','#b8c76f','#6f4f25','#433900','#9a6759','#444','#6c6c6c','#9ad284','#6c5eb5','#959595'],boot:'\n\n**** COMMODORE BASIC 3.5 ****\n\n 60671 BASIC BYTES FREE\n\nREADY.'},
-{id:'ht',real:1,n:'HT1080Z',y:1983,k:'8',cpu:'Z80 @ 1,77 MHz',ram:'16 KB',res:[384,192],txt:'64×16',col:2,gfx:'text',snd:'kazetta hang',st:'BETA (boot + billentyűzet él; MEMORY SIZE? prompt) — v9.2.3: videó-RAM olvasás javítva',pal:['#000','#fff'],boot:'\n\nRADIO SHACK TRS-80 MICROCOMPUTER\nLEVEL II BASIC\nREADY\n>'},
+{id:'c16',real:1,n:'Commodore 16 / Plus/4',y:1984,k:'8',cpu:'7501 @ 1,76 MHz',ram:'16/64 KB',res:[320,200],txt:'40×25',col:16,gfx:'pixel',snd:'TED hang',st:'MŰKÖDIK (boot + TED billentyű-latch: begépelés és BASIC él — v9.2.4)',pal:['#000','#fff','#68372b','#70a4b2','#6f3d86','#588d43','#352879','#b8c76f','#6f4f25','#433900','#9a6759','#444','#6c6c6c','#9ad284','#6c5eb5','#959595'],boot:'\n\n**** COMMODORE BASIC 3.5 ****\n\n 60671 BASIC BYTES FREE\n\nREADY.'},
+{id:'ht',real:1,n:'HT1080Z',y:1983,k:'8',cpu:'Z80 @ 1,77 MHz',ram:'16 KB',res:[384,192],txt:'64×16',col:2,gfx:'text',snd:'kazetta hang',st:'MŰKÖDIK (boot stabil, valódi Model I kulcsdekódolás) — v9.2.4: fantom-billentyű javítva',pal:['#000','#fff'],boot:'\n\nRADIO SHACK TRS-80 MICROCOMPUTER\nLEVEL II BASIC\nREADY\n>'},
 {id:'tvc',real:1,n:'Videoton TVC 64+',y:1986,k:'8',cpu:'Z80 @ 3,5 MHz',ram:'64 KB',res:[512,240],txt:'32×24 / 40×25',col:16,gfx:'text',snd:'beep',st:'RÉSZLEGES (kijelzés korlátozott)',pal:['#000','#f00','#0f0','#ff0','#00f','#f0f','#0ff','#fff'],boot:'\n\n\n\nTVC 64+\nVIDEOTON\n\nREADY'},
 {id:'primo',real:1,n:'Primo B-64',y:1984,k:'8',cpu:'U880D (Z80) @ 3,5 MHz',ram:'64 KB',res:[256,192],txt:'32×24',col:2,gfx:'text',snd:'beep',st:'MŰKÖDIK (kijelzés közelítő)',pal:['#000','#fff'],boot:'\n\n\n\n\n\nPRIMO B64\n\nReady'},
 {id:'ent',real:1,n:'Enterprise 64/128',y:1984,k:'8',cpu:'Z80 @ 4 MHz',ram:'64/128 KB',res:[672,256],txt:'52×26',col:256,gfx:'pixel',snd:'DAVE 4 csat.',st:'RÉSZLEGES (kijelzés korlátozott)',pal:['#000','#fff','#f00','#0f0','#00f','#ff0','#0ff','#f0f'],boot:'\n\n\n\nENTERPRISE COMPUTERS\nEXOS 2.1\n\nREADY'},
@@ -600,7 +600,7 @@ function tools(m){return (window.RHGEN?RHGEN.TOOLS:[]).slice();}
 var cur=null,loaded=null,filter='all',bootT=null,$=function(s){return document.querySelector(s)};
 var term=$('#term');
 function show(t,cursor){term.innerHTML='';term.appendChild(document.createTextNode(t));if(cursor!==false){var c=document.createElement('span');c.className='blk';term.appendChild(c)}}
-function home(){show('\n  RETROHUB  v9.2.3\n  ================\n\n  Válassz modult a bal oldali listából,\n  majd nyomd meg a ▶ gombot.\n\n  Moduláris, 8 és 16 bites gépekhez.\n\n  READY.\n')}
+function home(){show('\n  RETROHUB  v9.2.4\n  ================\n\n  Válassz modult a bal oldali listából,\n  majd nyomd meg a ▶ gombot.\n\n  Moduláris, 8 és 16 bites gépekhez.\n\n  READY.\n')}
 function renderList(){var l=$('#list');l.innerHTML='';MODS.filter(function(m){return filter==='all'||m.k===filter}).forEach(function(m){var d=document.createElement('div');d.className='mod'+(cur===m?' sel':'');
  d.innerHTML='<span class="n"></span><span class="badge"></span><span class="m"></span>';
  d.children[0].textContent=m.n;d.children[1].textContent=loaded===m?'FUT':(m.st||((m.k==='con'?'KONZOL':m.k+' BIT')));if(loaded===m)d.children[1].className='badge run';d.children[1].title=m.st||'';
@@ -10403,9 +10403,11 @@ class EnterpriseMachine {
         this.daveRegs[p & 0x1f] = v;
         break;
       case 0xb4: {
-        // interrupt enable; writing clears the enabled latches (ack)
+        // interrupt enable; writing clears the latches DIRECTLY (ack):
+        // az EXOS a feldolgozott latch bitjével ír (pl. INT1 → bit5), tehát a
+        // vezérlő-bitek közvetlenül a latch-bitjeket törlik (nem <<1 eltolással).
         this.irqEnable = v;
-        this.irqStatus &= ~(v << 1) & IRQ_LATCH & 0xff;
+        this.irqStatus &= ~(v & IRQ_LATCH) & 0xff;
         this.updateIRQ();
         break;
       }
@@ -10457,7 +10459,11 @@ class EnterpriseMachine {
       while (this.selAcc >= period) {
         this.selAcc -= period;
         this.irqStatus ^= IRQ_50HZ_DIVIDER;
-        if (this.irqStatus & IRQ_50HZ_DIVIDER) this.irqStatus |= IRQ_50HZ_LATCH;
+        /* A latch csak akkor áll be, ha a forrás engedélyezve van ($B4 bit0 → 50 Hz).
+           Enélkül a mindig-latchelő 50 Hz (0x02) lenyomta az INT1-et (0x20) az
+           EXOS 'legalacsonyabb latch-bit' diszpatchjében — a billentyűzet sosem
+           kapott időt. Az EXOS csak a Nick VIRQ-t (INT1) engedélyezi. */
+        if ((this.irqStatus & IRQ_50HZ_DIVIDER) && (this.irqEnable & 0x01)) this.irqStatus |= IRQ_50HZ_LATCH;
         this.updateIRQ();
       }
     }
@@ -10467,7 +10473,7 @@ class EnterpriseMachine {
     while (this.hz1Acc >= p1) {
       this.hz1Acc -= p1;
       this.irqStatus ^= IRQ_1HZ_DIVIDER;
-      if (this.irqStatus & IRQ_1HZ_DIVIDER) this.irqStatus |= IRQ_1HZ_LATCH;
+      if ((this.irqStatus & IRQ_1HZ_DIVIDER) && (this.irqEnable & 0x04)) this.irqStatus |= IRQ_1HZ_LATCH;
       this.updateIRQ();
     }
   }
@@ -78519,7 +78525,7 @@ function ScriptedAmigaEmulator() {
       if (renderFn) {
         try { renderFn(img.data); ctx.putImageData(img, 0, 0); } catch (e) {}
       }
-      frames++;
+      frames++; core._ctl._frames = frames;
       const st = document.querySelector('#rh-frames'), sf = document.querySelector('#rh-fps'), ss = document.querySelector('#rh-status');
       if (st) st.textContent = String(frames);
       fpsAcc += t - (lastT || t); lastT = t; fpsN++;
@@ -78532,7 +78538,8 @@ function ScriptedAmigaEmulator() {
     core._ctl = {
       start() { if (!raf) { lastT = 0; raf = requestAnimationFrame(tick); } running = true; },
       stop() { running = false; if (raf) cancelAnimationFrame(raf); raf = null; },
-      pause(p) { paused = !!p; }
+      pause(p) { paused = !!p; },
+      _frames: 0
     };
     core._resize = (w, h) => { W = w; H = h; canvas.width = w; canvas.height = h; img = ctx.createImageData(w, h); };
     core._ctl.start();
@@ -78667,6 +78674,7 @@ function ScriptedAmigaEmulator() {
   function makeC16() {
     const m = new C64Family('c16');
     m.tedKeyIdx = 0; /* TED key-index: 0 = nincs esemény */
+    m.tedRowSel = 0xFF; /* TED billentyű-latch: utoljára kiválasztott sor(ok) (aktív low) */
     /* C16 memóriatérkép: $8000-$BFFF BASIC ROM, $C000-$FFFF KERNAL ROM.
        FONTOS: a felülírást a loadRoms() ELŐTT telepítjük, hogy a reset-vektor
        olvasása ($FFFC) már a helyes térképen történjen (a dump $C000-tól indul). */
@@ -78690,14 +78698,35 @@ function ScriptedAmigaEmulator() {
       if (a === 0xFD00) { const v = m.tedKeyIdx | 0; m.tedKeyIdx = 0; return v; }
       /* bit7 = esemény érhető el, bit3 = lenyomás (a KERNAL $CE1D/$EA95 szerint) */
       if (a === 0xFD01) return (m.tedKeyIdx ? 0x88 : 0x00);
-      if (a === 0xFF09) return origRead(a) | 0x02;
-      if (a === 0xFF1D) return 0xA3;
+      /* TED billentyű-latch, kézi szken mód: a KERNAL $DB70-es rutinja a sor-
+         kiválasztást $FD30/$FF08-ra írja (aktív low, egy-hot), majd $FF08
+         olvasással kapja meg az oszlop-állapotot. Enélkül a $DB11-es jiffy-
+         szkenner nem lát billentyűt — ez volt a C16 némán maradásának oka. */
+      if (a === 0xFF08) {
+        let vv = 0xFF;
+        for (let r2 = 0; r2 < 8; r2++) if (!(m.tedRowSel & (1 << r2))) vv &= m.kb[r2];
+        return vv;
+      }
+      /* A teljes TED regiszterterület ($FF00-$FF1F) a KERNAL ROM FELETT van:
+         az olvasás a RAM-ba írt regiszterértékeket adja vissza. A KERNAL az
+         IRQ-jában $FF0B-be $CC/$A1-et ír a $CE42-es editor-tick vezérléséhez —
+         ROM-bájt visszaadása esetén a $CE38-as BIT mindig V=0-t adott, a tick
+         (és vele a $DB11-es jiffy-billentyűszkenner) sosem futott le. */
+      if (a >= 0xFF00 && a <= 0xFF1F) {
+        if (a === 0xFF1D) return 0xA3; /* hang-generátor: a $CE8A várakozása ezt igényli */
+        if (a === 0xFF09) return m.mem[a] | 0x02; /* TED időzítő-IRQ bit mindig jelzett */
+        return m.mem[a];
+      }
       if (a >= 0x8000 && a < 0xC000 && m.romBasic) return m.romBasic[a - 0x8000];
       if (a >= 0xC000 && m.romKernal) return m.romKernal[a - 0xC000];
       return origRead(a);
     };
     const origWrite = m.writeMem.bind(m);
-    m.writeMem = function (a, v) { a &= 0xFFFF; v &= 0xFF; if (a === 0 || a === 1) return origWrite(a, v); m.mem[a] = v; };
+    m.writeMem = function (a, v) {
+      a &= 0xFFFF; v &= 0xFF;
+      if (a === 0xFD30 || a === 0xFF08) { m.tedRowSel = v; return; } /* TED sor-kiválasztás */
+      if (a === 0 || a === 1) return origWrite(a, v); m.mem[a] = v;
+    };
     m.loadRoms({ basic: b64u8(ROM.c16low), kernal: b64u8(ROM.c16high), char: null });
     /* a C16 karakterkészlete a KERNAL ROM-ban van ($D000-$DFFF) */
     if (m.romKernal && m.romKernal.length >= 0x2000) m.romChar = m.romKernal.subarray(0x1000, 0x2000);
@@ -78755,7 +78784,12 @@ function ScriptedAmigaEmulator() {
       for (const ch of String(str)) {
         let p = cc ? cc(ch) : null;
         if (!p) { p = cc ? cc(String(ch).toUpperCase()) : null; }
-        if (p) pushChar(core, [{ r: p.r, c: p.c, d: 1 }, { r: p.r, c: p.c, d: 0 }]);
+        if (!p) continue;
+        const steps = [];
+        if (p.sh) steps.push({ r: 1, c: 7, d: 1 }); /* SHIFT lenyomva */
+        steps.push({ r: p.r, c: p.c, d: 1 }, { r: p.r, c: p.c, d: 0 });
+        if (p.sh) steps.push({ r: 1, c: 7, d: 0 });
+        pushChar(core, steps);
       }
       return true;
     };
@@ -78777,9 +78811,19 @@ function ScriptedAmigaEmulator() {
         /* Model I: MEMÓRIALEKÉPEZETT billentyűzet $3800-$3FFF:
            A8-A10 = sor, A0-A2 = oszlopbít (0 = nyomott) */
         if (a >= 0x3800 && a < 0x3C00) {
-          const row = (a >> 8) & 7, col = a & 7;
-          const pressed = !(kbRow[row] & (1 << col));
-          return pressed ? (0xFF & ~(1 << col)) : 0xFF;
+          /* Valódi Model I dekódolás: A0-A7 EGY-HOT oszlopkiválasztás ($01..$80),
+             a visszaadott bájt bit r = az r. sor állapota a kiválasztott oszlopban
+             (0 = nyomva). A ROM a $3801/$3802/.../$3880 címeket olvassa (LD A,(BC)
+             RLC C léptetéssel) — a bináris (a&7) dekódolás miatt a korábbi kód
+             nem tudott billentyűt átadni. */
+          const lb = a & 0xFF;
+          if (lb && !(lb & (lb - 1))) {
+            const cc = 31 - Math.clz32(lb);
+            let v2 = 0xFF;
+            for (let r2 = 0; r2 < 8; r2++) if (!(kbRow[r2] & (1 << cc))) v2 &= ~(1 << r2) & 0xFF;
+            return v2;
+          }
+          return 0xFF;
         }
         return mem[a];
       },
@@ -78799,6 +78843,8 @@ function ScriptedAmigaEmulator() {
     const core = {
       _cpu: cpu,
       get mem() { return mem; },
+      /* egységes core.f fasád (cpu + mem) a diagnosztikai/UI-rétegnek */
+      get f() { return { cpu: cpu, mem: mem, get frames() { return (core._ctl && core._ctl._frames) || 0; } }; },
       mount(cv) {
         /* 64×16 karakter, 8×12 cella → 512×192, zöld; Z80 @ 1,77 MHz, 60 Hz */
         const W = 512, H = 192, CW = 8, CH = 12;
@@ -78831,7 +78877,18 @@ function ScriptedAmigaEmulator() {
         makeLoop(core, cv, machine, render, { w: W, h: H });
       },
       unmount() { core._ctl.stop(); },
-      reset() { cpu.reset(); for (let i = 0x3000; i < 0x8000; i++) mem[i] = 0x20; selRow = 0xFF; kbRow.fill(0xFF); },
+      reset() {
+        cpu.reset();
+        /* A RAM $00-ról indul: a $20-töltés a $4036+ billentyű-árnyék-állapotot
+           is szeméttel töltötte, amiből a ROM kulcsszkenere (a $4036+-ot NEM
+           inicializálja) minden szkenneléskor fantom 'új lenyomást' látott →
+           garbage karakter → ?SN ERROR → végtelen READY/ERROR körforgás. */
+        for (let i = 0x3000; i < 0x8000; i++) mem[i] = 0x00;
+        /* a kulcsszken 'előző állapot' bájtjai: $FF = semmi nincs lenyomva
+           (a ROM ezek nélkül az első szkennelésnél fantom billentyűt lát) */
+        for (let i = 0x4036; i <= 0x403D; i++) mem[i] = 0xFF;
+        selRow = 0xFF; kbRow.fill(0xFF);
+      },
       matrix: (r, c, down) => keyP(r, c, down),
       loadFile(name, u8) {
         if (/\.cmd$/i.test(name) || u8[0] === 0x05) {
@@ -79753,13 +79810,16 @@ function ScriptedAmigaEmulator() {
     return rows.map(r => r.filter(Boolean));
   }
   function c16Rows() {
-    const order = ['←', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '+', '-', '£', 'HOME', 'DEL',
-      'CTRL', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '*', '↑', 'RESTORE',
-      'RUN/STOP', 'CBM', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', ';', '=', 'RETURN',
-      'SHIFT', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 'SHIFT2', '↓', '→'];
-    const rows = [[], [], [], [], [], [], [], []];
-    order.forEach((l, i) => rows[Math.floor(i / 8)].push({ l: l === 'SHIFT2' ? 'SHIFT' : l, r: Math.floor(i / 8), c: i % 8, mod: /^SHIFT|CTRL|CBM|RUN/.test(l) ? 1 : 0, w: /RETURN|HOME|RESTORE|SHIFT/.test(l) ? 2 : 0 }));
-    return rows;
+    /* A C16 KERNAL valódi mátrixa (a ROM $E026 unshifted / $E067 shifted táblái
+       szerint — a fizikai elrendezés vizuális, a (r,c) a ROM-féle sor/oszlop) */
+    const K = (l, r, c, s, mod, w) => { const o = { l: l, r: r, c: c }; if (s) o.s = s; if (mod) o.mod = 1; if (w) o.w = w; return o; };
+    return [
+      [K('←', 6, 0), K('1', 7, 0, '!'), K('2', 7, 3, '"'), K('3', 1, 0, '#'), K('4', 1, 3, '$'), K('5', 2, 0, '%'), K('6', 2, 3, '&'), K('7', 3, 0, '\''), K('8', 3, 3, '('), K('9', 4, 0, ')'), K('0', 4, 3), K('+', 6, 6), K('-', 5, 6, '_'), K('£', 0, 2), K('HOME', 7, 1), K('DEL', 0, 0, 'INS', 0, 2)],
+      [K('CTRL', 7, 2), K('Q', 7, 6), K('W', 1, 1), K('E', 1, 6), K('R', 2, 1), K('T', 2, 6), K('Y', 3, 1), K('U', 3, 6), K('I', 4, 1), K('O', 4, 6), K('P', 5, 1), K('@', 0, 7), K('*', 6, 1, '<'), K('↑', 5, 3), K('RUN/STOP', 7, 7)],
+      [K('C=', 7, 5), K('SHIFT', 1, 7), K('A', 1, 2), K('S', 1, 5), K('D', 2, 2), K('F', 2, 5), K('G', 3, 2), K('H', 3, 5), K('J', 4, 2), K('K', 4, 5), K('L', 5, 2), K(':', 5, 5, '['), K(';', 6, 2, ']'), K('=', 6, 5, '_'), K('RETURN', 0, 1, '', 0, 2)],
+      [K('ESC', 6, 4), K('Z', 1, 4), K('X', 2, 7), K('C', 2, 4), K('V', 3, 7), K('B', 3, 4), K('N', 4, 7), K('M', 4, 4), K(',', 5, 7, '<'), K('.', 5, 4, '>'), K('/', 6, 7, '?'), K('F1', 0, 3), K('F2', 0, 4), K('F3', 0, 5), K('HELP', 0, 6)],
+      [K('↓', 5, 0), K('↑', 5, 3), K('←', 6, 0), K('→', 6, 3)]
+    ];
   }
   function fromLibRows(lib, keyFns) {
     return lib.map(row => row.map(k => {
@@ -80235,22 +80295,30 @@ function ScriptedAmigaEmulator() {
   RHGEN.setActive = function (mid, prof) { activeMid = mid; RHGEN._active = mid; origSetActive(mid, prof); };
 
   /* ---------- C16 koordináták (kalibrációig sor-folytonos) ---------- */
+  /* C16 koordináták — a KERNAL $E026 (unshifted) és $E067 (shifted) táblái
+     szerint; sh = a SHIFT (1,7) lenyomása is kell a betöltéshez */
   RH.c16Coord = function (ch) {
     if (!RH._c16map) {
-      RH._c16map = {};
-      const L = ['←1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '+', '-', '£', 'HOME', 'DEL'];
-      void L;
-      // a buildC16Layout sorrendjében: index → (r,c)
-      const labels = ['←', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '+', '-', '£', 'HOME', 'DEL',
-        'CTRL', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '*', '↑', 'RESTORE',
-        'RUNSTOP', 'CBM', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', ';', '=', 'RETURN',
-        'SHIFT', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 'SHIFT2', '↓', '→'];
-      labels.forEach((lab, i) => { RH._c16map[lab] = { r: Math.floor(i / 8), c: i % 8 }; });
+      RH._c16map = {
+        '\n': { r: 0, c: 1 }, ' ': { r: 7, c: 4 },
+        A: { r: 1, c: 2 }, B: { r: 3, c: 4 }, C: { r: 2, c: 4 }, D: { r: 2, c: 2 }, E: { r: 1, c: 6 }, F: { r: 2, c: 5 },
+        G: { r: 3, c: 2 }, H: { r: 3, c: 5 }, I: { r: 4, c: 1 }, J: { r: 4, c: 2 }, K: { r: 4, c: 5 }, L: { r: 5, c: 2 },
+        M: { r: 4, c: 4 }, N: { r: 4, c: 7 }, O: { r: 4, c: 6 }, P: { r: 5, c: 1 }, Q: { r: 7, c: 6 }, R: { r: 2, c: 1 },
+        S: { r: 1, c: 5 }, T: { r: 2, c: 6 }, U: { r: 3, c: 6 }, V: { r: 3, c: 7 }, W: { r: 1, c: 1 }, X: { r: 2, c: 7 },
+        Y: { r: 3, c: 1 }, Z: { r: 1, c: 4 },
+        1: { r: 7, c: 0 }, 2: { r: 7, c: 3 }, 3: { r: 1, c: 0 }, 4: { r: 1, c: 3 }, 5: { r: 2, c: 0 }, 6: { r: 2, c: 3 },
+        7: { r: 3, c: 0 }, 8: { r: 3, c: 3 }, 9: { r: 4, c: 0 }, 0: { r: 4, c: 3 },
+        '.': { r: 5, c: 4 }, ',': { r: 5, c: 7 }, '-': { r: 5, c: 6 }, '+': { r: 6, c: 6 }, ':': { r: 5, c: 5 },
+        ';': { r: 6, c: 2 }, '=': { r: 6, c: 5 }, '/': { r: 6, c: 7 }, '*': { r: 6, c: 1 }, '@': { r: 0, c: 7 }, '£': { r: 0, c: 2 },
+        '!': { r: 7, c: 0, sh: 1 }, '"': { r: 7, c: 3, sh: 1 }, '#': { r: 1, c: 0, sh: 1 }, '$': { r: 1, c: 3, sh: 1 },
+        '%': { r: 2, c: 0, sh: 1 }, '&': { r: 2, c: 3, sh: 1 }, "'": { r: 3, c: 0, sh: 1 }, '(': { r: 3, c: 3, sh: 1 },
+        ')': { r: 4, c: 0, sh: 1 }, '?': { r: 6, c: 7, sh: 1 }, '<': { r: 5, c: 7, sh: 1 }, '>': { r: 5, c: 4, sh: 1 },
+        '[': { r: 5, c: 5, sh: 1 }, ']': { r: 6, c: 2, sh: 1 }, '_': { r: 5, c: 6, sh: 1 }
+      };
     }
-    if (ch === '\n') return RH._c16map['RETURN'];
-    if (ch === ' ') return RH._c16map['SPACE'] || { r: 5, c: 0 };
-    const up = String(ch).toUpperCase();
-    return RH._c16map[up] || null;
+    if (ch === '\n') return RH._c16map['\n'];
+    if (ch === ' ') return RH._c16map[' '];
+    return RH._c16map[String(ch).toUpperCase()] || RH._c16map[ch] || null;
   };
 
   /* ---------- GLOBÁLIS AI-PÁRBESZÉDABLAK (🤖) ---------- */
@@ -80339,7 +80407,7 @@ function ScriptedAmigaEmulator() {
 
   /* ---------- v9 marker ---------- */
   RHGEN.log('[RH9] Központosított menürendszer, gépenkénti billentyűzetek, beágyazott ROM-ok és modelllista-javítások aktívak — 23 gép, 9 emulátor-mag.');
-  console.log('[RH9] RETROHUB v9 aktív: egységes menük + billentyűzetek + RHMS AI');
+  console.log('[RH9] RETROHUB v9.2.4 aktív: egységes menük + billentyűzetek + RHMS AI');
 })();
 
 </script>
