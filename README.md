@@ -1,4 +1,4 @@
-# RETROHUB v9.2.2
+# RETROHUB v9.2.3
 
 **Egyfájlos retro emulátor-platform** — 23 gép, 9 emulátormag, egységes menürendszer (RHGEN), gépenkénti virtuális billentyűzet, beépített AI. Minden egyetlen HTML-fájlban, teljesen offline.
 
@@ -41,3 +41,4 @@ A `RETROHUB.html` nem kézzel szerkesztett dokumentum: a `fejlesztes/build_v9.py
 - **v9.2** — fájlmentés minden környezetben (automatikus Blob + letöltés-fallback a claude.use nélküli oldalakon: GitHub Pages, sima böngésző), dupla `<body>` javítás, a „Claude (beépített)” AI-szolgáltató biztonságos kezelése, súgószöveg-korrekciók.
 - **v9.2.1** — ZX81 ROM-súgó korrekció (a ROM be van ágyazva), Pages-en automatikus Pollinations alapértelmezett AI-szolgáltató, boot9 verzió-jelzés.
 - **v9.2.2** — Boot-javítások: **C64** teljes BASIC-boot (SED/BIT/IRQ-maghibák, VIC $D020/$D021 színek, begépelés + RETURN végrehajtás él), **C16/Plus/4** BASIC 3.5 boot (TED-regiszterek, cold start, jiffy-IRQ), **Amiga** csak-ROM boot (lemezes boot kikapcsolva, ADF kézzel helyezhető be). Mind a 9 maggép Playwright-ellenőrzéssel bootol.
+- **v9.2.3** — **Fizikai billentyűzet-híd**: a valódi (hardveres) billentyűzet mostantól minden maggépen él (C64, C16, HT1080Z, TVC, Primo, Enterprise) — Shift+szimbólum kombinációkkal, Enter/Backspace/nyilakkal. **HT1080Z**: a videó-RAM olvasás javítva (a boot már nem tölti szeméttel a képernyőt; él a MEMORY SIZE? prompt). **C16**: a TED key-index protokoll ($FD00/$FD01) beépítve, a kulcs-események elérik a ROM pufferét. **Amiga**: mind a négy meghajtó kiiktatva a bootból (csak Kickstart/AROS ROM boot; az ADF kézzel helyezhető be). **Primo**: boot + billentyűzet ellenőrizve (PRIMO BASIC SYSTEM ’84.2 + Ok + gépelés él).
