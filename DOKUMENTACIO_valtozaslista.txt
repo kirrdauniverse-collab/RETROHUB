@@ -252,3 +252,82 @@ javítva, majd Playwright-végponti teszttel ellenőrizve.
      RequiresWebAudio=50): hang nélküli környezetben a mag 3. próbára,
      hang nélkül indul — ez tervezett viselkedés, nem hiba.
    • Verzióbélyeg: v9.2.2 (lapszám + üdvözlőképernyő).
+
+═══════════════════════════════════════════════════════════════════════════════
+  V9.2.3 — FIZIKAI BILLENTYŰZET-HÍD, HT VIDEÓ-JAVÍTÁS, AMIGA MEGHAJTÓ-KIiktatás (2026-11-07)
+═══════════════════════════════════════════════════════════════════════════════
+
+A felhasználói hibajelentés alapján: „a C64 és a TVC a virtuális gombokra
+reagál, de a valódiakra nem; a C16 és az Enterprise semmire se reagál; a
+HT1080Z furcsa karakterekkel tölti fel a képernyőt; az Amigában mégis van
+lemez; a Primo nem csinál semmit."
+
+1) FIZIKAI BILLENTYŰZET-HÍD (MINDEN MAGGÉPEN)
+   A RH-magok (C64, C16, HT1080Z, TVC, Primo, Enterprise) eddig CSAK a
+   virtuális billentyűzetről kaptak billentyűket — window-szintű
+   keydown/keyup híd nem létezett (a ZX81, a Spectrum-joystick és az Amiga
+   SAE saját kezelővel rendelkezett, ezért azok működtek). Új híd:
+   • a window keydown/keyup (capture) → e.code/e.key → a virtuális
+     billentyűzet mátrix-koordinátái → core.matrix();
+   • gépenkénti címkézés: RETURN/ENTER/BE/⏎, DEL/ERASE/⌫/CLS, nyilak,
+     SHIFT/CTRL/ALT/CAPS ragadó-kezelés fizikai lenyomásra;
+   • Shift+szimbólum: a gombok sub-címkéi alapján (pl. Shift+2 = " a C64-en);
+   • a híd nem avatkozik be INPUT/TEXTAREA mezőkben, és az Amigát az SAE
+     kezeli továbbra is;
+   • RHGEN._active: a setActive/unmount szinkronban tartja az aktív gépet.
+   ELLENŐRZÉS: C64-en fizikai gépeléssel PRINT 2+2 + Enter →  4 (teljes
+   BASIC-ciklus); a kb-mátrix bájt-szinten ellenőrizve (KeyR → kb[2]=$FD).
+
+2) HT1080Z — A KÉPERNYŐT TÖLTŐ SZEMÉTKARAKTEREK MEGSZÜNTETVE
+   Gyökérok: a memórialeképezett billentyűzet olvasása (a >= 0x3800) a
+   VIDEÓ-RAM-ot (0x3C00-0x3FFF) is billentyűzet-olvasásként kezelte, ezért a
+   Level II ROM memóriatesztje a videó-RAM írása/olvasása ellenőrzésénél
+   elbukott, és a ROM a teszt-mintát (0x40/0x13) „hajtotta végre" — a
+   képernyő @S@S mintával telt, a gép a 0x38↔0x4012 körben kórtén.
+   Javítás: a billentyűzet-térkép most csak 0x3800-0x3BFF (a videó-RAM
+   olvasása visszaállt a memóriára). A boot mostantól eljut a
+   MEMORY SIZE? promptig; a fizikai gépelés él.
+
+3) C16 — TED KEY-INDEX PROTOKOLL BEÉPÍTVE
+   A C16 billentyűzete NEM sorszkennelés: a TED automatikusan szkenneli a
+   mátrixot, a KERNAL a $FD01 (bit7 = esemény, bit3 = lenyomás) és a $FD00
+   (kulcs-index, 1-alapú) regisztereken keresztül olvassa (a KERNAL $CE1D és
+   $EA95 helyein dekódolva). Beépítés: a setKey él-érzékelésből kulcs-index
+   (sor*8+oszlop+1), a $FD01/$FD00 olvasások a protokoll szerint; a
+   keyscan-kapu ($07D8 bit7) a frame-hurokban engedélyezett 20 frame után.
+   Állás: a kulcs-események elérik a KERNAL pufferét ($03F7 gyűrű, $07D3
+   számláló — ellenőrizve); a szerkesztő-visszhang (a puffer→karakter
+   lánc végén) még kidolgozás alatt — a gép státusza RÉSZLEGES marad.
+
+4) AMIGA — MIND A NÉGY MEGHAJTÓ KIiktatva a BOOTBÓL
+   A v9.2.2-ben a DF0 kapott type=0-t; a DF1–DF3 3,5"-es meghajtóként
+   maradtak a konfigban (a Kickstart üres meghajtókkal indul). Most mind a
+   négy drive type=0: a gép tisztán a beágyazott AROS ROM-ból bootol.
+   Megjegyzés: a boot-képernyő lemezkérő grafikája (ha látszik) a ROM SAJÁT
+   része — nem jelez behelyezett lemezt; az ADF a VEZÉRLÉS csoportból
+   behelyezhető (a beszúrás type=1-re állítja vissza a DF0-t).
+
+5) PRIMO — HELYREÁLLÍTOTT DIAGNÓZIS
+   A gép valójában működik: boot → „PRIMO BASIC SYSTEM '84.2" + „Ok" +
+   villogó kurzor; a virt. gombok és a gépelés él (a korábbi „nem csinál
+   semmit" a gyors szintetikus kattintások teszthibája volt — a Primo ROM
+   128-mintás szkenne a ~0 ms lenyomást nem látja; a valós kattintás
+   50-200 ms → érzékeli). Ellenőrizve: lenyomott A → auto-repeat „aaaa…".
+   A státuszjelölés: MŰKÖDIK.
+
+6) ENTERPRISE — ISMERT HATÁR
+   A boot-logó („ENTERPRISE © 1985 Intelligent Software Ltd", színes NICK
+   animáció) él; az EXOS splash-ról a parancssorra való átváltás (és az
+   onnan induló billentyűzet-szken) még nem aktiválódik — a $B5-ös
+   billentyűzet-port olvasatlan marad, mert az EXOS a splash-ciklusban
+   futtovább. A gép státusza RÉSZLEGES marad; a v9.2.3 a fizikai híd
+   bekötése után itt is él majd, amint az EXOS átvált.
+
+7) MODUL-ELLENŐRZÉS (a felhasználó kérésére)
+   • FEJLESZTÉS: RHASM assembler (LD A,2/INC A/JR → 3E 02 3C 18 FD),
+     Memória-szerkesztő él, Játékstúdió él, BASIC alcímke él.
+   • PAINT: 32×16 rajzoló — kattintásos rajzolás működik, PNG MENTÉS gomb.
+   • HANG: tracker — Lejátszás/Stop/WAV mentés/Hangfájl-lejátszás gombok.
+   • Fájl-betöltés: C64 PRG — „test.prg betöltve a $080B címre (13 bájt)".
+   • NAPLÓ: él (412 bejegyzés-karakter a vizsgálatkor).
+   • 13 script-blokk node --check: hibátlan; verzióbélyeg v9.2.3.
