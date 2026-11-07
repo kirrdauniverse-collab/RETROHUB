@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETROHUB v9.2 — Retro emulátor platform AI támogatással</title>
+<title>RETROHUB v9.2.2 — Retro emulátor platform AI támogatással</title>
 <style>
 :root{--bg:#0b0f0b;--panel:#101810;--line:#2a5a2a;--fg:#5dff7a;--dim:#2f9a45;--hi:#d8ffe0;--warn:#ffb000;--glow:0 0 6px rgba(93,255,122,.55);--screen:#031003;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -573,8 +573,8 @@ var P=function(a){return a};
 var MODS=[
 {id:'zx81',real:1,n:'Sinclair ZX81',y:1981,k:'8',cpu:'Z80 @ 3,25 MHz',ram:'1–64 KB',res:[256,192],txt:'32×24',col:2,gfx:'block',snd:'nincs (opc. ZON X-81 AY)',st:'MŰKÖDIK',pal:['#000','#fff'],boot:'\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n(C) 1981 Sinclair Research Ltd\n\nK'},
 {id:'zxs',real:1,n:'ZX Spectrum 48K',y:1982,k:'8',cpu:'Z80A @ 3,5 MHz',ram:'48 KB',res:[256,192],txt:'32×24',col:15,gfx:'attr',snd:'beeper',st:'MŰKÖDIK',pal:['#000','#0000d7','#d70000','#d700d7','#00d700','#00d7d7','#d7d700','#d7d7d7'],boot:'\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n(C) 1982 Sinclair Research Ltd'},
-{id:'c64',real:1,n:'Commodore 64',y:1982,k:'8',cpu:'6510 @ 1 MHz',ram:'64 KB',res:[320,200],txt:'40×25',col:16,gfx:'pixel',snd:'SID 6581',st:'RÉSZLEGES (KERNAL fut, BASIC-prompt még nem jelenik meg)',pal:['#000','#fff','#883932','#67b6bd','#8b5429','#55a049','#40318d','#bfce72','#8b5429','#574200','#b86962','#505050','#787878','#94e089','#7869c4','#9f9f9f'],boot:'\n    **** COMMODORE 64 BASIC V2 ****\n\n 64K RAM SYSTEM  38911 BASIC BYTES FREE\n\nREADY.'},
-{id:'c16',real:1,n:'Commodore 16 / Plus/4',y:1984,k:'8',cpu:'7501 @ 1,76 MHz',ram:'16/64 KB',res:[320,200],txt:'40×25',col:16,gfx:'pixel',snd:'TED hang',st:'RÉSZLEGES',pal:['#000','#fff','#68372b','#70a4b2','#6f3d86','#588d43','#352879','#b8c76f','#6f4f25','#433900','#9a6759','#444','#6c6c6c','#9ad284','#6c5eb5','#959595'],boot:'\n\n**** COMMODORE BASIC 3.5 ****\n\n 60671 BASIC BYTES FREE\n\nREADY.'},
+{id:'c64',real:1,n:'Commodore 64',y:1982,k:'8',cpu:'6510 @ 1 MHz',ram:'64 KB',res:[320,200],txt:'40×25',col:16,gfx:'pixel',snd:'SID 6581',st:'MŰKÖDIK (BASIC-prompt és begépelés él)',pal:['#000','#fff','#883932','#67b6bd','#8b5429','#55a049','#40318d','#bfce72','#8b5429','#574200','#b86962','#505050','#787878','#94e089','#7869c4','#9f9f9f'],boot:'\n    **** COMMODORE 64 BASIC V2 ****\n\n 64K RAM SYSTEM  38911 BASIC BYTES FREE\n\nREADY.'},
+{id:'c16',real:1,n:'Commodore 16 / Plus/4',y:1984,k:'8',cpu:'7501 @ 1,76 MHz',ram:'16/64 KB',res:[320,200],txt:'40×25',col:16,gfx:'pixel',snd:'TED hang',st:'RÉSZLEGES (boot javítva: BASIC 3.5 felmegy; billentyűzet-mátrix következik)',pal:['#000','#fff','#68372b','#70a4b2','#6f3d86','#588d43','#352879','#b8c76f','#6f4f25','#433900','#9a6759','#444','#6c6c6c','#9ad284','#6c5eb5','#959595'],boot:'\n\n**** COMMODORE BASIC 3.5 ****\n\n 60671 BASIC BYTES FREE\n\nREADY.'},
 {id:'ht',real:1,n:'HT1080Z',y:1983,k:'8',cpu:'Z80 @ 1,77 MHz',ram:'16 KB',res:[384,192],txt:'64×16',col:2,gfx:'text',snd:'kazetta hang',st:'BETA (TRS-80 Model I szint)',pal:['#000','#fff'],boot:'\n\nRADIO SHACK TRS-80 MICROCOMPUTER\nLEVEL II BASIC\nREADY\n>'},
 {id:'tvc',real:1,n:'Videoton TVC 64+',y:1986,k:'8',cpu:'Z80 @ 3,5 MHz',ram:'64 KB',res:[512,240],txt:'32×24 / 40×25',col:16,gfx:'text',snd:'beep',st:'RÉSZLEGES (kijelzés korlátozott)',pal:['#000','#f00','#0f0','#ff0','#00f','#f0f','#0ff','#fff'],boot:'\n\n\n\nTVC 64+\nVIDEOTON\n\nREADY'},
 {id:'primo',real:1,n:'Primo B-64',y:1984,k:'8',cpu:'U880D (Z80) @ 3,5 MHz',ram:'64 KB',res:[256,192],txt:'32×24',col:2,gfx:'text',snd:'beep',st:'MŰKÖDIK (kijelzés közelítő)',pal:['#000','#fff'],boot:'\n\n\n\n\n\nPRIMO B64\n\nReady'},
@@ -600,7 +600,7 @@ function tools(m){return (window.RHGEN?RHGEN.TOOLS:[]).slice();}
 var cur=null,loaded=null,filter='all',bootT=null,$=function(s){return document.querySelector(s)};
 var term=$('#term');
 function show(t,cursor){term.innerHTML='';term.appendChild(document.createTextNode(t));if(cursor!==false){var c=document.createElement('span');c.className='blk';term.appendChild(c)}}
-function home(){show('\n  RETROHUB  v9.2\n  ================\n\n  Válassz modult a bal oldali listából,\n  majd nyomd meg a ▶ gombot.\n\n  Moduláris, 8 és 16 bites gépekhez.\n\n  READY.\n')}
+function home(){show('\n  RETROHUB  v9.2.2\n  ================\n\n  Válassz modult a bal oldali listából,\n  majd nyomd meg a ▶ gombot.\n\n  Moduláris, 8 és 16 bites gépekhez.\n\n  READY.\n')}
 function renderList(){var l=$('#list');l.innerHTML='';MODS.filter(function(m){return filter==='all'||m.k===filter}).forEach(function(m){var d=document.createElement('div');d.className='mod'+(cur===m?' sel':'');
  d.innerHTML='<span class="n"></span><span class="badge"></span><span class="m"></span>';
  d.children[0].textContent=m.n;d.children[1].textContent=loaded===m?'FUT':(m.st||((m.k==='con'?'KONZOL':m.k+' BIT')));if(loaded===m)d.children[1].className='badge run';d.children[1].title=m.st||'';
@@ -7013,8 +7013,8 @@ class Cpu6502 {
     if (this.p & DF) {
       // BCD mode - ritkán használt, de implementáljuk
       let lo = (this.a & 0x0F) + (v & 0x0F) + (this.p & CF ? 1 : 0);
-      let hi = (this.a >> 4) + (v >> 4);
-      if (lo > 9) { lo += 6; hi++; }
+      let hi = (this.a >> 4) + (v >> 4) + (lo > 9 ? 1 : 0); /* carry a tagdecerek közé */
+      if (lo > 9) { lo -= 10; }
       let res = (hi << 4) | (lo & 0x0F);
       this.setFlags(CF | VF, (hi > 9 ? CF : 0) | (((~(this.a ^ v) & (this.a ^ res) & 0x80) ? VF : 0)));
       this.setZN(res & 0xFF);
@@ -7068,7 +7068,7 @@ class Cpu6502 {
     return r;
   }
   bit(v) {
-    this.setFlags(ZF | NF | VF, (v & this.a) === 0 ? ZF : 0 | (v & (NF | VF)));
+    this.setFlags(ZF | NF | VF, (((v & this.a) === 0 ? ZF : 0) | (v & (NF | VF))));
   }
 
   step() {
@@ -7078,7 +7078,7 @@ class Cpu6502 {
       this.nmiPending = false;
       this.push((this.pc >> 8) & 0xFF);
       this.push(this.pc & 0xFF);
-      this.push((this.p | BF) & ~IF);
+      this.push((this.p & ~BF) | 0x20); /* hardver NMI: B=0, bit5=1 (6502 viselkedés) */
       this.pc = this.bus.read(0xFFFA) | (this.bus.read(0xFFFB) << 8);
       this.setFlags(IF, IF);
       this.cycles += 7;
@@ -7089,7 +7089,7 @@ class Cpu6502 {
       this.irqPending = false;
       this.push((this.pc >> 8) & 0xFF);
       this.push(this.pc & 0xFF);
-      this.push((this.p | BF) & ~IF);
+      this.push((this.p & ~BF) | 0x20); /* hardver IRQ: B=0, bit5=1 (6502 viselkedés) */
       this.pc = this.bus.read(0xFFFE) | (this.bus.read(0xFFFF) << 8);
       this.setFlags(IF, IF);
       this.cycles += 7;
@@ -7372,6 +7372,7 @@ const PROFILES = {
     defaultFg: 2,    // white
     defaultBg: 0,    // black
     charRomOffset: 0,
+    zeroColorIs: 1,  // a KERNAL a szín-RAM-ot kinullázza (a TED színregisztere nincs emulálva): 0 = fehér szöveg
   },
 };
 
@@ -7530,10 +7531,18 @@ class C64Family {
 
   render(rgba) {
     const p = this.profile;
-    const W = 320, H = 200;
-    const bg = C64_COLORS[this.border & 0x0F] || C64_COLORS[0];
+    const W = 320;
+    const H = Math.floor(rgba.length / 4 / W);
+    /* VIC border ($D020) és képernyő-háttér ($D021) a RAM-ból — így a
+       KERNAL bootja után a klasszikus világoskék keret + kék háttér jelenik meg,
+       és a szöveg látható (korábban minden a border színével feszült). */
+    const borderC = C64_COLORS[this.mem[0xD020] & 0x0F] || C64_COLORS[14];
+    const bgC = C64_COLORS[this.mem[0xD021] & 0x0F] || borderC;
+    const oy = Math.max(0, Math.floor((H - p.rows * 8) / 2));
     // Border
     for (let y = 0; y < H; y++) {
+      const inScreen = y >= oy && y < oy + p.rows * 8;
+      const bg = inScreen ? bgC : borderC;
       for (let x = 0; x < W; x++) {
         const o = (y * W + x) * 4;
         rgba[o] = bg[0]; rgba[o + 1] = bg[1]; rgba[o + 2] = bg[2]; rgba[o + 3] = 255;
@@ -7541,13 +7550,14 @@ class C64Family {
     }
     // Képernyő tartalom (40x25 karakter)
     const cw = 8, ch = 8;
-    const ox = 0, oy = 0;
+    const ox = 0;
     for (let row = 0; row < p.rows; row++) {
       for (let col = 0; col < p.cols; col++) {
         const addr = (p.videoBase + row * p.cols + col) & 0xFFFF;
         const charCode = this.mem[addr];
         const colorAddr = (p.colorBase + row * p.cols + col) & 0xFFFF;
-        const color = this.mem[colorAddr] & 0x0F;
+        let color = this.mem[colorAddr] & 0x0F;
+        if (p.zeroColorIs !== undefined && color === 0) color = p.zeroColorIs;
         const fg = C64_COLORS[color] || C64_COLORS[1];
         // A karakter bitmap
         let bitmap = [0,0,0,0,0,0,0,0];
@@ -78656,17 +78666,49 @@ function ScriptedAmigaEmulator() {
   /* ================= C16 / Plus/4 ================= */
   function makeC16() {
     const m = new C64Family('c16');
-    m.loadRoms({ basic: b64u8(ROM.c16low), kernal: b64u8(ROM.c16high), char: b64u8(ROM.c64char) });
-    /* C16 memóriatérkép: $8000-$BFFF BASIC ROM, $C000-$FFFF KERNAL ROM */
+    /* C16 memóriatérkép: $8000-$BFFF BASIC ROM, $C000-$FFFF KERNAL ROM.
+       FONTOS: a felülírást a loadRoms() ELŐTT telepítjük, hogy a reset-vektor
+       olvasása ($FFFC) már a helyes térképen történjen (a dump $C000-tól indul). */
     const origRead = m.readMem.bind(m);
     m.readMem = function (a) {
       a &= 0xFFFF;
+      /* TED regiszterek ($FF00-$FF1F) a KERNAL ROM fölött állnak:
+         $FF09 bit1 = TED időzítő-IRQ (a jiffy + kurzor ehhez fut),
+         $FF1D = hang-generátor visszolvasás; a KERNAL $CE8A-nál addig vár,
+         amíg ≥ $A3 — ROM-bájtot visszaadva örök körbe ragadna. */
+      if (a === 0xFF09) return origRead(a) | 0x02;
+      if (a === 0xFF1D) return 0xA3;
       if (a >= 0x8000 && a < 0xC000 && m.romBasic) return m.romBasic[a - 0x8000];
       if (a >= 0xC000 && m.romKernal) return m.romKernal[a - 0xC000];
       return origRead(a);
     };
     const origWrite = m.writeMem.bind(m);
     m.writeMem = function (a, v) { a &= 0xFFFF; v &= 0xFF; if (a === 0 || a === 1) return origWrite(a, v); m.mem[a] = v; };
+    m.loadRoms({ basic: b64u8(ROM.c16low), kernal: b64u8(ROM.c16high), char: null });
+    /* a C16 karakterkészlete a KERNAL ROM-ban van ($D000-$DFFF) */
+    if (m.romKernal && m.romKernal.length >= 0x2000) m.romChar = m.romKernal.subarray(0x1000, 0x2000);
+    /* Boot-javítás: a KERNAL a $F49C-nél a gépnyelvi monitor parancspromptjára lép
+       (a dump $8006-os bájtja 0, így a KERNAL nem találja a BASIC-bankot).
+       Itt a saját BASIC cold startjára ugrik ($8019) — minden init után, ezért
+       már élő I/O-vektorokkal fut le: banner + READY. */
+    if (m.romKernal) { m.romKernal[0x349C] = 0x4C; m.romKernal[0x349D] = 0x19; m.romKernal[0x349E] = 0x80; }
+    /* a loadRoms() a régi (hibás) térképpel resetelt — most, a jó térképpel újra */
+    m.reset();
+    /* a C16 szín-RAM ($0800) alapértelmezése fehér (1) — a KERNAL a színeket
+       nem írja felül bootnál, feketén feketén láthatatlan lenne a szöveg */
+    m.mem.fill(1, 0x0800, 0x0C00);
+    /* TED jiffy-IRQ: ~1/50 s PAL (1,76 MHz / 35200 ciklus) */
+    m.runFrame = function () {
+      const cpu = m.cpu;
+      const end = cpu.cycles + 35200;
+      let guard = 0;
+      while (cpu.cycles < end && guard++ < 900000) {
+        if (cpu.halted) { cpu.cycles += 1; break; }
+        cpu.step();
+      }
+      cpu.irq();
+      m.frames++;
+    };
     const core = {
       f: m,
       get mem() { return m.mem; },
@@ -78970,8 +79012,12 @@ function ScriptedAmigaEmulator() {
         const saeSet = (dst, name, data) => { dst.clr(); dst.name = name; dst.data = data; dst.size = data.length; dst.crc32 = false; };
         saeSet(cfg.memory.rom, 'aros.rom', rom);
         saeSet(cfg.memory.extRom, 'aros.ext', ext);
+        /* Csak ROM boot: a DF0 meghajtót kiiktatjuk a bootból (type = 0), így a
+           gép nem próbál lemezről indulni — csak a ROM képernyője jelenik meg.
+           ADF továbbra is kézzel behelyezhető a VEZÉRLÉS csoportból. */
+        cfg.floppy.drive[0].type = 0;
         this._sae = sae; this._cfg = cfg;
-        say('SAE indítása (AROS ROM, A500)…');
+        say('SAE indítása (AROS ROM, A500, lemezes boot nélkül)…');
         const self = this;
         sae.start().then(err => {
           if (err !== 0 && cfg.audio.mode >= 2) {
