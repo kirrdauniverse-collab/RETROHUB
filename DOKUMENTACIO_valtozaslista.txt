@@ -428,3 +428,56 @@ billentyűzetet görgette elő, a képernyő csúszott ki).
      " 4" virtuális RETURN-nel / ZX Spectrum saját billentyűzete látszik / egyetlen
      gépnél sincs görgetés / asztali nézet változatlan / nincs JS-hiba.
    • 14 script-blokk node --check: hibátlan; verzióbélyeg v9.2.5.
+
+================================================================================
+v9.2.6 (2026-11-09) — HT1080Z: billentyűzet polaritás + teljes kalibráció
+================================================================================
+
+1) HT1080Z BILLentyűZET-POLARITÁS JAVÍTÁS (a gyökérok)
+   • CPU-nyomkövetéssel (PC-trace a $03EB-es ROM-szkennerben) kimutatva: a ROM
+     a (new^old)&new él-detektort használja — vagyis AKTÍV-MAGAS billentyű-
+     adatot vár (lenyomott billentyű = SET bit). Az emulátor eddig aktív-
+     alacsonyt adott vissza → a ROM fantom '0. soros' eseményeket látott,
+     a karakterek torzultak, a SHIFT-állapot állandóan 'nyomva' volt.
+   • A $3801-$3880 memória-térképes olvasás és a $FE/$FF port-olvasás most
+     invertált visszaadással működik; a nem-one-hot címek 0x00-t adnak
+     (aktív-magasban 'nincs billentyű'). Az árnyék-állapot ($4036-$403D)
+     inicializálása 0x00 (a ROM saját RAM-initje is ezt várja).
+
+2) HT1080Z BILLentyűZET-TÉRKÉP: TELJES EMPRIKUS KALIBRÁCIÓ
+   • Mátrix-szken (mind a 64 pozíció lenyomása → képernyő-válasz olvasása)
+     alapján a ROM-valódi térkép:
+       c=0: @ A B C D E F G   c=1: H I J K L M N O   c=2: P Q R S T U V W
+       c=3: X Y Z [ \ ] ^ _   c=4: 0 1 2 3 4 5 6 7   c=5: 8 9 : ; , - . /
+   • Különleges gombok (a $0050-es ROM-dekóder tábla szerint, index =
+     (keycode-48)*2): (0,6)=ENTER, (1,6)=CLEAR képernyő, (2,6)=BREAK,
+     (3,6)='[', (4,6)=↓, (5,6)=← (rubout), (6,6)=TAB, (7,6)=SPACE,
+     (0,7)=SHIFT, (1,7)=RESET.
+   • SHIFT-kombók (kalibrálva): 1..7 = !"#$%&'  és  8 9 : ; , - . / =
+     ( ) * + < = > ? — a klasszikus TRS-80 elrendezés.
+   • A RH_HTKB (rows/map/shmap/phys), a core.typeText ENTER- és SHIFT-
+     pozíciója, valamint a virtuális billentyűzet felület mind az új
+     térképet használja.
+
+3) HT1080Z AUTO-BOOT-VÁLASZ
+   • A ROM bootja 'READY ?' kérdés-állapotban megáll — négy ENTER viszi a
+     gépet a valódi BASIC '>' promptig. A mag futtató-hurokja most
+     figyeli a képernyő első sorát: amíg 'READY ?' látszik (és nincs '>'),
+     automatikusan ENTER-t küld ~0,5 s-enként; a '>' promptnál leáll.
+   • Eredmény: betöltés után ~4-6 s-mal magától a BASIC-promptnál vár a gép.
+
+4) ELLENŐRZÉS (Playwright)
+   • HT1080Z: auto-boot → '>' prompt; typeText('PRINT 1+1') → ' 2';
+     typeText('PRINT 2+3') → ' 5' (a SHIFT-útvonal is él); virtuális és
+     fizikai gombok begépelése a képernyőn jelenik meg.
+   • Enterprise: IS-BASIC boot ('ok' prompt) + virtuális billentyűzettel
+     'print 11' begépelése → eredmény '11' + 'ok' (VLM-leolvasással
+     ellenőrizve).
+   • C16: virtuális gomb + fizikai keydown + typeText mind működik
+     ('PRINT 2+2' → SYNTAX ERROR a korábbi teszt-maradék 'PP' előtaggal —
+     a begépelés lánc ép).
+   • Amiga: floppy.drive[0].type=0, nincs lemezkép a bootban; a képernyő az
+     AROS ROM 'Kitty' (kék macskaszem) logóját mutatja — ez a ROM-only
+     boot helyes képe (nem 'lemezes boot').
+   • Primo: 'PRIMO BASIC SYSTEM '84.2' + 'Ok' prompt — rendben bootol.
+   • 14 script-blokk node --check: hibátlan; verzióbélyeg v9.2.6.
