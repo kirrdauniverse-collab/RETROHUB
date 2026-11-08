@@ -386,3 +386,45 @@ de nem reagált; a HT1080Z hibát írt és folyamatosan újraindult; az Amiga bo
    • 13 script-blokk node --check: hibátlan; verzióbélyeg v9.2.4.
    • Tesztek: mind a 9 maggép bootol hibajelentés nélkül; C16-on PRINT 2+2
      begépelve és lefuttatva; HT-n stabil READY prompt.
+───────────────────────────────────────────────────────────────────────────────
+v9.2.5 (2026-11-08) — MOBIL NÉZET ÚJRATERVEZÉSE (felhasználói visszajelzés)
+───────────────────────────────────────────────────────────────────────────────
+Hibajelenség mobilon: a gépválasztó csempék felül nagy helyet ettek, a képernyőt
+és a billentyűzetet nem lehetett egyszerre látni (görgetni kellett — ha a
+billentyűzetet görgette elő, a képernyő csúszott ki).
+
+1) GÉPLISTA FióKBAN (alul felhúzható)
+   • Az aside (gépválasztó) mobilon kikerül a lap tetejéről: a képernyő alatti
+     vezérlősor "☰ Gépek" gombja hívja, alulról felcsúszó fiókként jelenik meg
+     (GÉPVÁLASZTÓ fejléc + ✕ Bezár + kategória-lapok + géplista).
+   • Gépválasztás után, vagy a fiókon kívüli koppintásra automatikusan csukódik.
+   • A téma-gombok (Zöld/Borostyán/Jég/Papír), az 🤖 AI és a Fejlesztői központ
+     mobilon a fiók "NÉZET / ESZKÖZÖK" sorába költöznek — a fejléc egyetlen
+     vékony (~33 px) sor marad. Asztalon (>=821 px) minden a régi helyén.
+   • A mozgatás DOM-node mozgatással történik (az eseménykezelők megmaradnak);
+     media-query váltásnál (telefon forgatása, ablak átméretezése) a gombok
+     vissza-/odaköltöznek.
+
+2) KÉPERNYŐ + BILLENTYŰZET EGYSZERRE, GÖRGETÉS NÉLKÜL
+   • A stage mobilon nem görgethető: rugalmas (flex) oszlop — a CRT-képernyő
+     összehúzható (min. ~96 px), a billentyűzet max. 36vh (saját görgetéssel),
+     a vezérlősorok tömörítettek. Kép + vezérlés + billentyűzet a viewportban.
+   • A v9.1-es .bezel min-height clamp mobilon felülírva (source-order javítás:
+     a v9.1 szabály a CSS-végén a korábbi mobil felülírást lenyomta).
+   • Rövid képernyőn (max-height 520 px) további tömörítés (bezel 64 px, kb 30vh).
+
+3) VALÓDI HIBÁK, AMIKET A MOBIL-JAVÍTÁS FELTÁRT ÉS JAVÍTOTT
+   • A generikus v9 billentyűzet-rács (#rh-kb-grid) kulcseinek hiányzó
+     min-width:0-ja miatt a rács min-content szélessége (~790 px) széthúzta a
+     layoutot mobilon (vízszintes görgetés, kicsúszó vezérlők). Most
+     összehúzható; a ZX saját rácsa ezt már korábban kezelte.
+   • position:fixed fiók mobilon megbízhatatlan (a layout-viewport az ICB-hez
+     rögzíti, az elem a viewport alá csúszik) → absolute pozíció a main-en
+     belül, ami pontosan a header és a footer közti területet fedi.
+   • A footer hosszú MODUL-API sora mobilon rejtve (kb. 102 px-ről 1 sorra).
+
+4) ELLENŐRZÉS (Playwright: 390×844 touch + 1280×800 asztal)
+   • 24/24 ellenőrzés él: FAB látszik / fiók nyit-zár / C64 boot + PRINT 2+2 →
+     " 4" virtuális RETURN-nel / ZX Spectrum saját billentyűzete látszik / egyetlen
+     gépnél sincs görgetés / asztali nézet változatlan / nincs JS-hiba.
+   • 14 script-blokk node --check: hibátlan; verzióbélyeg v9.2.5.
