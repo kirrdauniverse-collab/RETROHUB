@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETROHUB v9.2.6 — Retro emulátor platform AI támogatással</title>
+<title>RETROHUB v9.2.6.1 — Retro emulátor platform AI támogatással</title>
 <style>
 :root{--bg:#0b0f0b;--panel:#101810;--line:#2a5a2a;--fg:#5dff7a;--dim:#2f9a45;--hi:#d8ffe0;--warn:#ffb000;--glow:0 0 6px rgba(93,255,122,.55);--screen:#031003;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -344,7 +344,7 @@ section.stage{gap:8px;padding:10px 12px}
 <body>
 <div id="app">
 <header>
- <div class="logo">RETRO<b>HUB</b> <span style="font-size:18px;color:var(--dim)">v9.2.5</span></div>
+ <div class="logo">RETRO<b>HUB</b> <span style="font-size:18px;color:var(--dim)">v9.2.6.1</span></div>
  <div class="row"><span style="color:var(--dim)">SZÍN:</span>
   <button data-t="green" class="on">Zöld</button><button data-t="amber">Borostyán</button><button data-t="ice">Jég</button><button data-t="light">Papír</button>
   <button id="rh-aibtn" title="Globális AI-programozó beállítások">🤖 AI</button><button id="devbtn" disabled>Fejlesztői központ [F12]</button></div>
@@ -652,7 +652,7 @@ function tools(m){return (window.RHGEN?RHGEN.TOOLS:[]).slice();}
 var cur=null,loaded=null,filter='all',bootT=null,$=function(s){return document.querySelector(s)};
 var term=$('#term');
 function show(t,cursor){term.innerHTML='';term.appendChild(document.createTextNode(t));if(cursor!==false){var c=document.createElement('span');c.className='blk';term.appendChild(c)}}
-function home(){show('\n  RETROHUB  v9.2.6\n  ================\n\n  Válassz modult a bal oldali listából,\n  majd nyomd meg a ▶ gombot.\n\n  Moduláris, 8 és 16 bites gépekhez.\n\n  READY.\n')}
+function home(){show('\n  RETROHUB  v9.2.6.1\n  ================\n\n  Válassz modult a bal oldali listából,\n  majd nyomd meg a ▶ gombot.\n\n  Moduláris, 8 és 16 bites gépekhez.\n\n  READY.\n')}
 function renderList(){var l=$('#list');l.innerHTML='';MODS.filter(function(m){return filter==='all'||m.k===filter}).forEach(function(m){var d=document.createElement('div');d.className='mod'+(cur===m?' sel':'');
  d.innerHTML='<span class="n"></span><span class="badge"></span><span class="m"></span>';
  d.children[0].textContent=m.n;d.children[1].textContent=loaded===m?'FUT':(m.st||((m.k==='con'?'KONZOL':m.k+' BIT')));if(loaded===m)d.children[1].className='badge run';d.children[1].title=m.st||'';
@@ -79346,7 +79346,8 @@ function ScriptedAmigaEmulator() {
     let lastErr = null;
     for (const u of urls) {
       try {
-        const r = await fetch(u, { headers: c.key ? { 'Authorization': 'Bearer ' + c.key } : {} });
+        const mlc = new AbortController(); const mlt = setTimeout(() => mlc.abort(), 15000);
+        let r; try { r = await fetch(u, { headers: c.key ? { 'Authorization': 'Bearer ' + c.key } : {}, signal: mlc.signal }); } finally { clearTimeout(mlt); }
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const j = await r.json();
         let models = [];
@@ -79365,7 +79366,7 @@ function ScriptedAmigaEmulator() {
   };
 
   /* ---------- chat (egyetlen válasz szöveg) ---------- */
-  RHAI.chat = async function (prompt, system, history) {
+  RHAI.chat = async function (prompt, system, history, ms) {
     const tryChain = RHAI.night
       ? [RHAI.prov, 'pollinations'].filter((v, i, a) => a.indexOf(v) === i)
       : [RHAI.prov];
@@ -79378,11 +79379,15 @@ function ScriptedAmigaEmulator() {
         if (system) msgs.push({ role: 'system', content: system });
         (history || []).forEach(h => msgs.push(h));
         msgs.push({ role: 'user', content: prompt });
-        const r = await fetch(c.base.replace(/\/$/, '') + '/chat/completions', {
-          method: 'POST',
-          headers: headers(c),
-          body: JSON.stringify({ model: c.model || 'openai', messages: msgs, temperature: 0.6 })
-        });
+        const chc = new AbortController(); const cht = setTimeout(() => chc.abort(), ms || 120000);
+        let r; try {
+          r = await fetch(c.base.replace(/\/$/, '') + '/chat/completions', {
+            method: 'POST',
+            headers: headers(c),
+            signal: chc.signal,
+            body: JSON.stringify({ model: c.model || 'openai', messages: msgs, temperature: 0.6 })
+          });
+        } finally { clearTimeout(cht); }
         if (!r.ok) {
           const t = await r.text().catch(() => '');
           throw new Error('HTTP ' + r.status + (t ? ': ' + t.slice(0, 120) : ''));
@@ -79391,7 +79396,7 @@ function ScriptedAmigaEmulator() {
         const txt = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
         if (!txt) throw new Error('üres válasz');
         return txt;
-      } catch (e) { lastErr = e; }
+      } catch (e) { lastErr = (e && e.name === 'AbortError') ? new Error('Időtúllépés / megszakítva') : e; }
     }
     throw new Error(lastErr ? lastErr.message : 'nincs beállított szolgáltató');
   };
@@ -80486,7 +80491,7 @@ function ScriptedAmigaEmulator() {
 
   /* ---------- v9 marker ---------- */
   RHGEN.log('[RH9] Központosított menürendszer, gépenkénti billentyűzetek, beágyazott ROM-ok és modelllista-javítások aktívak — 23 gép, 9 emulátor-mag.');
-  console.log('[RH9] RETROHUB v9.2.6 aktív: egységes menük + billentyűzetek + RHMS AI — mobil: géplista fiókban');
+  console.log('[RH9] RETROHUB v9.2.6.1 aktív: egységes menük + billentyűzetek + RHMS AI — mobil: géplista fiókban');
 })();
 
 </script>

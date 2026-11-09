@@ -71,7 +71,8 @@
     let lastErr = null;
     for (const u of urls) {
       try {
-        const r = await fetch(u, { headers: c.key ? { 'Authorization': 'Bearer ' + c.key } : {} });
+        const mlc = new AbortController(); const mlt = setTimeout(() => mlc.abort(), 15000);
+        let r; try { r = await fetch(u, { headers: c.key ? { 'Authorization': 'Bearer ' + c.key } : {}, signal: mlc.signal }); } finally { clearTimeout(mlt); }
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const j = await r.json();
         let models = [];
@@ -90,7 +91,7 @@
   };
 
   /* ---------- chat (egyetlen válasz szöveg) ---------- */
-  RHAI.chat = async function (prompt, system, history) {
+  RHAI.chat = async function (prompt, system, history, ms) {
     const tryChain = RHAI.night
       ? [RHAI.prov, 'pollinations'].filter((v, i, a) => a.indexOf(v) === i)
       : [RHAI.prov];
@@ -103,11 +104,15 @@
         if (system) msgs.push({ role: 'system', content: system });
         (history || []).forEach(h => msgs.push(h));
         msgs.push({ role: 'user', content: prompt });
-        const r = await fetch(c.base.replace(/\/$/, '') + '/chat/completions', {
-          method: 'POST',
-          headers: headers(c),
-          body: JSON.stringify({ model: c.model || 'openai', messages: msgs, temperature: 0.6 })
-        });
+        const chc = new AbortController(); const cht = setTimeout(() => chc.abort(), ms || 120000);
+        let r; try {
+          r = await fetch(c.base.replace(/\/$/, '') + '/chat/completions', {
+            method: 'POST',
+            headers: headers(c),
+            signal: chc.signal,
+            body: JSON.stringify({ model: c.model || 'openai', messages: msgs, temperature: 0.6 })
+          });
+        } finally { clearTimeout(cht); }
         if (!r.ok) {
           const t = await r.text().catch(() => '');
           throw new Error('HTTP ' + r.status + (t ? ': ' + t.slice(0, 120) : ''));
@@ -116,7 +121,7 @@
         const txt = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
         if (!txt) throw new Error('üres válasz');
         return txt;
-      } catch (e) { lastErr = e; }
+      } catch (e) { lastErr = (e && e.name === 'AbortError') ? new Error('Időtúllépés / megszakítva') : e; }
     }
     throw new Error(lastErr ? lastErr.message : 'nincs beállított szolgáltató');
   };
