@@ -260,6 +260,8 @@
     function keyP(r, c, d) { if (r >= 0 && r < 8 && c >= 0 && c < 8) { if (d) kbRow[r] &= ~(1 << c) & 0xFF; else kbRow[r] |= (1 << c); } }
     const core = {
       _cpu: cpu,
+      /* v9.3: a billentyű-mátrix kifelé látható — a pillanatkép-modul sorosítja */
+      _kb: kbRow,
       get mem() { return mem; },
       mount(cv) {
         /* 64×16 karakter, 8×12 cella → 512×192, zöld; Z80 @ 1,77 MHz, 60 Hz */

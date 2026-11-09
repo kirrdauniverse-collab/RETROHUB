@@ -481,3 +481,144 @@ v9.2.6 (2026-11-09) — HT1080Z: billentyűzet polaritás + teljes kalibráció
      boot helyes képe (nem 'lemezes boot').
    • Primo: 'PRIMO BASIC SYSTEM '84.2' + 'Ok' prompt — rendben bootol.
    • 14 script-blokk node --check: hibátlan; verzióbélyeg v9.2.6.
+
+================================================================================
+v9.3 (2026-11-09) — PILLANATKÉP-MENTÉS (SNAPSHOT) + ZX81 ROM SORRENDJAVÍTÁS
+================================================================================
+
+A v9.3 egy nagyobb funkciókör és egy valódi hibajavítás: a futó emulátor-mag
+állapota mostantól MENTHETŐ és VISSZATÖLTHETŐ (böngésző-tárolóba és .rhsnap
+fájlba), valamint javításra került a ZX81 beágyazott ROM-jának betöltési
+sorrendje, ami a v9.2.x-ben friss böngészőben mindig elmaradt.
+
+1) PILLANATKÉP-MODUL (RH_SNAP — fejlesztes/v9/snap.js, új build-komponens)
+----------------------------------------------------------------------------
+   • MENTÉS KÉT ÚTON:
+       - "💾 Mentés a böngészőbe" → localStorage (kulcs: rhsnap.<gép>.<idólépték>);
+         gépenként TÖBB pillanatkép, listában (időbélyeg + típus + méret),
+         "Betöltés" és "✕" (törlés) gombokkal. Ha a tároló megtelik, őszinte
+         magyar hibaüzenet kéri egy régi törlését vagy fájlba mentést.
+       - "💾 Mentés fájlba (.rhsnap)" → a letöltés minden környezetben él
+         (Blob + <a download> fallback); a .rhsnap kiterjesztés felkerült a
+         ZIP-csomagolást kerülő ZX_DL_OK listára.
+   • BETÖLTÉS: listáról (böngésző) vagy "📂 Betöltés fájlból" (.rhsnap / .json).
+     A fájl bármely RETROHUB-példányra visszatölthető (JSON boríték:
+     fmt=RETROHUB-SNAP, ver=1, hub, machine, kind, created).
+   • FORMÁTUM (kind=state): CPU-regiszterek (Z80/6502 unió-lista — a
+     mezőinek csak a létező, szám/logikai mezői utaznak, ezért verzióbiztos),
+     memóriaképek base64-ben (c64/c16/ht: 64K ram; tvc/primo/ent: ram + vram),
+     valamint gépenkénti periféria-állapot (lásd 2. pont). A restaurálás a
+     célmezőket írja vissza HA azok léteznek — régebbi/újabb build között is
+     csak az értelmezett mezők töltődnek vissza.
+   • FORMÁTUM (kind=sna / kind=z81): a legacy Spectrum- és ZX81-mag NEM
+     állapot-sorosításba került, hanem a SAJÁT, natív formátumát használja:
+       - zxs: 48K SNA bináris (engine.saveSNA / engine.loadSNA — 49179 bájt),
+       - zx81: .z81 szöveges EightyOne-formátum (z81SnapSave / z81Z81Load).
+     A .rhsnap fájl mindkettőt becsomagolja (data mező: b64 / szöveg).
+   • ELHELYEZKEDÉS:
+       - a 7 új-mag gép (c64, c16, ht, tvc, primo, ent + Amiga-jegyzet):
+         a FEJLESZTŐI KÖZPONT → VEZÉRLÉS csoportban, saját "Pillanatkép"
+         szakasz (a pCtrl-ból hívott RH_SNAP.ctrlPane);
+       - zxs és zx81: a legacy fejlesztői központ ÚJ eszközfülje
+         ("Pillanatkép") — a zxs a tiles/toolview mintát követve saját
+         szakaszba (#rh-snap-sec), a zx81 .z81tool szakaszba (#z81t-snap)
+         készül futásidőben; a többi fül változatlanul él;
+       - a régi 💾 gomb (modul.snap) mostantól ténylegesen ment (a futó
+         mag állapotát), nem csak szöveges magyarázatot ad.
+   • VÉDELMEK: művelet csak futó maggal (aktív gép) lehetséges — máskülönben
+     pontos magyar tájékoztató ("indítsd el a gépet ▶"); gép-egyezés
+     ellenőrizve (a más géphez készült fájl nem tölthető be az aktív gépre);
+     minden localStorage-művelet try/catch-ben (sandboxbiztos).
+   • AMIGA: a SAE mag belső állapota nem sorosítható — a VEZÉRLÉS csoport
+     Pillanatkép szakasza ezt őszintén írja; az ADF lemezműveletek élnek.
+
+2) MAGONKÉNTI ÁLLAPOT (mi kerül a pillanatképbe)
+----------------------------------------------------------------------------
+   c64:    6502 regiszterek (a,x,y,sp,pc,p,cycles,halted,irq/nmi), RAM 64K,
+           IO-port ($0000/$0001: ioPort + ddr), border, frames, 8 bájtos
+           billentyű-mátrix, CIA1 Timer-A (latch/cnt/cra/ier/icr)
+   c16:    mint a c64 (CIA nélkül) + TED kulcs-index (tedKeyIdx) és
+           TED sor-latch (tedRowSel)
+   ht:     Z80 regiszterek, RAM 64K (a $3800-as memórialeképezett
+           billentyűzet állapotával együtt), 8 bájtos kbRow — a mátrix
+           mostantól kifelé látható (core._kb, build-komponensben is)
+   tvc:    Z80, RAM 64K + VRAM 64K, MC6845 CRTC (18 regiszter + cím),
+           bankolás (bank1/3/4, vramBank1/3, vramScreen), videoMode,
+           border, paletta, billentyű-sorok (16×8), hang-portok,
+           kazetta-flipflop, intFlipflop, frameCount
+   primo:  Z80, RAM 48K + VRAM 16K, portFD memória-konfiguráció,
+           KI-1 bitek (nmiEnabled, speaker, displayPage), keyGroups (4×16)
+   ent:    Z80, RAM 64K + VRAM 64K, Dave (irqStatus/irqEnable, szegmens-
+           tábla, hangregiszter-tükör 32 bájt, selIntHz/acc), Nick
+           (FIXBIAS, BORDER, LPL/LPH, lptFlags/Addr, LD1/LD2, LPT.COL)
+
+3) HIBAJAVÍTÁS — ZX81 BEÁGYAZOTT ROM SOSEM TÖLTŐDÖTT BE (a v9.2.x valós hibája)
+----------------------------------------------------------------------------
+   Jelenség: friss böngészőben a ZX81 nem bootolt ("Előbb töltsd be a
+   ZX81 ROM-ot (8 KB)"), a #z81-romst jelző ✗ maradt; a pillanatkép sem
+   volt használható (nincs futó mag).
+   Gyökérok: a build_v9.py a beágyazott ROM-initet a ZX81-modul
+   (zx81_3) VÉGÉRE fűzte, ami a generált HTML-ben az RH_ROMS definiáló
+   scriptblokk ELŐTTI blokkban fut. A init pillanatában window.RH_ROMS
+   még NEM létezett → a feltétel hamis → a try/catch elnyelte → a ROM
+   soha nem töltődött be. (A hiba a v9.2.1-től állt fenn.)
+   Javítás kettős:
+     a) build_v9.py: az init az RH_ROMS blokkjába került (roms_js +=),
+        így a jövőbeli buildekben a definíció UTÁN fut;
+     b) a pillanatkép-modul prologusa utoljára fut, és ha Z81.rom még
+        mindig üres (pl. régebbi builden), pótolja a betöltést — így a
+        kiszállított, patchelt RETROHUB.html is javul.
+   Ellenőrzés (Playwright, friss kontextus): betöltés után Z81.rom = 8192
+   bájt; ZX81 választás → automatikus boot; .z81 pillanatkép mentés/betöltés
+   él; a régi 💾 gomb is működik.
+
+4) VERZIÓBÉLYEGEK
+----------------------------------------------------------------------------
+   • RETROHUB.html: cím, fejléc-logó, boot-képernyő, konzol-jelző → v9.3
+     (a konzol-jelző mostantól a pillanatkép-mentést is jelzi)
+   • index.html: átirányító-oldal címe → v9.3
+   • build_v9.py: sablon-cím v9.3 + ÚJ stamp-normalizáló: a generált HTML
+     verzióbélyegeit (cím / logó / boot-képernyő / konzol-jelző) bármilyen
+     korábbi v9.x értékről v9.3-ra írja — a RETROSHELL forrás régi bélyegei
+     a jövőben nem csúszhatnak át.
+
+5) BUILD-RENDSZER (a saját build-folyamatba visszavezetve)
+----------------------------------------------------------------------------
+   • ÚJ komponens: fejlesztes/v9/snap.js (a pillanatkép-modul teljes
+     forrása; a build <script> blokkban a boot9 UTÁN fűzi be).
+   • engine.js: pCtrl-ba a Pillanatkép szakasz hívás + a 6 gép saveNote
+     jegyzeteinek frissítése ("pillanatkép nem menthető" → "él").
+   • cores8.js: HT core._kb kifelé látható (a billentyű-mátrix sorosításához).
+   • boot9.js: modul.snap() → RH_SNAP.saveActive().
+   • build_v9.py: snap.js betöltés + jscheck + blokk-beillesztés + sablon-cím
+     v9.3 + stamp-normalizáló + ZX81 ROM-init áthelyezés.
+   A patchelt fájlok a repo fejlesztes/ mappájában KÉSZEN lettek feltöltve;
+   a build-gépen a scripts/v9/ másolatokba a szokásos módon át kell másolni.
+
+6) ELLENŐRZÉS (Playwright, headless Chromium, 31/31 ellenőrzés)
+----------------------------------------------------------------------------
+   • node --check: mind a 15 script-blokk hibátlan (14 eredeti + snap.js);
+     a patchelt engine/cores8/boot9/snap komponensek és a build_v9.py is.
+   • C64: boot → PRINT 2+2 → pillanatkép-mentés → RAM-módosítás → reset →
+     visszatöltés → a képernyő-RAM bájt-pontosan egyezik; .rhsnap letöltés
+     (87910 bájt, 64K memóriakép) → reset → fájlbetöltés → egyezik; törlés ✕.
+   • HT1080Z: auto-boot a '>' promptig; mentés → reset → betöltés → a
+     64×16-os videó-RAM egyezik.
+   • ZX Spectrum: SNA pillanatkép mentés/betöltés (memória-próba: 0xAA →
+     reset → betöltés → 0xAA); új "Pillanatkép" eszközfül él.
+   • ZX81: a javítás után auto-boot él; .z81 pillanatkép mentés/betöltés
+     (0xAA-próba egyezik); új eszközfül él, a többi fül nem sérült.
+   • Amiga: Pillanatkép szakasz őszintén jelzi a korlátot; profilgépnél
+     (NES) a szakasz nem is jelenik meg.
+   • Konsole: 0 ÚJ hiba (az SAE headless 'error 50' előzmény-öröklött, a
+     v9.2.6.1-ben is jelen — valós GPU-val/audióval nem lép fel).
+
+7) ISMERT KORLÁTOK (változatlanok)
+----------------------------------------------------------------------------
+   • Amiga pillanatkép: a SAE mag állapota nem sorosítható (őszinte jegyzet).
+   • A pillanatkép a FUTÓ mag állapotát rögzíti — becsatolt ADF lemez, TAP
+     kazetta stb. NEM része; betöltés után a külső adathordozót újra
+     be kell helyezni, ha a program kéri.
+   • A localStorage ~5 MB kvótája ~55 darab 64K-s pillanatképet enged;
+     a lista biztonsági felső korlátja 24 megjelenített bejegyzés gépenként.
+================================================================================

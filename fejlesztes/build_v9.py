@@ -296,10 +296,13 @@ b += '''
 '''
 body = b
 
-# ---------------------------------------------------------------- ZX81 ROM beágyazás javítás
-s = zx81_3
-s += '''
-// === v9: beágyazott ZX81 ROM (ha a böngészőben nincs mentett) ===
+# ---------------------------------------------------------------- v9.3 JAVÍTÁS: ZX81 beágyazott ROM sorrend
+# A korábbi init a ZX81-modul (zx81_3) végére fűzve az RH_ROMS blokk ELŐTT futott,
+# így a beágyazott ROM friss böngészőben sosem töltődött be. Most az RH_ROMS
+# definiáló blokkba került — a definíció UTÁN fut, ezért már látja az adatot.
+# (A pillanatkép-modul prologusa további tartalék: ott ez már no-op.)
+roms_js += '''
+// === v9.3: beágyazott ZX81 ROM (a definíció UTÁN — már látja az RH_ROMS-ot) ===
 try { if (!Z81.rom && window.RH_ROMS && RH_ROMS.zx81) {
   const __b = atob(RH_ROMS.zx81), __u = new Uint8Array(__b.length);
   for (let __i = 0; __i < __b.length; __i++) __u[__i] = __b.charCodeAt(__i);
@@ -307,7 +310,6 @@ try { if (!Z81.rom && window.RH_ROMS && RH_ROMS.zx81) {
   log('ZX81: beágyazott ROM betöltve (8 KB)');
 } } catch (e) {}
 '''
-zx81_3 = s
 
 # ---------------------------------------------------------------- további részek betöltése
 def part(fn):
@@ -318,6 +320,7 @@ engine   = part('engine.js')
 ai       = part('ai.js')
 cores    = part('cores8.js')
 boot9    = part('boot9.js')
+snap9    = part('snap.js')   # v9.3 pillanatkép-modul
 ht_kbd   = part('ht_kbd.js')   # HT1080Z mátrix-adat
 
 # szintaxis-ellenőrzés
@@ -331,7 +334,7 @@ def jscheck(nm, code):
     os.unlink(p)
     print(f'JS OK: {nm} ({len(code):,} b)')
 
-jscheck('engine', engine); jscheck('ai', ai); jscheck('cores', cores); jscheck('boot9', boot9); jscheck('ht_kbd', ht_kbd)
+jscheck('engine', engine); jscheck('ai', ai); jscheck('cores', cores); jscheck('boot9', boot9); jscheck('ht_kbd', ht_kbd); jscheck('snap9', snap9)
 jscheck('cpu6502', cpu6502_js); jscheck('c64fam', c64fam_js); jscheck('z80gen', z80gen_js)
 jscheck('z80cb', z80cb_js)
 jscheck('kbd_tvc', kbd_tvc_js); jscheck('kbd_primo', kbd_primo_js)
@@ -344,7 +347,7 @@ html = f'''<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETROHUB v9.2 — Retro emulátor platform AI támogatással</title>
+<title>RETROHUB v9.3 — Retro emulátor platform AI támogatással</title>
 <style>
 {css}
 
@@ -403,9 +406,25 @@ html = f'''<!DOCTYPE html>
 <script>
 {boot9}
 </script>
+<script>
+{snap9}
+</script>
 </body>
 </html>
 '''
+# ---------------------------------------------------------------- v9.3: verzióbélyeg-normalizálás
+def stamp_fix(html, pat, repl, tag, expect=1):
+    hits = re.findall(pat, html)
+    if len(hits) < expect:
+        print(f'!!! STAMP HIBA ({tag}): {len(hits)} egyezés (legalább {expect} várt)'); sys.exit(1)
+    print(f'STAMP OK: {tag} ({len(hits)} hely)')
+    return re.sub(pat, repl, html)
+
+html = stamp_fix(html, r'<title>RETROHUB v9\.[0-9.]+ — ', '<title>RETROHUB v9.3 — ', 'cím')
+html = stamp_fix(html, r'color:var\(--dim\)">v9\.[0-9.]+</span>', 'color:var(--dim)">v9.3</span>', 'logó')
+html = stamp_fix(html, r'RETROHUB  v9\.[0-9.]+\\n', 'RETROHUB  v9.3\\n', 'boot-képernyő')
+html = stamp_fix(html, r"\[RH9\] RETROHUB v9\.[0-9.]+ aktív", "[RH9] RETROHUB v9.3 aktív", 'konzol-jelző')
+
 # ---------------------------------------------------------------- v9.2: célzott javítások a generált HTML-en
 def vpatch(html, old, new, tag):
     n = html.count(old)

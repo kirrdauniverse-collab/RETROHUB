@@ -27,12 +27,12 @@
   const CFG = {
     zx81: { n: 'Sinclair ZX81' },
     zxs: { n: 'ZX Spectrum 48K' },
-    c64: { n: 'Commodore 64', fileAcc: '.prg,.p00,.t64', fileN: 'PRG / P00 / T64 programfájl', saveNote: 'C64: futásidejű pillanatkép a magnál nem menthető — PRG-betöltés és begépelés él.' },
-    c16: { n: 'Commodore 16 / Plus/4', fileAcc: '.prg', fileN: 'PRG programfájl', saveNote: 'C16: pillanatkép nem menthető — PRG-betöltés és begépelés él.' },
-    ht: { n: 'HT1080Z (TRS-80 Model I)', fileAcc: '.cmd,.cas,.bas,.txt', fileN: 'CMD (system) / CAS / BASIC forrás', saveNote: 'HT1080Z: pillanatkép nem menthető — CMD/BAS betöltés és begépelés él.' },
-    tvc: { n: 'Videoton TVC 64+', fileAcc: '.cas,.txt', fileN: 'CAS kazettafájl', saveNote: 'TVC: pillanatkép nem menthető — CAS-betöltés és begépelés él.' },
-    primo: { n: 'Primo B-64', fileAcc: '.pp,.ptp,.txt', fileN: 'PP quickload / PTP kazetta', saveNote: 'Primo: pillanatkép nem menthető — PP quickload és begépelés él.' },
-    ent: { n: 'Enterprise 64/128', fileAcc: '.tap,.txt', fileN: 'TAP kazettafájl', saveNote: 'Enterprise: pillanatkép nem menthető — begépelés él.' },
+    c64: { n: 'Commodore 64', fileAcc: '.prg,.p00,.t64', fileN: 'PRG / P00 / T64 programfájl', saveNote: 'C64: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — PRG-betöltés és begépelés szintén.' },
+    c16: { n: 'Commodore 16 / Plus/4', fileAcc: '.prg', fileN: 'PRG programfájl', saveNote: 'C16: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — PRG-betöltés és begépelés szintén.' },
+    ht: { n: 'HT1080Z (TRS-80 Model I)', fileAcc: '.cmd,.cas,.bas,.txt', fileN: 'CMD (system) / CAS / BASIC forrás', saveNote: 'HT1080Z: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — CMD/BAS betöltés és begépelés szintén.' },
+    tvc: { n: 'Videoton TVC 64+', fileAcc: '.cas,.txt', fileN: 'CAS kazettafájl', saveNote: 'TVC: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — CAS-betöltés és begépelés szintén.' },
+    primo: { n: 'Primo B-64', fileAcc: '.pp,.ptp,.txt', fileN: 'PP quickload / PTP kazetta', saveNote: 'Primo: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — PP quickload és begépelés szintén.' },
+    ent: { n: 'Enterprise 64/128', fileAcc: '.tap,.txt', fileN: 'TAP kazettafájl', saveNote: 'Enterprise: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — begépelés szintén.' },
     amiga: { n: 'Commodore Amiga 500 (SAE mag)', fileAcc: '.adf,.adz,.adf.gz', fileN: 'ADF/ADZ lemezkép (DF0)', saveNote: 'Amiga: a lemezműveletek élnek (ADF behelyezés/kiadás), pillanatkép nem.' }
   };
 
@@ -97,6 +97,8 @@
     });
     fr.append(row(jbtn));
     if (core) fr.append(row(btn('↻ Reset', () => { mid === 'amiga' ? RH.AMIGA.reset() : RH.doReset(mid); }, 'primary')));
+    /* v9.3 — pillanatkép: a futó mag állapotának mentése/betöltése (böngésző vagy .rhsnap fájl) */
+    if (window.RH_SNAP) RH_SNAP.ctrlPane(fr, mid, { el: el, btn: btn, row: row, note: note, help: help });
     fr.append(help('A fájl megnyitása a képernyő alatti FÁJL / KAZETTA gombbal is elérhető; a begépelés a gép saját ROM-jába üti be a karaktereket.'));
     return fr;
   }

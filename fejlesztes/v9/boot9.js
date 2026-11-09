@@ -87,7 +87,7 @@
       },
       reset() { RH.doReset(mid); },
       open() { RH.fileOpen(mid); },
-      snap() { RHGEN.log((RHGEN.CFG[mid] || {}).saveNote || 'Mentés nem elérhető ennél a magnál.'); },
+      snap() { if (window.RH_SNAP && RH_SNAP.saveActive()) return; RHGEN.log((RHGEN.CFG[mid] || {}).saveNote || 'Mentés nem elérhető ennél a magnál.'); },
       devPane: '#rh-devpane', devChips: '#rh-chips',
       devTools: RHGEN.TOOLS,
       devOpen(id) { RHGEN.openTool(mid, id); }

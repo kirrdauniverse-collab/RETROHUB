@@ -1,4 +1,4 @@
-# RETROHUB v9.2.6
+# RETROHUB v9.3
 
 **Egyfájlos retro emulátor-platform** — 23 gép, 9 emulátormag, egységes menürendszer (RHGEN), gépenkénti virtuális billentyűzet, beépített AI. Minden egyetlen HTML-fájlban, teljesen offline.
 
@@ -17,6 +17,7 @@
 - **RHGEN menümotor** — mind a 23 gépen azonos, hat csoportos fejlesztői központ: VEZÉRLÉS · HARDVER · FEJLESZTÉS (BASIC, Z80-assembler, élő memória-szerkesztő, AI-programozó, játékstúdió) · PAINT (32×16 rajzoló) · HANG (4 csatornás tracker, WAV-mentés) · NAPLÓ.
 - **Virtuális billentyűzet** minden maggéphez, a valódi gépek mátrixaiból: C64 (KERNAL $EB81-es kulcstábla), TVC (62 gomb), Primo (55 gomb), Enterprise (10×8 EP-mátrix), HT1080Z (memórialeképezett TRS-80 Model I), Amiga (74 gomb). A SHIFT/CTRL/CAPS gombok ragadósak.
 - **Fájlcsatornák gépenként:** TAP/TZX/Z81 (Spectrum/ZX81), PRG/P00/T64 (C64), PRG (C16), CAS (TVC), PP/PTP quickload (Primo), CMD/BAS (HT1080Z), ADF behelyezés DF0:-be (Amiga).
+- **Pillanatkép (v9.3):** a futó emulátor-mag teljes állapota — CPU-regiszterek, memória, perifériák — menthető és visszatölthető: **a böngésző tárolójába** (gépenként több pillanatkép, listával, törléssel) vagy **`.rhsnap` fájlba** (JSON boríték, bármely RETROHUB-példányra visszatölthető). A VEZÉRLÉS csoportból érhető el mind a 9 maggépen: c64, c16, ht, tvc, primo, ent (teljes állapot-sorosítás), zxs (natív 48K **SNA**), zx81 (natív **.z81**); az Amigánál a modul őszintén jelzi, hogy a SAE mag belső állapota nem sorosítható.
 - **RHMS AI:** a fejléc 🤖 gombjával szolgáltató választható — Pollinations (ingyenes, kulcs nélküli alapértelmezés), OpenAI, OpenRouter, Ollama, LM Studio, egyéni. Gépenkénti AI-programozó gépspecifikus rendszerprompttal, a válasz begépelhető az emulált gépbe.
 
 ## A repó tartalma
@@ -44,3 +45,4 @@ A `RETROHUB.html` nem kézzel szerkesztett dokumentum: a `fejlesztes/build_v9.py
 - **v9.2.3** — **Fizikai billentyűzet-híd**: a valódi (hardveres) billentyűzet mostantól minden maggépen él (C64, C16, HT1080Z, TVC, Primo, Enterprise) — Shift+szimbólum kombinációkkal, Enter/Backspace/nyilakkal. **HT1080Z**: a videó-RAM olvasás javítva (a boot már nem tölti szeméttel a képernyőt; él a MEMORY SIZE? prompt). **C16**: a TED key-index protokoll ($FD00/$FD01) beépítve, a kulcs-események elérik a ROM pufferét. **Amiga**: mind a négy meghajtó kiiktatva a bootból (csak Kickstart/AROS ROM boot; az ADF kézzel helyezhető be). **Primo**: boot + billentyűzet ellenőrizve (PRIMO BASIC SYSTEM ’84.2 + Ok + gépelés él).
 - **v9.2.4** — Gépenkénti bemenet-javítások: C16 (TED regiszterterület + billentyű-latch — a begépelés és a BASIC él), Enterprise (Dave IRQ-réteg), HT1080Z (fantom-billentyű javítva, valódi Model I kulcsdekódolás), Amiga boot-tisztítás. Részletek a változáslistában.
 - **v9.2.6** — **Mobil nézet újratervezve**: a géplista alul-felhúzható fiókba került (hívása a képernyő alatti „☰ Gépek" gomb), a téma/AI/fejlesztői gombok mobilon a fiókba költöznek, a képernyő + vezérlés + billentyűzet egyszerre látszik görgetés nélkül. Javítva a generikus billentyűzet-rács min-content széthúzása (a mobil vízszintes görgetés oka).
+- **v9.3** — **Pillanatkép-mentés (snapshot)**: a 9 maggépen a futó mag teljes állapota menthető (böngésző + `.rhsnap` fájl) és visszatölthető; a zxs/zx81 saját natív formátumban (SNA/.z81) dolgozik, a régi 💾 gomb is erre fut. **Hibajavítás:** a ZX81 beágyazott ROM-ja a v9.2.x-ben friss böngészőben sosem töltődött be (a ROM-init az RH_ROMS definiálása ELŐTT futott) — a v9.3-ban sorrend-cserével javítva, így a ZX81 mostantól magától bootol. Verzióbélyegek egyeztetve (cím, logó, boot-képernyő, konzol-jelző, index.html).
