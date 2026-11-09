@@ -622,3 +622,76 @@ sorrendje, ami a v9.2.x-ben friss böngészőben mindig elmaradt.
    • A localStorage ~5 MB kvótája ~55 darab 64K-s pillanatképet enged;
      a lista biztonsági felső korlátja 24 megjelenített bejegyzés gépenként.
 ================================================================================
+
+================================================================================
+v9.3.1 (2026-11-09) — AMIGA .SNAPSHOT KEZELÉS A ZX SPECTRUMON + PÉLDAPROGRAMOK
+================================================================================
+
+Az AI.ZIP csomag (Amiga-emulátor gyűjtemény, 1555 fájl) elemzése alapján a ZX
+Spectrum fájlcsatornája bővült az Amiga-hosted Spectrum-emulátorok .snapshot
+formátumával, és a fejlesztői központ Pillanatkép fülén beágyazott példaprogramok
+jelentek meg.
+
+1) FORMÁTUM-ELEMZÉS (a kézhez kapott fájlokon, élő emulátorban igazolva)
+----------------------------------------------------------------------------
+   • A .snapshot fájlok 49 179 bájtot = PONTOSAN a szabvány 48K SNA méretét
+     adják (27 bájtos fejléc + 48K RAM tömörítetlenül).
+   • A fejléc elrendezése a szabvány SNA szerinti: I, HL', DE', BC', AF',
+     HL, DE, BC, IY, IX, IFF2, R, F/A, SP, IM, border — azaz a mag meglévő
+     loadSNA/saveSNA pálya PONTOSAN ezt implementálja (a PC a verem tetején,
+     RETN-szemantikával).
+   • Ellenőrzés a RAM-képpel: a 27. offsettől a képernyő hibátlanul renderel
+     (Deep Strike kokpit, VU-3D menü), a regiszterek értelmesek (HL'=$2758,
+     IY=$5C3A, SP RAM-ban).
+   • KÜLÖNBSÉG a saját .sna mentéshez képest: nincs a miénk. A korábbi sejtés
+     ("a mag saját formátuma") elvetve — a Sinclair-wiki SNA-specifikációja
+     szerint a meglévő implementáció a szabvány.
+   • DI-mentés: az Amiga-emulátor egyes fájljai megszakítás-tiltott (IFF2=0)
+     állapotban mentettek (pl. Deep Strike motorhang-rutin közepén). A betöltő
+     .snapshot kiterjesztésnél ezért engedélyezi a megszakításokat (logüzenettel).
+   • NEM betölthető (őszintén dokumentálva): az AMIGA.Z80 / AMIGA.sna (35 518
+     bájt) saját, tömörített formátum — sem SNA, sem Z80-szabvány nem; a
+     betöltés hibát ír ki, nem omlik össze.
+
+2) BEÉPÍTÉS
+----------------------------------------------------------------------------
+   • Fájlcsatorna: a #file-input accept-lista bővült .snapshot-tal; a
+     fájl-dispatch a 'snapshot' kiterjesztést az SNA-útvonalra köti (48K/128K
+     kezeléssel együtt), DI-mentésnél EI-engedélyezéssel + logüzenettel.
+   • ÚJ build-komponens: fejlesztes/v9/amigasnap.js (RH_AGDEX) — beágyazott
+     példaprogramok: 3D Psi-Chess és Deep Strike (Bill Bennett Amiga-
+     gyűjteménye, .snapshot, 2 × 49 179 bájt base64-ben). A gombok a
+     Pillanatkép fül 'Amiga .snapshot példák' szekciójában érhetők el.
+   • snap.js: a ctrlPane 'zxs' ágának vége meghívja RH_AGDEX.pane()-t (csak
+     zxs gépnél; pCtrl/legacy ui-segtőkkel).
+   • build_v9.py: amigasnap.js betöltés + jscheck + új <script> blokk a snap9
+     UTÁN + vpatchek (accept-snapshot, dispatch-snapshot) + verzióbélyegek
+     v9.3.1 (a stamp-normalizáló is).
+
+3) ELLENŐRZÉS (Agent Browser, headless Chromium — a preview preview-blason)
+----------------------------------------------------------------------------
+   • node --check: mind a 16 script-blokk hibátlan (15 + amigasnap.js);
+     build_v9.py szintaxis-ellenőrizve.
+   • Példagombok: 3D Psi-Chess → a 3D sakktábla hibátlanul áll a képernyőn
+     (PC a billentyűfigyelő hurokban, SP=$8E50, IY=$5C3A, IM1, EI);
+     Deep Strike → a játék a mentett állapotból továbbfut (motorhang-rutin,
+     IM2), menü-képernyőig él.
+   • Fájlcsatorna: DataTransfer-rel valódi File átküldve az onchange-en →
+     'teszt.snapshot' betöltése a dispatch új ágán keresztül él; az accept
+     attribútum .snapshot-ot listáz.
+   • Negatív teszt: 35 518 bájtos AMIGA.sna → kecses hibaüzenet, a mag fut
+     tovább; konzol: 0 ÚJ hiba.
+   • Regresszió: a v9.3 pillanatkép-mentés (böngészőbe) változatlanul él;
+     verzióbélyeg v9.3.1 (cím, logó, boot-képernyő, konzol-jelző, index.html).
+
+4) A CSOMAG TOVÁBBI TARTALMA (beépítési javaslatok későbbre)
+----------------------------------------------------------------------------
+   • V0.7.9: Multi-Platform Arcade Game Designer (MPAGD) — gépenkénti Suite-ok
+     (ZX, CPC, MSX, BBC, EP, Dragon, Atom, TC2048, VZ200), AGD-szkriptek (65 db),
+     engine .asm források + Windows-os fordítók. Jövő: AGD-szkript-példák a
+     FEJLESZTÉS csoportba, vagy fordító portolása.
+   • Atari800: OS/BASIC ROM-ok + az Atari800 emulátor 1995-ös C-forrása;
+     Atari 800XL profilgép — jövőbeli 6502-maghoz anyag.
+   • MSX: AmiMSX2 (Amigára) + lemezek; Oric: amoric; AppleII, AtariST (TOS ROM),
+     MAC, Colecó (Vcolec), NES/GBA/N64/NDS ROM-ok — profilgépekhez/új magokhoz
+     anyagnak. Az Amiga .hdf (Alien Breed 3D) SAE hardfile-támogatást igényelne.

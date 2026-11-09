@@ -457,6 +457,7 @@
       renderLst();
       fr.append(lst, st);
       fr.append(help('A fájl (.rhsnap) bármely RETROHUB-példányra visszatölthető; a böngészőbeli pillanatképek gépenként külön lista alatt állnak.'));
+      if (mid === 'zxs' && window.RH_AGDEX) { try { RH_AGDEX.pane(fr, ui, st); } catch (e) {} }
     },
 
     /* zxs / zx81 örökölt eszközfül: a legacy devOpen 'snap' ágából hívódik */

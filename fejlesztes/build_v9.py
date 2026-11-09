@@ -321,6 +321,7 @@ ai       = part('ai.js')
 cores    = part('cores8.js')
 boot9    = part('boot9.js')
 snap9    = part('snap.js')   # v9.3 pillanatkép-modul
+amigasnap = part('amigasnap.js')   # v9.3.1 Amiga .snapshot példák (RH_AGDEX)
 ht_kbd   = part('ht_kbd.js')   # HT1080Z mátrix-adat
 
 # szintaxis-ellenőrzés
@@ -334,7 +335,7 @@ def jscheck(nm, code):
     os.unlink(p)
     print(f'JS OK: {nm} ({len(code):,} b)')
 
-jscheck('engine', engine); jscheck('ai', ai); jscheck('cores', cores); jscheck('boot9', boot9); jscheck('ht_kbd', ht_kbd); jscheck('snap9', snap9)
+jscheck('engine', engine); jscheck('ai', ai); jscheck('cores', cores); jscheck('boot9', boot9); jscheck('ht_kbd', ht_kbd); jscheck('snap9', snap9); jscheck('amigasnap', amigasnap)
 jscheck('cpu6502', cpu6502_js); jscheck('c64fam', c64fam_js); jscheck('z80gen', z80gen_js)
 jscheck('z80cb', z80cb_js)
 jscheck('kbd_tvc', kbd_tvc_js); jscheck('kbd_primo', kbd_primo_js)
@@ -347,7 +348,7 @@ html = f'''<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETROHUB v9.3 — Retro emulátor platform AI támogatással</title>
+<title>RETROHUB v9.3.1 — Retro emulátor platform AI támogatással</title>
 <style>
 {css}
 
@@ -409,6 +410,9 @@ html = f'''<!DOCTYPE html>
 <script>
 {snap9}
 </script>
+<script>
+{amigasnap}
+</script>
 </body>
 </html>
 '''
@@ -420,10 +424,10 @@ def stamp_fix(html, pat, repl, tag, expect=1):
     print(f'STAMP OK: {tag} ({len(hits)} hely)')
     return re.sub(pat, repl, html)
 
-html = stamp_fix(html, r'<title>RETROHUB v9\.[0-9.]+ — ', '<title>RETROHUB v9.3 — ', 'cím')
-html = stamp_fix(html, r'color:var\(--dim\)">v9\.[0-9.]+</span>', 'color:var(--dim)">v9.3</span>', 'logó')
-html = stamp_fix(html, r'RETROHUB  v9\.[0-9.]+\\n', 'RETROHUB  v9.3\\n', 'boot-képernyő')
-html = stamp_fix(html, r"\[RH9\] RETROHUB v9\.[0-9.]+ aktív", "[RH9] RETROHUB v9.3 aktív", 'konzol-jelző')
+html = stamp_fix(html, r'<title>RETROHUB v9\.[0-9.]+ — ', '<title>RETROHUB v9.3.1 — ', 'cím')
+html = stamp_fix(html, r'color:var\(--dim\)">v9\.[0-9.]+</span>', 'color:var(--dim)">v9.3.1</span>', 'logó')
+html = stamp_fix(html, r'RETROHUB  v9\.[0-9.]+\\n', 'RETROHUB  v9.3.1\\n', 'boot-képernyő')
+html = stamp_fix(html, r"\[RH9\] RETROHUB v9\.[0-9.]+ aktív", "[RH9] RETROHUB v9.3.1 aktív", 'konzol-jelző')
 
 # ---------------------------------------------------------------- v9.2: célzott javítások a generált HTML-en
 def vpatch(html, old, new, tag):
@@ -477,6 +481,17 @@ html = vpatch(html,
     "if (aiSel >= aiProv.length) aiSel = 0; const __shopt = document.querySelector('#ai-type option[value=\"shell\"]');",
     "if (aiSel >= aiProv.length) aiSel = 0; if (!aiProv.length) { aiProv.push({ name: 'Pollinations (ingyenes, kulcs nélküli)', type: 'openai', url: 'https://text.pollinations.ai/openai', key: '', model: 'openai', models: ['openai', 'mistral', 'llama'] }); aiSel = 0; } const __shopt = document.querySelector('#ai-type option[value=\"shell\"]');",
     'pollinations-default')
+
+# 7) v9.3.1: ZX Spectrum fájlcsatorna — .snapshot kiterjesztés (Amiga-emulátorok,
+#    szabvány 48K SNA tartalommal) + DI-mentésnél megszakítás-engedélyezés
+html = vpatch(html,
+    '<input accept=".sna,.z80,.tap,.tzx,.scr,.rom,.trd" id="file-input" type="file"/>',
+    '<input accept=".sna,.snapshot,.z80,.tap,.tzx,.scr,.rom,.trd" id="file-input" type="file"/>',
+    'accept-snapshot')
+html = vpatch(html,
+    "if (ext === 'sna' || ext === 'z80') { engine.script.length = 0; if (ext === 'sna') { if (buf.length < 131103 && engine.m128) engine.setModel('48'); engine.loadSNA(buf); } else engine.loadZ80(buf); audio.aySync = true; $('hw-model').value = engine.model; $('hw-ay').checked = engine.ayOn || engine.m128; renderFrame(); start(); }",
+    "if (ext === 'sna' || ext === 'snapshot' || ext === 'z80') { engine.script.length = 0; if (ext === 'sna' || ext === 'snapshot') { if (buf.length < 131103 && engine.m128) engine.setModel('48'); engine.loadSNA(buf); if (ext === 'snapshot' && !engine.cpu.iff2) { engine.cpu.iff2 = 1; engine.cpu.iff1 = 1; log('Amiga .snapshot: a mentés DI állapotban volt — a megszakítások engedélyezve.'); } } else engine.loadZ80(buf); audio.aySync = true; $('hw-model').value = engine.model; $('hw-ay').checked = engine.ayOn || engine.m128; renderFrame(); start(); }",
+    'dispatch-snapshot')
 
 open(OUT, 'w', encoding='utf-8').write(html)
 print('KÉSZ:', OUT, f'{len(html.encode("utf-8")):,} bytes')
