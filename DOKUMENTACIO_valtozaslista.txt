@@ -695,3 +695,85 @@ jelentek meg.
    • MSX: AmiMSX2 (Amigára) + lemezek; Oric: amoric; AppleII, AtariST (TOS ROM),
      MAC, Colecó (Vcolec), NES/GBA/N64/NDS ROM-ok — profilgépekhez/új magokhoz
      anyagnak. Az Amiga .hdf (Alien Breed 3D) SAE hardfile-támogatást igényelne.
+
+
+v9.3.3 (2026-11-12) — VALÓDI KICKSTART (KS 1.3/3.1) + ELRENDEZÉS: NAGY TV, BAL OLDALI
+CSEMPÉK, APRÓ IKONSÁV
+================================================================================
+
+1) VALÓDI KICKSTART ROM-OK BEÁGYAZÁSA (kulcs nélküli dumpok, checksum javítva)
+----------------------------------------------------------------------------
+   • amiga13 = KS 1.3 (34.5), 262 144 bájt — a „Kick.rom" 512K lemezkép első
+     fele (a két fél bizonyítottan azonos), az A500/68000 párosításhoz.
+   • amiga = KS 3.1 (40.68), 524 288 bájt — A1200 lemezkép; 68020-at követel,
+     ezért A500-on csak tartalék (a KS 3.1 68000-en SAEE_CPU_Requires680EC20
+     hibát ad).
+   • Checksum-normalizálás: mindkét dump 0x14–0x17 mezője FF FF FF FF volt;
+     az SAE (SAEE_Memory_RomChecksum) a carry-folding összeg 0xFFFFFFFF
+     értékét követeli meg (kickstart_calc_checksum: összeadás + átvitel
+     visszahajlása). A mező az SAE algoritmusát portoló szkripttel készült:
+     a 0x14-es szó kihagyásával számolt fold-összeg 0xFFFFFFFF volt, tehát
+     a helyes mezőérték 0x00000000; a fold-ellenőrzés mindkét ROM-on
+     hibátlan. (A korábbi, egyszerű wrap-around „összeg = 0" javítás pont
+     error 35-öt adott — épp az SAE-ellenőrzésnek köszönhetően derült ki.)
+   • AROM-híd (RETROHUB.html AMIGA.boot + fejlesztes/v9/cores8.js):
+     ROMKEY: amiga13 előbb → amiga → AROS-tartalék; az üzenet a betöltött
+     ROM-típusot írja („Valódi Kickstart ROM betöltve: KS 1.3 (34.5)").
+
+2) ELRENDEZÉS (felhasználói kérés három pontja)
+----------------------------------------------------------------------------
+   a) TV kép magassága — a korábbi hatályos szabály (v9.1, source-order miatt
+      ez nyert: min-height:clamp(160px,22vh,560px)) 22vh-t adott; most
+      clamp(340px, calc(100vh - 210px), 1040px), mobilon (≤820px) 52vh
+      minimum, a stage görgethető. Az SAE Amiga-canvas a TV teljes magasságát
+      kitölti (a fix 720×568 konténer + width:auto canvas felülírva:
+      100%/100% + object-fit:contain).
+   b) Minden vezérlő csempe a bal oldali oszlopba (a géplista alá):
+      VEZÉRLÉS csoport 11 csempével — Fájl/kazetta, Modul betöltése, Kiadás,
+      Pillanatkép, Reset, Hideg indítás, NMI, Sebesség (1×→8×), CRT-effekt,
+      Billentyűzet, Fejlesztői központ (F12). Mobilon a GÉPVÁLASZTÓ fiókban
+      jelennek meg (az aside részei), a ☰ Gépek gomb az ikonsávba költözött.
+   c) TV és billentyűzet közti egyetlen sáv: #rh-iconbar, apró ikonokkal —
+      PWR/FDD/Tape/HDD LED-ek, ▶ (okos: kijelölve betölt, futva indít/folytat),
+      ⏸, ↻ reset, NMI, ⌨ billentyűzet + 🕹 joystick mód (csak érintőképernyőn,
+      pointer:coarse), 📁 fájl, 🎛 CRT-effekt. A régi gombsorok (.ctl,
+      tvbarok) kijelöléskor rejtve — a TV képe felett semmi sincs.
+   • Gépkijelölés = bekapcsolás: a géplista kattintás automatikusan
+     betölti (mount) a modult — külön „Modul betöltése" gombnyomás nélkül.
+   • Kontextus-érzékeny proxyk: az ikonsáv/csempék mindig az AKTÍV gép
+     saját gombját hívják (canvas-wrap/z81-wrap/rh-wrap láthatóság alapján),
+     nem az első engedélyezettet — Amigán a reset az Amigáét, ZX-en a ZX-ét.
+   • Joystick mód (érintőn): #rh-joypad D-pad (▲◀●▶▼) → KeyboardEvent
+     (ArrowUp/Left/Right/Down + Space) a fókuszált elemre.
+   • LED-vezérlés: PWR = futó mag (státusz-szöveg poll), FDD/Tape = fájl-
+     és kazetta-műveletek (input change + gomb-klikk capture-listener),
+     HDD = pillanatkép-műveletek.
+
+3) ELLENŐRZÉS (Agent Browser, headless Chromium, 2026-11-12)
+----------------------------------------------------------------------------
+   • node --check: mind a 17 script-blokk hibátlan; RH_ROMS base64 dekódolva:
+     amiga 524 288 / amiga13 262 144 bájt, SAE fold-checksum 0xFFFFFFFF.
+   • Amiga 500: KS 1.3 betöltés után a klasszikus fehér insert-disk képernyő
+     (Workbench 1.3 floppy-grafika) hibátlanul renderel a TV teljes magassá-
+     gában; a „Kickstart 1.3" szöveg a lemezen olvasható. (Korai hibák:
+     error 35 = checksum, error 50 = audio worklet file:// korlát — mindkettő
+     kezelve: checksum-javítás + az áthidaló ScriptProcessor-fallback él.)
+   • C64: boot után a klasszikus kék BASIC V2 képernyő (domináns színek
+     #0000AA/#0088FF); C16: fekete háttér, COMMODORE 16 BASIC sor — a
+     korábbi „C64/C16 nem indult" regresszió (a v9.3.2-s regex-patch idején)
+     a tiszta v9.3.1 alapon nem reprodukálható.
+   • ZX Spectrum: Indítás után „Fut", PWR LED él; bal oldali csempék proxyja
+     ZX-en a ZX-gombokat (btn-reset, kbtoggle), Amigán a rh-reset2-t hívja.
+   • Mobil (iPhone 14 viewport): TV ~81% magasság, ☰ Gépek az ikonsávban,
+     fiókban a csempék; érintős azonosítónál (rh-touch) a ⌨/🕹 ikonok
+     látszanak, a joystick D-pad 5 gombbal él és ArrowUp keydown-t ad.
+   • Layout: a TV felett nulla látható elem (bezel előző testvérei rejtve),
+     .ctl display:none, tvbarok rejtve.
+
+4) FORRÁS-SZINKRON
+----------------------------------------------------------------------------
+   • fejlesztes/v9/cores8.js: AMIGA-híd ROMKEY-blokk (azonos kód).
+   • fejlesztes/build_v9.py: ROMS['amiga'] / ROMS['amiga13'] bejegyzések
+     _fixck() checksum-normalizálóval + OSError esetén figyelmeztetés
+     (AROS marad).
+   • Verzióbélyeg: v9.3.3 (title, logó, home-képernyő, konzol-jelző).

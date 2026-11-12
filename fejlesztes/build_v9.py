@@ -119,6 +119,24 @@ ROMS['ebasic']  = zread('Enterprise/ROM/BASIC Interpreter v2.1 (1985)(Intelligen
 ROMS['aros']    = open('/home/z/my-project/upload/forras/amiga_proj/public/media/aros-rom.bin', 'rb').read()
 ROMS['arosext'] = open('/home/z/my-project/upload/forras/amiga_proj/public/media/aros-ext.bin', 'rb').read()
 
+# v9.3.3: valódi Kickstart ROM-ok (kulcs nélküli dumpok; a checksum mező 0x14–0x17 javítva, hogy az összeg 0 legyen)
+def _fixck(d):
+    import struct as _s
+    field = _s.unpack('>I', d[0x14:0x18])[0]
+    t = 0
+    for i in range(0, len(d) - 3, 4):
+        t = (t + _s.unpack('>I', d[i:i + 4])[0]) & 0xFFFFFFFF
+    t_others = (t - field) & 0xFFFFFFFF
+    d = bytearray(d); d[0x14:0x18] = _s.pack('>I', (-t_others) & 0xFFFFFFFF)
+    return bytes(d)
+
+try:
+    ROMS['amiga'] = _fixck(open('/home/z/my-project/upload/Kickstart v3.1 rev 40.68 (1993)(Commodore)(A1200)[!].rom', 'rb').read())
+    ROMS['amiga13'] = _fixck(open('/home/z/my-project/upload/Kick.rom', 'rb').read()[:262144])
+    print('KS ROM: amiga (KS 3.1 40.68) + amiga13 (KS 1.3 34.5) beágyazva')
+except OSError as e:
+    print(f'KS ROM figyelmeztetés: {e} — AROS marad')
+
 for k, v in ROMS.items():
     print(f'ROM {k}: {len(v):,} bytes')
 

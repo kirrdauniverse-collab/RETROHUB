@@ -490,10 +490,18 @@
           let c = -1; for (let i = 0; i < s.length; i++) c = crcT[(c ^ s.charCodeAt(i)) & 0xFF] ^ (c >>> 8);
           return (c ^ -1) >>> 0;
         }
-        const rom = bin(b64u8(ROM.aros)), ext = bin(b64u8(ROM.arosext));
         const saeSet = (dst, name, data) => { dst.clr(); dst.name = name; dst.data = data; dst.size = data.length; dst.crc32 = false; };
-        saeSet(cfg.memory.rom, 'aros.rom', rom);
-        saeSet(cfg.memory.extRom, 'aros.ext', ext);
+        /* v9.3.3: valódi Kickstart — A500/68000: KS 1.3 (34.5); a KS 3.1 (40.68) 68020-at követel, ezért csak tartalék */
+        const ROMKEY = ROM.amiga13 ? 'amiga13' : (ROM.amiga ? 'amiga' : null);
+        if (ROMKEY) {
+          saeSet(cfg.memory.rom, ROMKEY === 'amiga' ? 'kick31.rom' : 'kick13.rom', bin(b64u8(ROM[ROMKEY])));
+          cfg.memory.extRom.clr();
+          say('Valódi Kickstart ROM betöltve: ' + (ROMKEY === 'amiga' ? 'KS 3.1 (40.68)' : 'KS 1.3 (34.5)'));
+        } else {
+          const rom = bin(b64u8(ROM.aros)), ext = bin(b64u8(ROM.arosext));
+          saeSet(cfg.memory.rom, 'aros.rom', rom);
+          saeSet(cfg.memory.extRom, 'aros.ext', ext);
+        }
         this._sae = sae; this._cfg = cfg;
         say('SAE indítása (AROS ROM, A500)…');
         const self = this;
