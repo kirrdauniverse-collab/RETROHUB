@@ -777,3 +777,55 @@ CSEMPÉK, APRÓ IKONSÁV
      _fixck() checksum-normalizálóval + OSError esetén figyelmeztetés
      (AROS marad).
    • Verzióbélyeg: v9.3.3 (title, logó, home-képernyő, konzol-jelző).
+
+═══════════════════════════════════════════════════════════════════════════════
+v9.3.4 (2026-11-12) — INDÍTÁSI MEGBÍZHATÓSÁG: CSAK VALÓDI MAGOK, NINCS SINCLAIR-FALLBACK
+═══════════════════════════════════════════════════════════════════════════════
+
+Jelentés (felhasználó): „csak a két Sinclair gép indul" — a többi gép nem.
+Vizsgálat: minden gép (ZX81, ZX Spectrum, C64, C16, HT1080Z, TVC, Primo,
+Enterprise, Amiga 500) a v9.3.3-ban is elindult file:// ÉS GitHub Pages
+alatt; a tünet oka a régi cache-ből jövő lap + a lenti törékenységek együttese.
+
+1) AMIGA — WebAudio-hiba ne szakítsa meg az indítást
+----------------------------------------------------------------------------
+   • sae.start(): ha az audio.setup() WebAudio-hibát ad (SAEE_Audio_
+     RequiresWebAudio = 50 — file:// CORS vagy audio_worklet.js 404), az
+     eddig VÉGZETES volt: „sae.start() ...error 50", majd csak a bridge
+     retry-lánca mentett. Most: audio.setup() maga figyelmeztet és néma
+     emulációval (audio.mode = Off) fut tovább — az Amiga ELSŐ próbrára
+     indul, hang esetén pedig a bridge ScriptProcessor-váltása megmarad.
+   • Amiga-híd: file:// protokollon rögtön ScriptProcessor (az
+     sae/audio_worklet.js file://-n CORS miatt sehogy sem töltődik be —
+     az első, kárvallott start elhagyása).
+
+2) VEZÉRLÉS — „Hideg indítás" soha nem indít másik rendszert
+----------------------------------------------------------------------------
+   • ctx(): a korábbi fallback-lánc (zxs → zx81 → rh) akkor is másik
+     rendszer gombját nyomta meg, ha a kijelölt gép képernyője még nem
+     látszott (btn-hard / z81-boot sosem disabled) — pont a „csak Sinclair
+     indul" tünet. Most: aktív kontextus gombja → generikus ('_') gomb →
+     a KIJELÖLT gép indítása (#load). Másik rendszer gombja soha.
+   • rh-reset2 (↻): az alapból beégetett 'c64' helyett a ténylegesen futó
+     gép resetel (load() rögzíti: window.RH_CUR_MID).
+
+3) ELLENŐRZÉS (agent-browser, file:// + GitHub Pages, v9.3.4)
+----------------------------------------------------------------------------
+   • Mind a 9 „valódi magos" gép: „FUT (valódi emulátor-mag)", konzolhiba
+     nélkül. Képvizsgálat canvas-mintával / PNG-exporttal:
+       ZX81 (256×192, fehér + kurzor), ZX Spectrum („© 1982 Sinclair
+       Research Ltd", 50 fps), C64 (kék BASIC V2 banner), C16 (fekete/
+       fehér BASIC), HT1080Z (zöld „READY" + „>" — TRS-80 Model I),
+       TVC (boot menü), Primo (sötét + világos szöveg), Enterprise
+       (RÉSZLEGES — kijelzés korlátozott), Amiga 500 (KS 1.3 „kézben
+       lemez" képernyő, ELSŐ próbrára).
+   • „Hideg indítás" C64 futása közben: C64 marad (nincs Sinclair-váltás);
+     Reset: ugyanaz a gép; ZX Spectrum hideg indítás: canvas-wrap él.
+
+4) FORRÁS-SZINKRON ÉS VERZIÓBÉLYEG
+----------------------------------------------------------------------------
+   • fejlesztes/v9/cores8.js: AMIGA-híd file:// ScriptProcessor sor.
+   • Verzióbélyeg: v9.3.4 (title, logó, home-képernyő, konzol-jelző,
+     index.html).
+   • Javaslat a felhasználónak: a lap erős újratöltése (Ctrl+F5 /
+     Cmd+Shift+R), hogy a régi cache-beli v9.3.1/9.3.2 ne fusson.

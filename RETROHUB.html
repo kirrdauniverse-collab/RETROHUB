@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETROHUB v9.3.3 — Retro emulátor platform AI támogatással</title>
+<title>RETROHUB v9.3.4 — Retro emulátor platform AI támogatással</title>
 <style>
 :root{--bg:#0b0f0b;--panel:#101810;--line:#2a5a2a;--fg:#5dff7a;--dim:#2f9a45;--hi:#d8ffe0;--warn:#ffb000;--glow:0 0 6px rgba(93,255,122,.55);--screen:#031003;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -385,7 +385,7 @@ body.rh-joymode #crt{cursor:crosshair}
 <body>
 <div id="app">
 <header>
- <div class="logo">RETRO<b>HUB</b> <span style="font-size:18px;color:var(--dim)">v9.3.3</span></div>
+ <div class="logo">RETRO<b>HUB</b> <span style="font-size:18px;color:var(--dim)">v9.3.4</span></div>
  <div class="row"><span style="color:var(--dim)">SZÍN:</span>
   <button data-t="green" class="on">Zöld</button><button data-t="amber">Borostyán</button><button data-t="ice">Jég</button><button data-t="light">Papír</button>
   <button id="rh-aibtn" title="Globális AI-programozó beállítások">🤖 AI</button><button id="devbtn" disabled>Fejlesztői központ [F12]</button></div>
@@ -724,7 +724,7 @@ function tools(m){return (window.RHGEN?RHGEN.TOOLS:[]).slice();}
 var cur=null,loaded=null,filter='all',bootT=null,$=function(s){return document.querySelector(s)};
 var term=$('#term');
 function show(t,cursor){term.innerHTML='';term.appendChild(document.createTextNode(t));if(cursor!==false){var c=document.createElement('span');c.className='blk';term.appendChild(c)}}
-function home(){show('\n  RETROHUB  v9.3.3\n  ================\n\n  Válassz modult a bal oldali listából,\n  majd nyomd meg a ▶ gombot.\n\n  Moduláris, 8 és 16 bites gépekhez.\n\n  READY.\n')}
+function home(){show('\n  RETROHUB  v9.3.4\n  ================\n\n  Válassz modult a bal oldali listából,\n  majd nyomd meg a ▶ gombot.\n\n  Moduláris, 8 és 16 bites gépekhez.\n\n  READY.\n')}
 function renderList(){var l=$('#list');l.innerHTML='';MODS.filter(function(m){return filter==='all'||m.k===filter}).forEach(function(m){var d=document.createElement('div');d.className='mod'+(cur===m?' sel':'');
  d.innerHTML='<span class="n"></span><span class="badge"></span><span class="m"></span>';
  d.children[0].textContent=m.n;d.children[1].textContent=loaded===m?'FUT':(m.st||((m.k==='con'?'KONZOL':m.k+' BIT')));if(loaded===m)d.children[1].className='badge run';d.children[1].title=m.st||'';
@@ -733,7 +733,7 @@ function renderList(){var l=$('#list');l.innerHTML='';MODS.filter(function(m){re
 function load(){if(!cur)return;clearInterval(bootT);if(loaded){var oc=(window.RetroShell._cores||{})[loaded.id];if(oc&&oc.unmount)oc.unmount()}var m=cur;loaded=m;var s=m.boot.split('\n'),i=0,out='';
  $('#st').textContent='ÁLLAPOT: '+m.n.toUpperCase()+' BETÖLTÉS…';show('');
  var core=(window.RetroShell._cores||{})[m.id];
- if(core&&core.mount){core.mount(term.parentNode,m);$('#st').textContent='ÁLLAPOT: '+m.n.toUpperCase()+' – FUT (valódi emulátor-mag)'}
+ if(core&&core.mount){core.mount(term.parentNode,m);window.RH_CUR_MID=m.id;$('#st').textContent='ÁLLAPOT: '+m.n.toUpperCase()+' – FUT (valódi emulátor-mag)'}
  else bootT=setInterval(function(){if(i<s.length){out+=s[i++]+'\n';show(out)}else{clearInterval(bootT);show(out+'\n[ profil: emulátor-mag nincs bekötve — a fejlesztői központ (AI, eszközök) ennek ellenére teljesen működik. Nyisd meg: F12 ]');$('#st').textContent='ÁLLAPOT: '+m.n.toUpperCase()+' – PROFIL (fejlesztői központ él, mag nincs)'}},m.k==='con'?120:160);
  $('#devbtn').disabled=false;$('#eject').disabled=false;$('#reset').disabled=false;$('#open').disabled=$('#snap').disabled=!(core&&core.open);renderList();buildDev()}
 function eject(){clearInterval(bootT);var c=(window.RetroShell._cores||{})[loaded&&loaded.id];if(c&&c.unmount)c.unmount();loaded=null;$('#devbtn').disabled=true;$('#eject').disabled=true;$('#reset').disabled=true;$('#open').disabled=$('#snap').disabled=true;closeDev();home();$('#st').textContent='ÁLLAPOT: KÉSZENLÉT';renderList()}
@@ -59931,8 +59931,10 @@ function SAEO_Audio() {
 		paula.currrent = 0;
 
 		if (SAEV_config.audio.mode >= SAEC_Config_Audio_Mode_On) {
-			if (!(await setup_sound()))
-				return SAEE_Audio_RequiresWebAudio; //can't happen cos we fail on audio.obtain()
+			if (!(await setup_sound())) { /* v9.3.4: a WebAudio hiánya ne szakítsa meg az indítást */
+				SAEF_warn("audio.setup() WebAudio nem elérhető — hang nélkül fut tovább");
+				SAEV_config.audio.mode = SAEC_Config_Audio_Mode_Off; /* néma emuláció */
+			}
 		}
 
 		next_sample_evtime = scaled_sample_evtime;
@@ -79231,6 +79233,7 @@ function ScriptedAmigaEmulator() {
         cfg.video.api = 0; /* Canvas */
         cfg.video.pauseInBackground = true;
         cfg.audio.mode = 3; /* On_Best */
+        if (location.protocol === 'file:') cfg.audio.api = 0; /* v9.3.4: AudioWorklet file://-n nem tölthető be (CORS) — rögtön ScriptProcessor */
         sae.setModel(1, 0); /* A500, 512K chip */
         /* AROS ROM beállítása */
         const bin = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, Math.min(u8.length, i + 0x8000))); return s; };
@@ -79348,9 +79351,9 @@ function ScriptedAmigaEmulator() {
     const st = document.querySelector('#rh-start'), pa = document.querySelector('#rh-pause'), rs = document.querySelector('#rh-reset2');
     if (st) st.onclick = () => { Object.values(RH.coreOf || {}).forEach(c => { try { c._ctl.pause(false); } catch (e) {} }); RHGEN.log('futás indítva'); };
     if (pa) pa.onclick = () => { Object.values(RH.coreOf || {}).forEach(c => { try { c._ctl.pause(true); } catch (e) {} }); RHGEN.log('szünet'); };
-    if (rs) rs.onclick = () => {
+    if (rs) rs.onclick = () => { /* v9.3.4: a ténylegesen futó gép resetelése — nem mindig 'c64' */
       const mid = document.querySelector('#rh-kb') ? (document.querySelector('#rh-kb').dataset.mid || '') : '';
-      RH.doReset(mid || 'c64');
+      RH.doReset(window.RH_CUR_MID || mid || 'c64');
     };
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireBar);
@@ -80579,7 +80582,7 @@ function ScriptedAmigaEmulator() {
 
   /* ---------- v9 marker ---------- */
   RHGEN.log('[RH9] Központosított menürendszer, gépenkénti billentyűzetek, beágyazott ROM-ok és modelllista-javítások aktívak — 23 gép, 9 emulátor-mag.');
-  console.log('[RH9] RETROHUB v9.3.3 aktív: egységes menük + billentyűzetek + RHMS AI + pillanatkép-mentés — mobil: géplista fiókban');
+  console.log('[RH9] RETROHUB v9.3.4 aktív: egységes menük + billentyűzetek + RHMS AI + pillanatkép-mentés — mobil: géplista fiókban');
 })();
 
 </script>
@@ -82636,12 +82639,13 @@ function ScriptedAmigaEmulator() {
     return null;
   }
   function wv(id) { var e = btn(id); return e && !e.hidden; }
-  function ctx(map) {
+  function ctx(map) { /* v9.3.4: szigorú kontextus — soha nem indít másik rendszert (pl. Hideg indítás ne Sinclair-t adjon) */
     var a = actCtx();
     if (a && map[a]) { var b = btn(map[a]); if (b && !b.disabled) { b.click(); return true; } }
-    var rest = Object.keys(map).filter(function (k) { return k !== a && k !== '_'; }).map(function (k) { return map[k]; });
-    if (map._) rest.push(map._);
-    return chain(rest);
+    if (map._) { var g = btn(map._); if (g && !g.disabled) { g.click(); return true; } }
+    var ld = btn('load'); /* nincs látható mag-képernyő → a KIJELÖLT gépet indítjuk */
+    if (ld && !ld.disabled) { ld.click(); return true; }
+    return false;
   }
   on('ib-play',  function () {
     /* ha a gép képe már látszik, indítás/szünet-continue; ha csak kijelölve van, előbb betöltés (mount + automatikus start) */

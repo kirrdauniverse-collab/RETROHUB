@@ -481,6 +481,7 @@
         cfg.video.api = 0; /* Canvas */
         cfg.video.pauseInBackground = true;
         cfg.audio.mode = 3; /* On_Best */
+        if (location.protocol === 'file:') cfg.audio.api = 0; /* v9.3.4: AudioWorklet file://-n nem tölthető be (CORS) — rögtön ScriptProcessor */
         sae.setModel(1, 0); /* A500, 512K chip */
         /* AROS ROM beállítása */
         const bin = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, Math.min(u8.length, i + 0x8000))); return s; };
