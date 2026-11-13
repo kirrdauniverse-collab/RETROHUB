@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETROHUB v9.3.5 — Retro emulátor platform AI támogatással</title>
+<title>RETROHUB v9.3.6 — Retro emulátor platform AI támogatással</title>
 <style>
 :root{--bg:#0b0f0b;--panel:#101810;--line:#2a5a2a;--fg:#5dff7a;--dim:#2f9a45;--hi:#d8ffe0;--warn:#ffb000;--glow:0 0 6px rgba(93,255,122,.55);--screen:#031003;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -385,7 +385,7 @@ body.rh-joymode #crt{cursor:crosshair}
 <body>
 <div id="app">
 <header>
- <div class="logo">RETRO<b>HUB</b> <span style="font-size:18px;color:var(--dim)">v9.3.5</span></div>
+ <div class="logo">RETRO<b>HUB</b> <span style="font-size:18px;color:var(--dim)">v9.3.6</span></div>
  <div class="row"><span style="color:var(--dim)">SZÍN:</span>
   <button data-t="green" class="on">Zöld</button><button data-t="amber">Borostyán</button><button data-t="ice">Jég</button><button data-t="light">Papír</button>
   <button id="rh-aibtn" title="Globális AI-programozó beállítások">🤖 AI</button><button id="devbtn" disabled>Fejlesztői központ [F12]</button></div>
@@ -724,7 +724,7 @@ function tools(m){return (window.RHGEN?RHGEN.TOOLS:[]).slice();}
 var cur=null,loaded=null,filter='all',bootT=null,$=function(s){return document.querySelector(s)};
 var term=$('#term');
 function show(t,cursor){term.innerHTML='';term.appendChild(document.createTextNode(t));if(cursor!==false){var c=document.createElement('span');c.className='blk';term.appendChild(c)}}
-function home(){show('\n  RETROHUB  v9.3.5\n  ================\n\n  Válassz modult a bal oldali listából,\n  majd nyomd meg a ▶ gombot.\n\n  Moduláris, 8 és 16 bites gépekhez.\n\n  READY.\n')}
+function home(){show('\n  RETROHUB  v9.3.6\n  ================\n\n  Válassz modult a bal oldali listából,\n  majd nyomd meg a ▶ gombot.\n\n  Moduláris, 8 és 16 bites gépekhez.\n\n  READY.\n')}
 function renderList(){var l=$('#list');l.innerHTML='';MODS.filter(function(m){return filter==='all'||m.k===filter}).forEach(function(m){var d=document.createElement('div');d.className='mod'+(cur===m?' sel':'');
  d.innerHTML='<span class="n"></span><span class="badge"></span><span class="m"></span>';
  d.children[0].textContent=m.n;d.children[1].textContent=loaded===m?'FUT':(m.st||((m.k==='con'?'KONZOL':m.k+' BIT')));if(loaded===m)d.children[1].className='badge run';d.children[1].title=m.st||'';
@@ -78707,7 +78707,7 @@ function ScriptedAmigaEmulator() {
     core._processTyping = function () {
       if (!core._tq.length) return;
       core._tcount++;
-      if (core._tcount % 3) return;
+      if (core._tcount % 5) return; /* v9.3.6: lassabb gépelés — a TVC/Primo/Ent key-scan lemaradt a 3 frame-nél */
       const a = core._tq.shift();
       applyAction(a);
     };
@@ -79269,7 +79269,11 @@ function ScriptedAmigaEmulator() {
         cfg.video.cursor = 0; /* SAEC_Config_Video_Cursor_Show */
         cfg.audio.mode = 3; /* On_Best */
         if (location.protocol === 'file:') cfg.audio.api = 0; /* v9.3.4: AudioWorklet file://-n nem tölthető be (CORS) — rögtön ScriptProcessor */
-        sae.setModel(1, 0); /* A500, 512K chip */
+        /* v9.3.6: HDF behelyezve → A1200 mód (68020 + AGA + 2 MB chip + Gayle IDE);
+           KS 1.3 az IDE-merevlemezről nem bootol, ezért HDF-módban KS 3.1 megy fel */
+        const hdf = this._hdfPending || null;
+        if (hdf) sae.setModel(5, 0); else sae.setModel(1, 0); /* A500, 512K chip — v9.3.6: A1200 config 0 (a config 1 autoconfig-probe-ja STOP-ba fagyott) */
+        this._containerId = containerId; this._logFn = logFn;
         /* AROS ROM beállítása */
         const bin = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, Math.min(u8.length, i + 0x8000))); return s; };
         let crcT = null;
@@ -79280,7 +79284,9 @@ function ScriptedAmigaEmulator() {
         }
         const saeSet = (dst, name, data) => { dst.clr(); dst.name = name; dst.data = data; dst.size = data.length; dst.crc32 = false; };
         /* v9.3.3: valódi Kickstart — A500/68000: KS 1.3 (34.5); a KS 3.1 (40.68) 68020-at követel, ezért csak tartalék */
-        const ROMKEY = ROM.amiga13 ? 'amiga13' : (ROM.amiga ? 'amiga' : null);
+        /* v9.3.6: HDF-módban a KS 3.1 előnyben (IDE/RDB boot) */
+        const ROMKEY = hdf ? (ROM.amiga ? 'amiga' : (ROM.amiga13 ? 'amiga13' : null))
+                           : (ROM.amiga13 ? 'amiga13' : (ROM.amiga ? 'amiga' : null));
         if (ROMKEY) {
           saeSet(cfg.memory.rom, ROMKEY === 'amiga' ? 'kick31.rom' : 'kick13.rom', bin(b64u8(ROM[ROMKEY])));
           cfg.memory.extRom.clr();
@@ -79290,13 +79296,23 @@ function ScriptedAmigaEmulator() {
           saeSet(cfg.memory.rom, 'aros.rom', rom);
           saeSet(cfg.memory.extRom, 'aros.ext', ext);
         }
-        /* Csak ROM boot: a DF0 meghajtót kiiktatjuk a bootból (type = 0), így a
-           gép nem próbál lemezről indulni — csak a ROM képernyője jelenik meg.
-           ADF továbbra is kézzel behelyezhető a VEZÉRLÉS csoportból. */
-        cfg.floppy.drive[0].type = 0;
+        /* v9.3.6: HDF csatolása a Gayle IDE-re — a filesys.reset() az induláskor
+           olvassa a mount.config bejegyzéseket (initialize_mountinfo). */
+        if (hdf) {
+          const ci = cfg.mount.config[0].ci;
+          ci.controller_type = 1; /* SAEC_Config_Mount_Controller_Type_MB_IDE */
+          ci.controller_unit = 0;
+          ci.file.clr(); ci.file.name = hdf.name; ci.file.data = hdf.s; ci.file.size = hdf.s.length; ci.file.crc32 = false;
+          ci.readonly = false; ci.blocksize = 512; /* v9.3.6: 0 maradt volna -> IDE IRQ-vihar */
+        }
+        /* v9.3.6: a DF0 meghajtó JELEN van (üres, type = 1) — a KS boot képernyő
+           folyamatosan figyeli a DF0-t, így a behelyezett lemezt magától észreveszi.
+           (Régi magatartás: type = 0, kikapcsolt meghajtó; a ROM bekapcsoláskor
+           enumerálta a meghajtókat, a később behelyezett lemezt nem látta.) */
+        cfg.floppy.drive[0].type = 1;
         if (cfg.floppy.drive[1]) cfg.floppy.drive[1].type = 0;
         this._sae = sae; this._cfg = cfg;
-        say('SAE indítása (' + (ROMKEY === 'amiga' ? 'KS 3.1' : (ROMKEY ? 'KS 1.3' : 'AROS')) + ' ROM, A500, lemezes boot nélkül)…');
+        say('SAE indítása (' + (ROMKEY === 'amiga' ? 'KS 3.1' : (ROMKEY ? 'KS 1.3' : 'AROS')) + ' ROM, ' + (hdf ? 'A1200, HDF→IDE0' : 'A500') + ')…');
         const self = this;
         const stale = () => gen !== self._gen; /* v9.3.5: közben leállították → lánc abortál */
         sae.start().then(err => {
@@ -79352,21 +79368,41 @@ function ScriptedAmigaEmulator() {
     },
     insertDisk(name, u8) {
       if (!this._cfg) return 'Előbb indítsd el az Amigát (▶).';
+      const lower = String(name || '').toLowerCase();
+      if (/\.(hdf|vhd|hd0)$/.test(lower)) return this.insertHDF(name, u8); /* v9.3.6: merevlemez-kép */
       let s = '';
       for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, Math.min(u8.length, i + 0x8000)));
       try {
         const f = this._cfg.floppy.drive[0].file;
         f.clr(); f.name = name; f.data = s; f.size = s.length; f.crc32 = false;
         this._cfg.floppy.drive[0].type = 1;
-        if (this._running && this._sae.insert) this._sae.insert(0);
-        return name + ' behelyezve DF0-be (' + u8.length + ' bájt)';
+        /* v9.3.6: a fájl objektumot is átadjuk — a régi insert(0) undefined
+           fájllal hívta a disk_insert_2-t, az a file.size-nál elhasalt. */
+        if (this._running && this._sae.insert) this._sae.insert(0, f);
+        return name + ' behelyezve DF0-be (' + u8.length + ' bájt) — a Kickstart képernyő magától betölti.';
       } catch (e) { return 'lemezhiba: ' + e.message; }
+    },
+    /* v9.3.6: HDF merevlemez-kép → A1200 mód (KS 3.1), teljes újraindítással */
+    insertHDF(name, u8) {
+      let s = '';
+      for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, Math.min(u8.length, i + 0x8000)));
+      this._hdfPending = { name: String(name), s: s, size: u8.length };
+      if (this._running) {
+        this._gen++;
+        try { if (this._sae) this._sae.stop(); } catch (e) {}
+        this._running = false; this._sae = null; this._cfg = null;
+        setTimeout(() => this.boot(this._containerId || 'rh-ami-cv', this._logFn), 80);
+        return name + ' behelyezve IDE0-ra — A1200 (KS 3.1) újraindítás (' + u8.length + ' bájt)…';
+      }
+      return name + ' HDF beállítva (' + u8.length + ' bájt) — a ▶ indítás A1200 módban csatolja IDE0-ra.';
     },
     ejectDisk() {
       try {
         if (this._cfg) this._cfg.floppy.drive[0].file.clr();
         if (this._running && this._sae.eject) this._sae.eject(0);
-        return 'DF0 kiadva';
+        let m = 'DF0 kiadva';
+        if (this._hdfPending) { this._hdfPending = null; m += ' — HDF eltávolítva, a következő ▶ indítás újra A500 (KS 1.3) módban lesz'; }
+        return m;
       } catch (e) { return 'kiadási hiba: ' + e.message; }
     }
   };
@@ -79570,7 +79606,7 @@ function ScriptedAmigaEmulator() {
     tvc: { n: 'Videoton TVC 64+', fileAcc: '.cas,.txt', fileN: 'CAS kazettafájl', saveNote: 'TVC: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — CAS-betöltés és begépelés szintén.' },
     primo: { n: 'Primo B-64', fileAcc: '.pp,.ptp,.txt', fileN: 'PP quickload / PTP kazetta', saveNote: 'Primo: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — PP quickload és begépelés szintén.' },
     ent: { n: 'Enterprise 64/128', fileAcc: '.tap,.txt', fileN: 'TAP kazettafájl', saveNote: 'Enterprise: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — begépelés szintén.' },
-    amiga: { n: 'Commodore Amiga 500 (SAE mag)', fileAcc: '.adf,.adz,.adf.gz', fileN: 'ADF/ADZ lemezkép (DF0)', saveNote: 'Amiga: a lemezműveletek élnek (ADF behelyezés/kiadás), pillanatkép nem.' }
+    amiga: { n: 'Commodore Amiga 500 (SAE mag)', fileAcc: '.adf,.adz,.adf.gz,.hdf,.vhd,.hd0', fileN: 'ADF/ADZ lemez (DF0) vagy HDF merevlemez (IDE0)', saveNote: 'Amiga: a lemezműveletek élnek (ADF → DF0, HDF → IDE0/A1200), pillanatkép nem.' }
   };
 
   /* ---------------- eseménynapló ---------------- */
@@ -80466,7 +80502,7 @@ function ScriptedAmigaEmulator() {
   rhFile.type = 'file'; rhFile.style.display = 'none';
   document.body.appendChild(rhFile);
   RH.fileOpen = function (mid) {
-    if (mid === 'amiga') rhFile.accept = '.adf,.adz,.adf.gz';
+    if (mid === 'amiga') rhFile.accept = '.adf,.adz,.adf.gz,.hdf,.vhd,.hd0';
     else if (mid === 'c64') rhFile.accept = '.prg,.p00,.t64';
     else if (mid === 'primo') rhFile.accept = '.pp,.ptp';
     else if (mid === 'ht') rhFile.accept = '.cmd,.cas,.bas,.txt';
@@ -80624,7 +80660,7 @@ function ScriptedAmigaEmulator() {
 
   /* ---------- v9 marker ---------- */
   RHGEN.log('[RH9] Központosított menürendszer, gépenkénti billentyűzetek, beágyazott ROM-ok és modelllista-javítások aktívak — 23 gép, 9 emulátor-mag.');
-  console.log('[RH9] RETROHUB v9.3.5 aktív: egységes menük + billentyűzetek + RHMS AI + pillanatkép-mentés — mobil: géplista fiókban');
+  console.log('[RH9] RETROHUB v9.3.6 aktív: egységes menük + billentyűzetek + RHMS AI + pillanatkép-mentés — mobil: géplista fiókban');
 })();
 
 </script>

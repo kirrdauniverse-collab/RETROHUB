@@ -1,3 +1,4 @@
+
 /* ================================================================
    RETROHUB v9 — RH mag-réteg (cores8)
    createCore(mid): c64, c16, ht, tvc, primo, ent + RH.AMIGA (SAE)
@@ -22,7 +23,7 @@
     let img = ctx.createImageData(W, H);
     let frames = 0, lastT = 0, fpsAcc = 0, fpsN = 0, raf = null, running = true, paused = false;
     /* v9.3.5: rAF-orvos — rejtett/átfedett ablaknál a böngésző leállítja a requestAnimationFrame-et,
-       és a teljes emuláció megfagy (a gép „nem indul el”). A 60 ms-os setTimeout-ör is erőlteti
+       és a teljes emuláció megfagy (a gép „nem indul el”). A 60 ms-os setTimeout-őr is erőlteti
        a futást (kb. 16 fps), ha az rAF nem tüzel; látható ablaknál az rAF dominál, a timer leselejtezik. */
     let pulse = 0;
     function tickWatchdog() { if (running) tick(performance.now()); }
@@ -38,7 +39,7 @@
       if (renderFn) {
         try { renderFn(img.data); ctx.putImageData(img, 0, 0); } catch (e) {}
       }
-      frames++;
+      frames++; core._ctl._frames = frames;
       const st = document.querySelector('#rh-frames'), sf = document.querySelector('#rh-fps'), ss = document.querySelector('#rh-status');
       if (st) st.textContent = String(frames);
       fpsAcc += t - (lastT || t); lastT = t; fpsN++;
@@ -51,7 +52,8 @@
     core._ctl = {
       start() { if (raf === null && pulse === 0) { lastT = 0; raf = requestAnimationFrame(tick); pulse = setTimeout(tickWatchdog, 60); } running = true; },
       stop() { running = false; if (raf) cancelAnimationFrame(raf); raf = null; clearTimeout(pulse); pulse = 0; },
-      pause(p) { paused = !!p; }
+      pause(p) { paused = !!p; },
+      _frames: 0
     };
     core._resize = (w, h) => { W = w; H = h; canvas.width = w; canvas.height = h; img = ctx.createImageData(w, h); };
     core._ctl.start();
@@ -64,7 +66,7 @@
     core._processTyping = function () {
       if (!core._tq.length) return;
       core._tcount++;
-      if (core._tcount % 3) return;
+      if (core._tcount % 5) return; /* v9.3.6: lassabb gépelés — a TVC/Primo/Ent key-scan lemaradt a 3 frame-nél */
       const a = core._tq.shift();
       applyAction(a);
     };
@@ -185,12 +187,54 @@
   /* ================= C16 / Plus/4 ================= */
   function makeC16() {
     const m = new C64Family('c16');
-    m.loadRoms({ basic: b64u8(ROM.c16low), kernal: b64u8(ROM.c16high), char: b64u8(ROM.c64char) });
-    /* C16 memóriatérkép: $8000-$BFFF BASIC ROM, $C000-$FFFF KERNAL ROM */
+    m.tedKeyIdx = 0; /* TED key-index: 0 = nincs esemény */
+    m.tedRowSel = 0xFF; /* TED billentyű-latch: utoljára kiválasztott sor(ok) (aktív low) */
+    /* C16 memóriatérkép: $8000-$BFFF BASIC ROM, $C000-$FFFF KERNAL ROM.
+       FONTOS: a felülírást a loadRoms() ELŐTT telepítjük, hogy a reset-vektor
+       olvasása ($FFFC) már a helyes térképen történjen (a dump $C000-tól indul). */
+    const origSetKey16 = m.setKey.bind(m);
+    m.setKey = function (r, c2, down) {
+      origSetKey16(r, c2, down);
+      /* TED auto-szkenner: lenyomási él → kulcs-index a pufferbe.
+         Index-képlet: sor*8 + oszlop + 1 (a 8×8-as mátrix bejárása). */
+      if (down && !m.tedKeyIdx) m.tedKeyIdx = (r & 7) * 8 + (c2 & 7) + 1;
+    };
     const origRead = m.readMem.bind(m);
     m.readMem = function (a) {
       a &= 0xFFFF;
-      /* v9.3.5: TED RAM-bank ($FF3F = RAM $8000-$FFFF-en, $FF3E = ROM vissza) */
+      /* TED regiszterek ($FF00-$FF1F) a KERNAL ROM fölött állnak:
+         $FF09 bit1 = TED időzítő-IRQ (a jiffy + kurzor ehhez fut),
+         $FF1D = hang-generátor visszolvasás; a KERNAL $CE8A-nál addig vár,
+         amíg ≥ $A3 — ROM-bájtot visszaadva örök körbe ragadna. */
+      /* TED billentyűzet (a C16 a TED-be épített auto-szkennert használja):
+         $FD01 olvasás: bit3 = új kulcs-esemény várakozik;
+         $FD00 olvasás: az esemény kulcs-indexe (1-alapú), majd törlődik. */
+      if (a === 0xFD00) { const v = m.tedKeyIdx | 0; m.tedKeyIdx = 0; return v; }
+      /* bit7 = esemény érhető el, bit3 = lenyomás (a KERNAL $CE1D/$EA95 szerint) */
+      if (a === 0xFD01) return (m.tedKeyIdx ? 0x88 : 0x00);
+      /* TED billentyű-latch, kézi szken mód: a KERNAL $DB70-es rutinja a sor-
+         kiválasztást $FD30/$FF08-ra írja (aktív low, egy-hot), majd $FF08
+         olvasással kapja meg az oszlop-állapotot. Enélkül a $DB11-es jiffy-
+         szkenner nem lát billentyűt — ez volt a C16 némán maradásának oka. */
+      if (a === 0xFF08) {
+        let vv = 0xFF;
+        for (let r2 = 0; r2 < 8; r2++) if (!(m.tedRowSel & (1 << r2))) vv &= m.kb[r2];
+        return vv;
+      }
+      /* A teljes TED regiszterterület ($FF00-$FF1F) a KERNAL ROM FELETT van:
+         az olvasás a RAM-ba írt regiszterértékeket adja vissza. A KERNAL az
+         IRQ-jában $FF0B-be $CC/$A1-et ír a $CE42-es editor-tick vezérléséhez —
+         ROM-bájt visszaadása esetén a $CE38-as BIT mindig V=0-t adott, a tick
+         (és vele a $DB11-es jiffy-billentyűszkenner) sosem futott le. */
+      if (a >= 0xFF00 && a <= 0xFF1F) {
+        if (a === 0xFF1D) return 0xA3; /* hang-generátor: a $CE8A várakozása ezt igényli */
+        if (a === 0xFF09) return m.mem[a] | 0x02; /* TED időzítő-IRQ bit mindig jelzett */
+        return m.mem[a];
+      }
+      /* v9.3.5: TED RAM-bank ($FF3F = RAM $8000-$FFFF-en, $FF3E = ROM vissza) —
+         a kernel bankolt olvasói ($04B0+: STA $FF3F / LDA ($22),Y / STA $FF3E)
+         enélkül ROM-bájtot olvastak a memtop alatti temp-string területről
+         ($FCFC), ezért minden BASIC-kiírás (PRINT, RAM-szám) szemét volt. */
       if (m.tedRamBank && a >= 0x8000) return m.mem[a];
       if (a >= 0x8000 && a < 0xC000 && m.romBasic) return m.romBasic[a - 0x8000];
       if (a >= 0xC000 && m.romKernal) return m.romKernal[a - 0xC000];
@@ -199,9 +243,40 @@
     const origWrite = m.writeMem.bind(m);
     m.writeMem = function (a, v) {
       a &= 0xFFFF; v &= 0xFF;
+      if (a === 0xFD30 || a === 0xFF08) { m.tedRowSel = v; return; } /* TED sor-kiválasztás */
+      /* v9.3.5: TED ROM-bankkapcsoló: $FF3F → RAM látszik, $FF3E → ROM vissza */
       if (a === 0xFF3F) { m.tedRamBank = true; return; }
       if (a === 0xFF3E) { m.tedRamBank = false; return; }
       if (a === 0 || a === 1) return origWrite(a, v); m.mem[a] = v;
+    };
+    m.loadRoms({ basic: b64u8(ROM.c16low), kernal: b64u8(ROM.c16high), char: null });
+    /* a C16 karakterkészlete a KERNAL ROM-ban van ($D000-$DFFF) */
+    if (m.romKernal && m.romKernal.length >= 0x2000) m.romChar = m.romKernal.subarray(0x1000, 0x2000);
+    /* Boot-javítás: a KERNAL a $F49C-nél a gépnyelvi monitor parancspromptjára lép
+       (a dump $8006-os bájtja 0, így a KERNAL nem találja a BASIC-bankot).
+       Itt a saját BASIC cold startjára ugrik ($8019) — minden init után, ezért
+       már élő I/O-vektorokkal fut le: banner + READY. */
+    if (m.romKernal) { m.romKernal[0x349C] = 0x4C; m.romKernal[0x349D] = 0x19; m.romKernal[0x349E] = 0x80; }
+    /* a loadRoms() a régi (hibás) térképpel resetelt — most, a jó térképpel újra */
+    m.reset();
+    /* a C16 szín-RAM ($0800) alapértelmezése fehér (1) — a KERNAL a színeket
+       nem írja felül bootnál, feketén feketén láthatatlan lenne a szöveg */
+    m.mem.fill(1, 0x0800, 0x0C00);
+    /* a KERNAL keyscan-kapuja ($07D8 bit7): a cold-start útirányítás miatt a
+       normál init sorozat nem fut le, így a szerkesztő nem engélyezi a
+       TED-billentyűzet olvasást — a futtató hurok kapcsolja be (20 frame után) */
+    /* TED jiffy-IRQ: ~1/50 s PAL (1,76 MHz / 35200 ciklus) */
+    m.runFrame = function () {
+      const cpu = m.cpu;
+      const end = cpu.cycles + 35200;
+      let guard = 0;
+      while (cpu.cycles < end && guard++ < 900000) {
+        if (cpu.halted) { cpu.cycles += 1; break; }
+        cpu.step();
+      }
+      if (m.frames > 20 && !(m.mem[0x07D8] & 0x80)) m.mem[0x07D8] = 0x80;
+      cpu.irq();
+      m.frames++;
     };
     const core = {
       f: m,
@@ -231,7 +306,12 @@
       for (const ch of String(str)) {
         let p = cc ? cc(ch) : null;
         if (!p) { p = cc ? cc(String(ch).toUpperCase()) : null; }
-        if (p) pushChar(core, [{ r: p.r, c: p.c, d: 1 }, { r: p.r, c: p.c, d: 0 }]);
+        if (!p) continue;
+        const steps = [];
+        if (p.sh) steps.push({ r: 1, c: 7, d: 1 }); /* SHIFT lenyomva */
+        steps.push({ r: p.r, c: p.c, d: 1 }, { r: p.r, c: p.c, d: 0 });
+        if (p.sh) steps.push({ r: 1, c: 7, d: 0 });
+        pushChar(core, steps);
       }
       return true;
     };
@@ -252,10 +332,24 @@
         a &= 0xFFFF;
         /* Model I: MEMÓRIALEKÉPEZETT billentyűzet $3800-$3FFF:
            A8-A10 = sor, A0-A2 = oszlopbít (0 = nyomott) */
-        if (a >= 0x3800) {
-          const row = (a >> 8) & 7, col = a & 7;
-          const pressed = !(kbRow[row] & (1 << col));
-          return pressed ? (0xFF & ~(1 << col)) : 0xFF;
+        if (a >= 0x3800 && a < 0x3C00) {
+          /* Valódi Model I dekódolás: A0-A7 EGY-HOT oszlopkiválasztás ($01..$80),
+             a visszaadott bájt bit r = az r. sor állapota a kiválasztott oszlopban
+             (0 = nyomva). A ROM a $3801/$3802/.../$3880 címeket olvassa (LD A,(BC)
+             RLC C léptetéssel) — a bináris (a&7) dekódolás miatt a korábbi kód
+             nem tudott billentyűt átadni. */
+          const lb = a & 0xFF;
+          if (lb && !(lb & (lb - 1))) {
+            const cc = 31 - Math.clz32(lb);
+            let v2 = 0xFF;
+            for (let r2 = 0; r2 < 8; r2++) if (!(kbRow[r2] & (1 << cc))) v2 &= ~(1 << r2) & 0xFF;
+            /* A ROM (new^old)&new él-detektort használ ($03EB-$03F0) — a lenyomott
+               billentyűt SET bitként várja (aktív-magas). A belső mátrix aktív-alacsony,
+               ezért a visszaadott bájtot invertáljuk. Az eredeti polaritással a ROM
+               fantom '0. soros' eseményeket látott (maszk = ~lenyomva). */
+            return (~v2) & 0xFF;
+          }
+          return 0x00; /* nem one-hot cím = nincs billentyű (aktív-magas: 0x00) */
         }
         return mem[a];
       },
@@ -263,9 +357,10 @@
       in: p => {
         p &= 0xFF;
         if (p === 0xFE || p === 0xFF) {
-          if (selRow === 0xFF || (selRow & (selRow - 1)) !== 0) return 0xFF;
-          for (let i = 0; i < 8; i++) if (!((selRow >> i) & 1)) return kbRow[i];
-          return 0xFF;
+          /* aktív-magas visszaadás (a $03EB-es ROM-detektornak) */
+          if (selRow === 0xFF || (selRow & (selRow - 1)) !== 0) return 0x00;
+          for (let i = 0; i < 8; i++) if (!((selRow >> i) & 1)) return (~kbRow[i]) & 0xFF;
+          return 0x00;
         }
         return 0xFF;
       },
@@ -277,14 +372,33 @@
       /* v9.3: a billentyű-mátrix kifelé látható — a pillanatkép-modul sorosítja */
       _kb: kbRow,
       get mem() { return mem; },
+      /* egységes core.f fasád (cpu + mem) a diagnosztikai/UI-rétegnek */
+      get f() { return { cpu: cpu, mem: mem, get frames() { return (core._ctl && core._ctl._frames) || 0; } }; },
       mount(cv) {
         /* 64×16 karakter, 8×12 cella → 512×192, zöld; Z80 @ 1,77 MHz, 60 Hz */
         const W = 512, H = 192, CW = 8, CH = 12;
         const machine = {
+          _f: 0, _hold: 0,
           runFrame() {
             let n = 29500;
             let guard = 0;
             while (n > 0 && guard++ < 400000) n -= cpu.step();
+            /* v9.2.6 — automata boot-válasz: a HT1080Z ROM "READY ?" boot-
+               lekérdezéseknél megáll. Amíg a 0. sorban a "READY ?" látszik
+               (és nincs ">"), ENTER-t (0,6) küldünk ~0,5 s-enként; a valódi
+               BASIC ">" prompt megjelenésekor a segély leáll. */
+            this._f++;
+            if (this._hold > 0) { this._hold--; if (this._hold === 0) keyP(0, 6, false); }
+            if (this._f % 30 === 0) {
+              /* képernyőkód → szöveg (0-31: @A-Z[\]^_, 32-63: ASCII) */
+              const CS = '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_';
+              let s = '';
+              for (let col = 0; col < 16; col++) { const v = mem[0x3C00 + col] & 0x3F; s += (v >= 32) ? String.fromCharCode(v) : CS[v]; }
+              if (s.indexOf('READY') >= 0 && s.indexOf('?') >= 0 && s.indexOf('>') < 0 && this._hold === 0) {
+                keyP(0, 6, true);
+                this._hold = 7;
+              }
+            }
           }
         };
         const render = rgba => {
@@ -309,7 +423,19 @@
         makeLoop(core, cv, machine, render, { w: W, h: H });
       },
       unmount() { core._ctl.stop(); },
-      reset() { cpu.reset(); for (let i = 0x3000; i < 0x8000; i++) mem[i] = 0x20; selRow = 0xFF; kbRow.fill(0xFF); },
+      reset() {
+        cpu.reset();
+        /* A RAM $00-ról indul: a $20-töltés a $4036+ billentyű-árnyék-állapotot
+           is szeméttel töltötte, amiből a ROM kulcsszkenere (a $4036+-ot NEM
+           inicializálja) minden szkenneléskor fantom 'új lenyomást' látott →
+           garbage karakter → ?SN ERROR → végtelen READY/ERROR körforgás. */
+        for (let i = 0x3000; i < 0x8000; i++) mem[i] = 0x00;
+        /* a kulcsszken 'előző állapot' bájtjai: aktív-magasban a semmi = 0x00
+           (a ROM saját RAM-initje így is nullázza; az invertált olvasással
+           együtt már nincs fantom-esemény sem bootnál, sem gépelésnél) */
+        for (let i = 0x4036; i <= 0x403D; i++) mem[i] = 0x00;
+        selRow = 0xFF; kbRow.fill(0xFF);
+      },
       matrix: (r, c, down) => keyP(r, c, down),
       loadFile(name, u8) {
         if (/\.cmd$/i.test(name) || u8[0] === 0x05) {
@@ -333,12 +459,13 @@
     };
     makeTyper(core, a => keyP(a.r, a.c, !!a.d));
     core.typeText = str => {
+      const SH = { r: 0, c: 7 }; /* SHIFT (0,7) — v9.2.6 kalibráció */
       for (const ch of String(str)) {
-        if (ch === '\n') { pushChar(core, [{ r: 6, c: 0, d: 1 }, { r: 6, c: 0, d: 0 }]); continue; }
+        if (ch === '\n') { pushChar(core, [{ r: 0, c: 6, d: 1 }, { r: 0, c: 6, d: 0 }]); continue; } /* ENTER */
         let p = HKB.map[ch];
         if (p) { pushChar(core, [{ r: p.r, c: p.c, d: 1 }, { r: p.r, c: p.c, d: 0 }]); continue; }
         p = HKB.shmap[ch];
-        if (p) { pushChar(core, [{ r: 6, c: 6, d: 1 }, { r: p.r, c: p.c, d: 1 }, { r: p.r, c: p.c, d: 0 }, { r: 6, c: 6, d: 0 }]); }
+        if (p) { pushChar(core, [{ r: SH.r, c: SH.c, d: 1 }, { r: p.r, c: p.c, d: 1 }, { r: p.r, c: p.c, d: 0 }, { r: SH.r, c: SH.c, d: 0 }]); }
       }
       return true;
     };
@@ -501,7 +628,11 @@
         cfg.video.cursor = 0; /* SAEC_Config_Video_Cursor_Show */
         cfg.audio.mode = 3; /* On_Best */
         if (location.protocol === 'file:') cfg.audio.api = 0; /* v9.3.4: AudioWorklet file://-n nem tölthető be (CORS) — rögtön ScriptProcessor */
-        sae.setModel(1, 0); /* A500, 512K chip */
+        /* v9.3.6: HDF behelyezve → A1200 mód (68020 + AGA + 2 MB chip + Gayle IDE);
+           KS 1.3 az IDE-merevlemezről nem bootol, ezért HDF-módban KS 3.1 megy fel */
+        const hdf = this._hdfPending || null;
+        if (hdf) sae.setModel(5, 0); else sae.setModel(1, 0); /* A500, 512K chip — v9.3.6: A1200 config 0 (a config 1 autoconfig-probe-ja STOP-ba fagyott) */
+        this._containerId = containerId; this._logFn = logFn;
         /* AROS ROM beállítása */
         const bin = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, Math.min(u8.length, i + 0x8000))); return s; };
         let crcT = null;
@@ -512,7 +643,9 @@
         }
         const saeSet = (dst, name, data) => { dst.clr(); dst.name = name; dst.data = data; dst.size = data.length; dst.crc32 = false; };
         /* v9.3.3: valódi Kickstart — A500/68000: KS 1.3 (34.5); a KS 3.1 (40.68) 68020-at követel, ezért csak tartalék */
-        const ROMKEY = ROM.amiga13 ? 'amiga13' : (ROM.amiga ? 'amiga' : null);
+        /* v9.3.6: HDF-módban a KS 3.1 előnyben (IDE/RDB boot) */
+        const ROMKEY = hdf ? (ROM.amiga ? 'amiga' : (ROM.amiga13 ? 'amiga13' : null))
+                           : (ROM.amiga13 ? 'amiga13' : (ROM.amiga ? 'amiga' : null));
         if (ROMKEY) {
           saeSet(cfg.memory.rom, ROMKEY === 'amiga' ? 'kick31.rom' : 'kick13.rom', bin(b64u8(ROM[ROMKEY])));
           cfg.memory.extRom.clr();
@@ -522,8 +655,23 @@
           saeSet(cfg.memory.rom, 'aros.rom', rom);
           saeSet(cfg.memory.extRom, 'aros.ext', ext);
         }
+        /* v9.3.6: HDF csatolása a Gayle IDE-re — a filesys.reset() az induláskor
+           olvassa a mount.config bejegyzéseket (initialize_mountinfo). */
+        if (hdf) {
+          const ci = cfg.mount.config[0].ci;
+          ci.controller_type = 1; /* SAEC_Config_Mount_Controller_Type_MB_IDE */
+          ci.controller_unit = 0;
+          ci.file.clr(); ci.file.name = hdf.name; ci.file.data = hdf.s; ci.file.size = hdf.s.length; ci.file.crc32 = false;
+          ci.readonly = false; ci.blocksize = 512; /* v9.3.6: 0 maradt volna -> IDE IRQ-vihar */
+        }
+        /* v9.3.6: a DF0 meghajtó JELEN van (üres, type = 1) — a KS boot képernyő
+           folyamatosan figyeli a DF0-t, így a behelyezett lemezt magától észreveszi.
+           (Régi magatartás: type = 0, kikapcsolt meghajtó; a ROM bekapcsoláskor
+           enumerálta a meghajtókat, a később behelyezett lemezt nem látta.) */
+        cfg.floppy.drive[0].type = 1;
+        if (cfg.floppy.drive[1]) cfg.floppy.drive[1].type = 0;
         this._sae = sae; this._cfg = cfg;
-        say('SAE indítása (AROS ROM, A500)…');
+        say('SAE indítása (' + (ROMKEY === 'amiga' ? 'KS 3.1' : (ROMKEY ? 'KS 1.3' : 'AROS')) + ' ROM, ' + (hdf ? 'A1200, HDF→IDE0' : 'A500') + ')…');
         const self = this;
         const stale = () => gen !== self._gen; /* v9.3.5: közben leállították → lánc abortál */
         sae.start().then(err => {
@@ -579,21 +727,41 @@
     },
     insertDisk(name, u8) {
       if (!this._cfg) return 'Előbb indítsd el az Amigát (▶).';
+      const lower = String(name || '').toLowerCase();
+      if (/\.(hdf|vhd|hd0)$/.test(lower)) return this.insertHDF(name, u8); /* v9.3.6: merevlemez-kép */
       let s = '';
       for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, Math.min(u8.length, i + 0x8000)));
       try {
         const f = this._cfg.floppy.drive[0].file;
         f.clr(); f.name = name; f.data = s; f.size = s.length; f.crc32 = false;
         this._cfg.floppy.drive[0].type = 1;
-        if (this._running && this._sae.insert) this._sae.insert(0);
-        return name + ' behelyezve DF0-be (' + u8.length + ' bájt)';
+        /* v9.3.6: a fájl objektumot is átadjuk — a régi insert(0) undefined
+           fájllal hívta a disk_insert_2-t, az a file.size-nál elhasalt. */
+        if (this._running && this._sae.insert) this._sae.insert(0, f);
+        return name + ' behelyezve DF0-be (' + u8.length + ' bájt) — a Kickstart képernyő magától betölti.';
       } catch (e) { return 'lemezhiba: ' + e.message; }
+    },
+    /* v9.3.6: HDF merevlemez-kép → A1200 mód (KS 3.1), teljes újraindítással */
+    insertHDF(name, u8) {
+      let s = '';
+      for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, Math.min(u8.length, i + 0x8000)));
+      this._hdfPending = { name: String(name), s: s, size: u8.length };
+      if (this._running) {
+        this._gen++;
+        try { if (this._sae) this._sae.stop(); } catch (e) {}
+        this._running = false; this._sae = null; this._cfg = null;
+        setTimeout(() => this.boot(this._containerId || 'rh-ami-cv', this._logFn), 80);
+        return name + ' behelyezve IDE0-ra — A1200 (KS 3.1) újraindítás (' + u8.length + ' bájt)…';
+      }
+      return name + ' HDF beállítva (' + u8.length + ' bájt) — a ▶ indítás A1200 módban csatolja IDE0-ra.';
     },
     ejectDisk() {
       try {
         if (this._cfg) this._cfg.floppy.drive[0].file.clr();
         if (this._running && this._sae.eject) this._sae.eject(0);
-        return 'DF0 kiadva';
+        let m = 'DF0 kiadva';
+        if (this._hdfPending) { this._hdfPending = null; m += ' — HDF eltávolítva, a következő ▶ indítás újra A500 (KS 1.3) módban lesz'; }
+        return m;
       } catch (e) { return 'kiadási hiba: ' + e.message; }
     }
   };
@@ -618,11 +786,12 @@
     const st = document.querySelector('#rh-start'), pa = document.querySelector('#rh-pause'), rs = document.querySelector('#rh-reset2');
     if (st) st.onclick = () => { Object.values(RH.coreOf || {}).forEach(c => { try { c._ctl.pause(false); } catch (e) {} }); RHGEN.log('futás indítva'); };
     if (pa) pa.onclick = () => { Object.values(RH.coreOf || {}).forEach(c => { try { c._ctl.pause(true); } catch (e) {} }); RHGEN.log('szünet'); };
-    if (rs) rs.onclick = () => {
+    if (rs) rs.onclick = () => { /* v9.3.4: a ténylegesen futó gép resetelése — nem mindig 'c64' */
       const mid = document.querySelector('#rh-kb') ? (document.querySelector('#rh-kb').dataset.mid || '') : '';
-      RH.doReset(mid || 'c64');
+      RH.doReset(window.RH_CUR_MID || mid || 'c64');
     };
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireBar);
   else wireBar();
 })();
+

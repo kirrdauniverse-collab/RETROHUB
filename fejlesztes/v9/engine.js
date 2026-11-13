@@ -1,3 +1,4 @@
+
 /* ================================================================
    RETROHUB v9 — RHGEN központi menümotor
    Minden gépen AZONOS menüszerkezet (a Spectrum-modell szerint):
@@ -33,7 +34,7 @@
     tvc: { n: 'Videoton TVC 64+', fileAcc: '.cas,.txt', fileN: 'CAS kazettafájl', saveNote: 'TVC: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — CAS-betöltés és begépelés szintén.' },
     primo: { n: 'Primo B-64', fileAcc: '.pp,.ptp,.txt', fileN: 'PP quickload / PTP kazetta', saveNote: 'Primo: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — PP quickload és begépelés szintén.' },
     ent: { n: 'Enterprise 64/128', fileAcc: '.tap,.txt', fileN: 'TAP kazettafájl', saveNote: 'Enterprise: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — begépelés szintén.' },
-    amiga: { n: 'Commodore Amiga 500 (SAE mag)', fileAcc: '.adf,.adz,.adf.gz', fileN: 'ADF/ADZ lemezkép (DF0)', saveNote: 'Amiga: a lemezműveletek élnek (ADF behelyezés/kiadás), pillanatkép nem.' }
+    amiga: { n: 'Commodore Amiga 500 (SAE mag)', fileAcc: '.adf,.adz,.adf.gz,.hdf,.vhd,.hd0', fileN: 'ADF/ADZ lemez (DF0) vagy HDF merevlemez (IDE0)', saveNote: 'Amiga: a lemezműveletek élnek (ADF → DF0, HDF → IDE0/A1200), pillanatkép nem.' }
   };
 
   /* ---------------- eseménynapló ---------------- */
@@ -488,13 +489,16 @@
     return rows.map(r => r.filter(Boolean));
   }
   function c16Rows() {
-    const order = ['←', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '+', '-', '£', 'HOME', 'DEL',
-      'CTRL', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '*', '↑', 'RESTORE',
-      'RUN/STOP', 'CBM', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', ';', '=', 'RETURN',
-      'SHIFT', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 'SHIFT2', '↓', '→'];
-    const rows = [[], [], [], [], [], [], [], []];
-    order.forEach((l, i) => rows[Math.floor(i / 8)].push({ l: l === 'SHIFT2' ? 'SHIFT' : l, r: Math.floor(i / 8), c: i % 8, mod: /^SHIFT|CTRL|CBM|RUN/.test(l) ? 1 : 0, w: /RETURN|HOME|RESTORE|SHIFT/.test(l) ? 2 : 0 }));
-    return rows;
+    /* A C16 KERNAL valódi mátrixa (a ROM $E026 unshifted / $E067 shifted táblái
+       szerint — a fizikai elrendezés vizuális, a (r,c) a ROM-féle sor/oszlop) */
+    const K = (l, r, c, s, mod, w) => { const o = { l: l, r: r, c: c }; if (s) o.s = s; if (mod) o.mod = 1; if (w) o.w = w; return o; };
+    return [
+      [K('←', 6, 0), K('1', 7, 0, '!'), K('2', 7, 3, '"'), K('3', 1, 0, '#'), K('4', 1, 3, '$'), K('5', 2, 0, '%'), K('6', 2, 3, '&'), K('7', 3, 0, '\''), K('8', 3, 3, '('), K('9', 4, 0, ')'), K('0', 4, 3), K('+', 6, 6), K('-', 5, 6, '_'), K('£', 0, 2), K('HOME', 7, 1), K('DEL', 0, 0, 'INS', 0, 2)],
+      [K('CTRL', 7, 2), K('Q', 7, 6), K('W', 1, 1), K('E', 1, 6), K('R', 2, 1), K('T', 2, 6), K('Y', 3, 1), K('U', 3, 6), K('I', 4, 1), K('O', 4, 6), K('P', 5, 1), K('@', 0, 7), K('*', 6, 1, '<'), K('↑', 5, 3), K('RUN/STOP', 7, 7)],
+      [K('C=', 7, 5), K('SHIFT', 1, 7), K('A', 1, 2), K('S', 1, 5), K('D', 2, 2), K('F', 2, 5), K('G', 3, 2), K('H', 3, 5), K('J', 4, 2), K('K', 4, 5), K('L', 5, 2), K(':', 5, 5, '['), K(';', 6, 2, ']'), K('=', 6, 5, '_'), K('RETURN', 0, 1, '', 0, 2)],
+      [K('ESC', 6, 4), K('Z', 1, 4), K('X', 2, 7), K('C', 2, 4), K('V', 3, 7), K('B', 3, 4), K('N', 4, 7), K('M', 4, 4), K(',', 5, 7, '<'), K('.', 5, 4, '>'), K('/', 6, 7, '?'), K('F1', 0, 3), K('F2', 0, 4), K('F3', 0, 5), K('HELP', 0, 6)],
+      [K('↓', 5, 0), K('↑', 5, 3), K('←', 6, 0), K('→', 6, 3)]
+    ];
   }
   function fromLibRows(lib, keyFns) {
     return lib.map(row => row.map(k => {
@@ -541,6 +545,96 @@
     } catch (e) { log('billentyűzet-hiba: ' + e.message); }
     return k.rows || [];
   }
+
+  /* ============ fizikai billentyűzet-híd (v9.2.3) ============
+     A window-szintű keydown/keyup eseményeket a virtuális billentyűzet
+     mátrix-koordinátáira képezi le, és a mag matrix() hívására továbbítja.
+     A Shift+szimbólum kombinációkat a gombok sub-címkéi alapján oldja fel. */
+  const PHYS_SPECIAL = {
+    Enter: ['RETURN', 'ENTER', 'BE', '⏎'],
+    Backspace: ['DEL', 'ERASE', '⌫', 'CLS'],
+    Tab: ['TAB'],
+    Escape: ['ESC', 'BRK', 'STOP'],
+    ArrowLeft: ['←', 'LEFT', 'CRSR↔'],
+    ArrowRight: ['→', 'RIGHT', 'CRSR↔'],
+    ArrowUp: ['↑', 'UP', 'CRSR↕'],
+    ArrowDown: ['↓', 'DOWN', 'CRSR↕'],
+    Delete: ['DEL', 'ERASE'],
+    Insert: ['INS'],
+    Home: ['HOME', 'CLR', 'CLS'],
+    ControlLeft: ['CTRL', 'CTR'],
+    ControlRight: ['CTRL', 'CTR'],
+    ShiftLeft: ['SHIFT'],
+    ShiftRight: ['SHIFT'],
+    AltLeft: ['ALT'],
+    AltRight: ['ALT'],
+    CapsLock: ['CAPS'],
+    Space: ['SPACE']
+  };
+  const PHYS_HELD = {};
+  function physFind(mid, label) {
+    try {
+      const rows = kbRows(mid);
+      for (const row of rows) for (const k of row) {
+        if (k && k.r >= 0 && k.l && k.l.toUpperCase() === label) return k;
+      }
+    } catch (e) {}
+    return null;
+  }
+  function physFindSub(mid, ch) {
+    try {
+      const rows = kbRows(mid);
+      for (const row of rows) for (const k of row) {
+        if (k && k.r >= 0 && k.s && k.s.length === 1 && k.s === ch) return k;
+      }
+    } catch (e) {}
+    return null;
+  }
+  function rhPhysKey(e, on) {
+    const mid = (window.RHGEN && window.RHGEN._active) || null;
+    if (!mid || mid === 'amiga') return; /* az Amigát az SAE kezeli */
+    const c = coreOf(mid);
+    if (!c || !c.matrix) return;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    let kk = null, needShift = null;
+    const spec = PHYS_SPECIAL[e.code];
+    if (spec) { for (const lb of spec) { kk = physFind(mid, lb); if (kk) break; } }
+    if (!kk && e.key && e.key.length === 1) {
+      const up = e.key.toUpperCase();
+      kk = physFind(mid, up) || physFind(mid, e.key);
+      if (!kk) {
+        kk = physFindSub(mid, e.key);
+        if (kk) needShift = physFind(mid, 'SHIFT');
+      }
+    }
+    if (!kk) return;
+    if (on) {
+      e.preventDefault();
+      if (e.repeat) return;
+      const entry = { keys: [kk], shift: null };
+      if (needShift) { keyDown(mid, needShift, true); entry.shift = needShift; }
+      keyDown(mid, kk, true);
+      PHYS_HELD[e.code] = entry;
+    } else {
+      const entry = PHYS_HELD[e.code];
+      if (!entry) return;
+      for (const k of entry.keys) keyDown(mid, k, false);
+      if (entry.shift) keyDown(mid, entry.shift, false);
+      delete PHYS_HELD[e.code];
+    }
+  }
+  window.addEventListener('keydown', e => rhPhysKey(e, true), true);
+  window.addEventListener('keyup', e => rhPhysKey(e, false), true);
+  window.addEventListener('blur', () => {
+    const mid = (window.RHGEN && window.RHGEN._active) || null;
+    for (const code in PHYS_HELD) {
+      const en = PHYS_HELD[code];
+      for (const k of en.keys) keyDown(mid, k, false);
+      if (en.shift) keyDown(mid, en.shift, false);
+      delete PHYS_HELD[code];
+    }
+  });
 
   const stuck = {};
   function keyDown(mid, k, on) {
@@ -721,3 +815,4 @@
     get logs() { return logs; }
   };
 })();
+

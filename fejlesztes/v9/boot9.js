@@ -1,3 +1,4 @@
+
 /* ================================================================
    RETROHUB v9 — boot: modulregisztrációk, billentyűzet-szinkron,
    globális AI-párbeszédablak, v9 marker
@@ -85,6 +86,7 @@
         delete RH.coreOf[mid];
         core = null;
         activeMid = null;
+        RHGEN._active = null;
         setRhUI(false);
       },
       reset() { RH.doReset(mid); },
@@ -109,7 +111,7 @@
   rhFile.type = 'file'; rhFile.style.display = 'none';
   document.body.appendChild(rhFile);
   RH.fileOpen = function (mid) {
-    if (mid === 'amiga') rhFile.accept = '.adf,.adz,.adf.gz';
+    if (mid === 'amiga') rhFile.accept = '.adf,.adz,.adf.gz,.hdf,.vhd,.hd0';
     else if (mid === 'c64') rhFile.accept = '.prg,.p00,.t64';
     else if (mid === 'primo') rhFile.accept = '.pp,.ptp';
     else if (mid === 'ht') rhFile.accept = '.cmd,.cas,.bas,.txt';
@@ -152,25 +154,33 @@
 
   /* ---------- aktív gép követése a mountból ---------- */
   const origSetActive = RHGEN.setActive;
-  RHGEN.setActive = function (mid, prof) { activeMid = mid; origSetActive(mid, prof); };
+  RHGEN.setActive = function (mid, prof) { activeMid = mid; RHGEN._active = mid; origSetActive(mid, prof); };
 
   /* ---------- C16 koordináták (kalibrációig sor-folytonos) ---------- */
+  /* C16 koordináták — a KERNAL $E026 (unshifted) és $E067 (shifted) táblái
+     szerint; sh = a SHIFT (1,7) lenyomása is kell a betöltéshez */
   RH.c16Coord = function (ch) {
     if (!RH._c16map) {
-      RH._c16map = {};
-      const L = ['←1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '+', '-', '£', 'HOME', 'DEL'];
-      void L;
-      // a buildC16Layout sorrendjében: index → (r,c)
-      const labels = ['←', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '+', '-', '£', 'HOME', 'DEL',
-        'CTRL', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '*', '↑', 'RESTORE',
-        'RUNSTOP', 'CBM', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', ';', '=', 'RETURN',
-        'SHIFT', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 'SHIFT2', '↓', '→'];
-      labels.forEach((lab, i) => { RH._c16map[lab] = { r: Math.floor(i / 8), c: i % 8 }; });
+      RH._c16map = {
+        '\n': { r: 0, c: 1 }, ' ': { r: 7, c: 4 },
+        A: { r: 1, c: 2 }, B: { r: 3, c: 4 }, C: { r: 2, c: 4 }, D: { r: 2, c: 2 }, E: { r: 1, c: 6 }, F: { r: 2, c: 5 },
+        G: { r: 3, c: 2 }, H: { r: 3, c: 5 }, I: { r: 4, c: 1 }, J: { r: 4, c: 2 }, K: { r: 4, c: 5 }, L: { r: 5, c: 2 },
+        M: { r: 4, c: 4 }, N: { r: 4, c: 7 }, O: { r: 4, c: 6 }, P: { r: 5, c: 1 }, Q: { r: 7, c: 6 }, R: { r: 2, c: 1 },
+        S: { r: 1, c: 5 }, T: { r: 2, c: 6 }, U: { r: 3, c: 6 }, V: { r: 3, c: 7 }, W: { r: 1, c: 1 }, X: { r: 2, c: 7 },
+        Y: { r: 3, c: 1 }, Z: { r: 1, c: 4 },
+        1: { r: 7, c: 0 }, 2: { r: 7, c: 3 }, 3: { r: 1, c: 0 }, 4: { r: 1, c: 3 }, 5: { r: 2, c: 0 }, 6: { r: 2, c: 3 },
+        7: { r: 3, c: 0 }, 8: { r: 3, c: 3 }, 9: { r: 4, c: 0 }, 0: { r: 4, c: 3 },
+        '.': { r: 5, c: 4 }, ',': { r: 5, c: 7 }, '-': { r: 5, c: 6 }, '+': { r: 6, c: 6 }, ':': { r: 5, c: 5 },
+        ';': { r: 6, c: 2 }, '=': { r: 6, c: 5 }, '/': { r: 6, c: 7 }, '*': { r: 6, c: 1 }, '@': { r: 0, c: 7 }, '£': { r: 0, c: 2 },
+        '!': { r: 7, c: 0, sh: 1 }, '"': { r: 7, c: 3, sh: 1 }, '#': { r: 1, c: 0, sh: 1 }, '$': { r: 1, c: 3, sh: 1 },
+        '%': { r: 2, c: 0, sh: 1 }, '&': { r: 2, c: 3, sh: 1 }, "'": { r: 3, c: 0, sh: 1 }, '(': { r: 3, c: 3, sh: 1 },
+        ')': { r: 4, c: 0, sh: 1 }, '?': { r: 6, c: 7, sh: 1 }, '<': { r: 5, c: 7, sh: 1 }, '>': { r: 5, c: 4, sh: 1 },
+        '[': { r: 5, c: 5, sh: 1 }, ']': { r: 6, c: 2, sh: 1 }, '_': { r: 5, c: 6, sh: 1 }
+      };
     }
-    if (ch === '\n') return RH._c16map['RETURN'];
-    if (ch === ' ') return RH._c16map['SPACE'] || { r: 5, c: 0 };
-    const up = String(ch).toUpperCase();
-    return RH._c16map[up] || null;
+    if (ch === '\n') return RH._c16map['\n'];
+    if (ch === ' ') return RH._c16map[' '];
+    return RH._c16map[String(ch).toUpperCase()] || RH._c16map[ch] || null;
   };
 
   /* ---------- GLOBÁLIS AI-PÁRBESZÉDABLAK (🤖) ---------- */
@@ -258,6 +268,7 @@
   Q('#rh-aibtn').addEventListener('click', () => RHAIopen());
 
   /* ---------- v9 marker ---------- */
-  RHGEN.log('[RH9] Központosított menürendszer, gépenkénti billentyűzetek, beágyazott ROM-ok — 23 gép, 9 emulátor-mag. v9.2: böngésző-mentés fallback (Pages-kompatibilis), AI-szolgáltató környezetfigyelés.');
-  console.log('[RH9] RETROHUB v9 aktív: egységes menük + billentyűzetek + RHMS AI');
+  RHGEN.log('[RH9] Központosított menürendszer, gépenkénti billentyűzetek, beágyazott ROM-ok és modelllista-javítások aktívak — 23 gép, 9 emulátor-mag.');
+  console.log('[RH9] RETROHUB v9.3.5 aktív: egységes menük + billentyűzetek + RHMS AI + pillanatkép-mentés — mobil: géplista fiókban');
 })();
+
