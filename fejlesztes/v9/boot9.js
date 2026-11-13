@@ -46,14 +46,16 @@
   function amigaMount() {
     setRhUI(true);
     let cv = Q('#rh-ami-cv');
-    if (!cv) { cv = document.createElement('div'); cv.id = 'rh-ami-cv'; cv.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center'; Q('#rh-wrap').appendChild(cv); }
+    if (cv) cv.remove(); /* v9.3.5: mindig friss tároló — a régi SAE canvas ne halmozódjon */
+    cv = document.createElement('div'); cv.id = 'rh-ami-cv'; cv.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center'; Q('#rh-wrap').appendChild(cv);
     Q('#rh-canvas').style.display = 'none';
     RH.AMIGA.boot('rh-ami-cv', m => RHGEN.log('Amiga: ' + m));
     RHGEN.setActive('amiga', null);
     chipsFill('amiga');
   }
   function amigaUnmount() {
-    RH.AMIGA.stop();
+    RH.AMIGA.stop(); /* v9.3.5: futó start-láncot is leállít (generációs jelző) */
+    const cv = Q('#rh-ami-cv'); if (cv) cv.remove(); /* zombi canvas/DOM eltakarítása */
     Q('#rh-canvas').style.display = '';
     setRhUI(false);
   }

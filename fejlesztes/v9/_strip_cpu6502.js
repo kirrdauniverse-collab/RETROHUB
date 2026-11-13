@@ -100,14 +100,18 @@ class Cpu6502 {
   // ADC
   adc(v) {
     if (this.p & DF) {
-      // BCD mode - ritkán használt, de implementáljuk
+      /* v9.3.5: helyes NMOS-dekád korrekció — a régi kód a hi>9-es +6-os
+         korrekciót elhagyta és a lo ≥ 0x20-nál rossz átvitelt adott, ezért
+         a BASIC 3.5 (C16/Plus4) BCD-alapú FP→ASCII számkiírása szemetet
+         nyomtatott (a C64 BASIC 2 bináris osztásos, azért nem érintett). */
       let lo = (this.a & 0x0F) + (v & 0x0F) + (this.p & CF ? 1 : 0);
-      let hi = (this.a >> 4) + (v >> 4);
-      if (lo > 9) { lo += 6; hi++; }
-      let res = (hi << 4) | (lo & 0x0F);
-      this.setFlags(CF | VF, (hi > 9 ? CF : 0) | (((~(this.a ^ v) & (this.a ^ res) & 0x80) ? VF : 0)));
-      this.setZN(res & 0xFF);
-      this.a = res & 0xFF;
+      if (lo > 9) lo += 6;
+      let hi = (this.a >> 4) + (v >> 4) + (lo > 0x0F ? 1 : 0);
+      if (hi > 9) hi += 6;
+      const res = ((hi << 4) | (lo & 0x0F)) & 0xFF;
+      this.setFlags(CF | VF, (hi > 0x0F ? CF : 0) | (((~(this.a ^ v) & (this.a ^ res) & 0x80) ? VF : 0)));
+      this.setZN(res);
+      this.a = res;
     } else {
       const sum = this.a + v + (this.p & CF ? 1 : 0);
       const res = sum & 0xFF;
@@ -117,12 +121,15 @@ class Cpu6502 {
   }
   sbc(v) {
     if (this.p & DF) {
+      /* v9.3.5: NMOS-dekád SBC — a hi alulcsordulásnál dekád korrekció (+10),
+         nem bináris fallback; a VF-képlet marad. */
       let lo = (this.a & 0x0F) - (v & 0x0F) - (this.p & CF ? 0 : 1);
       let hi = (this.a >> 4) - (v >> 4);
       if (lo < 0) { lo += 10; hi--; }
-      let res;
-      if (hi < 0) { res = (this.a - v - (this.p & CF ? 0 : 1)) & 0xFF; this.setFlags(CF, 0); }
-      else { res = (hi << 4) | (lo & 0x0F); this.setFlags(CF, CF); }
+      let cf = 0;
+      if (hi < 0) { hi += 10; } else { cf = CF; }
+      const res = ((hi << 4) | (lo & 0x0F)) & 0xFF;
+      this.setFlags(CF | VF, cf | (((~(this.a ^ v) & (this.a ^ res) & 0x80) ? VF : 0)));
       this.setZN(res);
       this.a = res;
     } else {

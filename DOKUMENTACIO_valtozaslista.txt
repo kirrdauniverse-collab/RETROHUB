@@ -829,3 +829,46 @@ alatt; a tünet oka a régi cache-ből jövő lap + a lenti törékenységek egy
      index.html).
    • Javaslat a felhasználónak: a lap erős újratöltése (Ctrl+F5 /
      Cmd+Shift+R), hogy a régi cache-beli v9.3.1/9.3.2 ne fusson.
+
+================================================================================
+v9.3.5 (2026-11-13) — GÉPVÁLTÁS + AMIGA EGÉR + C16 VALÓS INDULÁS
+================================================================================
+
+1) GÉPVÁLTÁS MEGFAGYÁS JAVÍTÁS (a „gép nem indul az Amiga után" hiba)
+----------------------------------------------------------------------------
+   • rAF-orvos (mindhárom hurok: ZX Spectrum, ZX81, makeLoop/7 mag):
+     rejtett / átfedett / inaktív ablaknál a böngésző leállítja a
+     requestAnimationFrame-et, és a teljes emuláció megfagy — a gép „nem
+     indul el", böngésző-reset után meg újra megy. Mostantól 60 ms-os
+     setTimeout-őr is erőlteti a futást (~16 fps), ha az rAF nem tüzel;
+     látható ablaknál az rAF dominál, a timer leselejtezik.
+   • Amiga stop()-javítás: futó start()-lánccal (a WebAudio-404 miatt a
+     ScriptProcessor-újrapróbálás másodpercekig tart) közbeni gépváltás
+     zombi SAE-t hagyott futni (a _running csak a start után állt be).
+     Generációs jelző (_gen): a stop() érvényteleníti a függő láncot, az
+     elavult lánc magát is leállítja (sae.stop()).
+   • amigaUnmount: a #rh-ami-cv tároló eltávolítása (zombi canvas-takarítás),
+     amigaMount: mindig friss tároló.
+   • shell load(): a régi mag unmount()-hibája nem szakíthatja meg a
+     gépváltást (belső try/catch).
+
+2) AMIGA EGÉR
+----------------------------------------------------------------------------
+   • cfg.video.cursor = Show (Lock helyett): a pointer-lock iframe-en belül
+     engedély nélkül mindig elutasított, és akkor az SAE mouse.attach sosem
+     futott le → az egér nem mozgott. 'Show' módon az SAE közvetlenül a
+     canvasra köti az egér-eseményeket.
+
+3) C16 / PLUS4 — VALÓS INDULÁS ÉS MŰKÖDŐ BASIC
+----------------------------------------------------------------------------
+   • TED RAM-bank ($FF3E/$FF3F): a kernel bankolt olvasói ($04B0+: STA $FF3F /
+     LDA ($22),Y / STA $FF3E) ROM-bájtot olvastak a memtop alatti
+     temp-string területről ($FCFC) — a string-build írásai "láthatatlanok"
+     voltak. Mostantól $FF3F-re RAM nézet, $FF3E-re ROM nézet.
+   • Cpu6502 BCD-javítás (adc/sbc decimális mód): helyes NMOS-dekád
+     korrekció — a BASIC 3.5 (C16/Plus4) BCD-alapú FP→ASCII számkiírása
+     enélkül szemetet nyomtatott ('|L' a 60671 és a PRINT-eredmény helyett).
+     A C64 BASIC 2 bináris osztásos konverziót használ, azért nem érintett.
+   • Ellenőrzés: boot → 'COMMODORE BASIC V3.5 60671 BYTES FREE'; PRINT 2+2 → 4;
+     PRINT "ABC" → ABC; C64: PRINT 5*5 → 25 (nem rongált); gépváltás
+     Amiga→C64→TVC→HT1080Z→C16 mind renderel; Amiga egér él.

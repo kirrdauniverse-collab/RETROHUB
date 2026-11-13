@@ -21,8 +21,15 @@
     canvas.width = W; canvas.height = H;
     let img = ctx.createImageData(W, H);
     let frames = 0, lastT = 0, fpsAcc = 0, fpsN = 0, raf = null, running = true, paused = false;
+    /* v9.3.5: rAF-orvos — rejtett/átfedett ablaknál a böngésző leállítja a requestAnimationFrame-et,
+       és a teljes emuláció megfagy (a gép „nem indul el”). A 60 ms-os setTimeout-ör is erőlteti
+       a futást (kb. 16 fps), ha az rAF nem tüzel; látható ablaknál az rAF dominál, a timer leselejtezik. */
+    let pulse = 0;
+    function tickWatchdog() { if (running) tick(performance.now()); }
     function tick(t) {
-      raf = requestAnimationFrame(tick);
+      if (!running) return;
+      clearTimeout(pulse); pulse = 0; if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(tick); pulse = setTimeout(tickWatchdog, 60);
       if (!running) return;
       if (!paused) {
         try { machine.runFrame(); } catch (e) { RHGEN.log('maghiba: ' + e.message); running = false; }
@@ -42,8 +49,8 @@
       }
     }
     core._ctl = {
-      start() { if (!raf) { lastT = 0; raf = requestAnimationFrame(tick); } running = true; },
-      stop() { running = false; if (raf) cancelAnimationFrame(raf); raf = null; },
+      start() { if (raf === null && pulse === 0) { lastT = 0; raf = requestAnimationFrame(tick); pulse = setTimeout(tickWatchdog, 60); } running = true; },
+      stop() { running = false; if (raf) cancelAnimationFrame(raf); raf = null; clearTimeout(pulse); pulse = 0; },
       pause(p) { paused = !!p; }
     };
     core._resize = (w, h) => { W = w; H = h; canvas.width = w; canvas.height = h; img = ctx.createImageData(w, h); };
@@ -183,12 +190,19 @@
     const origRead = m.readMem.bind(m);
     m.readMem = function (a) {
       a &= 0xFFFF;
+      /* v9.3.5: TED RAM-bank ($FF3F = RAM $8000-$FFFF-en, $FF3E = ROM vissza) */
+      if (m.tedRamBank && a >= 0x8000) return m.mem[a];
       if (a >= 0x8000 && a < 0xC000 && m.romBasic) return m.romBasic[a - 0x8000];
       if (a >= 0xC000 && m.romKernal) return m.romKernal[a - 0xC000];
       return origRead(a);
     };
     const origWrite = m.writeMem.bind(m);
-    m.writeMem = function (a, v) { a &= 0xFFFF; v &= 0xFF; if (a === 0 || a === 1) return origWrite(a, v); m.mem[a] = v; };
+    m.writeMem = function (a, v) {
+      a &= 0xFFFF; v &= 0xFF;
+      if (a === 0xFF3F) { m.tedRamBank = true; return; }
+      if (a === 0xFF3E) { m.tedRamBank = false; return; }
+      if (a === 0 || a === 1) return origWrite(a, v); m.mem[a] = v;
+    };
     const core = {
       f: m,
       get mem() { return m.mem; },
@@ -470,16 +484,21 @@
 
   /* ================= Amiga (SAE híd) ================= */
   const AMIGA = {
-    _sae: null, _cfg: null, _running: false,
+    _sae: null, _cfg: null, _running: false, _gen: 0,
     boot(containerId, logFn) {
       const say = m => { try { logFn && logFn(m); } catch (e) {} };
       if (this._running) { say('már fut'); return; }
+      const gen = ++this._gen; /* v9.3.5: az induló start-lánc generációja — stop() érvényteleníti */
       try {
         const sae = new window.ScriptedAmigaEmulator();
         const cfg = sae.getConfig();
         cfg.video.id = containerId;
         cfg.video.api = 0; /* Canvas */
         cfg.video.pauseInBackground = true;
+        /* v9.3.5: egér — a Lock mód pointer-lockot kér, ami iframe-en belül (engedély nélkül)
+           mindig elutasított, és akkor az SAE mouse.attach SOSEM futott le → nem mozgott az egér.
+           'Show' módon (0) az SAE közvetlenül a canvasra köti az egér-eseményeket. */
+        cfg.video.cursor = 0; /* SAEC_Config_Video_Cursor_Show */
         cfg.audio.mode = 3; /* On_Best */
         if (location.protocol === 'file:') cfg.audio.api = 0; /* v9.3.4: AudioWorklet file://-n nem tölthető be (CORS) — rögtön ScriptProcessor */
         sae.setModel(1, 0); /* A500, 512K chip */
@@ -506,23 +525,28 @@
         this._sae = sae; this._cfg = cfg;
         say('SAE indítása (AROS ROM, A500)…');
         const self = this;
+        const stale = () => gen !== self._gen; /* v9.3.5: közben leállították → lánc abortál */
         sae.start().then(err => {
+          if (stale()) { try { sae.stop(); } catch (e) {} throw new Error('elavult SAE start megszakítva'); }
           if (err !== 0 && cfg.audio.mode >= 2) {
             cfg.audio.api = 0; /* ScriptProcessor */
             return sae.start();
           }
           return err;
         }).then(err => {
+          if (stale()) { try { sae.stop(); } catch (e) {} throw new Error('elavult SAE start megszakítva'); }
           if (err !== 0) { cfg.audio.mode = 1; return sae.start(); }
           return err;
         }).then(err => {
+          if (stale()) { try { sae.stop(); } catch (e) {} throw new Error('elavult SAE start megszakítva'); }
           if (err === 0) { self._running = true; say('Amiga elindult — Kickstart képernyő. ADF lemez a VEZÉRLÉS csoportban helyezhető be.'); }
           else say('SAE hiba: ' + err);
-        }).catch(e => say('SAE hiba: ' + (e && e.message || e)));
+        }).catch(e => { const msg = e && e.message || String(e); if (msg.indexOf('elavult') < 0) say('SAE hiba: ' + msg); });
       } catch (e) { say('Amiga boot hiba: ' + (e && e.message || e)); }
     },
     stop() {
-      try { if (this._sae && this._running) this._sae.stop(); } catch (e) {}
+      this._gen++; /* v9.3.5: a futó start-lánc is érvénytelenítve */
+      try { if (this._sae) this._sae.stop(); } catch (e) {} /* akkor is, ha még nem 'running' — a quit-flag átvészeli az indulást */
       this._running = false;
     },
     reset() { try { if (this._sae) this._sae.reset(true, false); } catch (e) {} },
