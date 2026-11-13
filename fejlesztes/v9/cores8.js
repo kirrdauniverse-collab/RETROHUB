@@ -26,6 +26,9 @@
        és a teljes emuláció megfagy (a gép „nem indul el”). A 60 ms-os setTimeout-őr is erőlteti
        a futást (kb. 16 fps), ha az rAF nem tüzel; látható ablaknál az rAF dominál, a timer leselejtezik. */
     let pulse = 0;
+    /* v9.3.7: valós idejű catch-up — a lassú renderelés (nagy canvas) visszafogja az rAF-et,
+       és az emulált gép a valós idő alatt lemarad (a TVC/Ent ROM key-scanje „elveszi” a
+       gyors leütéseket). Ha a tick óta több mint egy képkocka idő telt el, több runFrame fut. */
     function tickWatchdog() { if (running) tick(performance.now()); }
     function tick(t) {
       if (!running) return;
@@ -33,8 +36,15 @@
       raf = requestAnimationFrame(tick); pulse = setTimeout(tickWatchdog, 60);
       if (!running) return;
       if (!paused) {
-        try { machine.runFrame(); } catch (e) { RHGEN.log('maghiba: ' + e.message); running = false; }
-        core._processTyping();
+        /* v9.3.7: lemaradás-kiegyenlítés (max 4 frame / tick — a CPU ne ragadjon be) */
+        let n = 1;
+        if (lastT && t > lastT) {
+          const target = Math.min(4, Math.max(1, Math.round((t - lastT) / 20)));
+          n = target;
+        }
+        try {
+          for (let i = 0; i < n && running; i++) { machine.runFrame(); core._processTyping(); }
+        } catch (e) { RHGEN.log('maghiba: ' + e.message); running = false; }
       }
       if (renderFn) {
         try { renderFn(img.data); ctx.putImageData(img, 0, 0); } catch (e) {}
@@ -51,7 +61,7 @@
     }
     core._ctl = {
       start() { if (raf === null && pulse === 0) { lastT = 0; raf = requestAnimationFrame(tick); pulse = setTimeout(tickWatchdog, 60); } running = true; },
-      stop() { running = false; if (raf) cancelAnimationFrame(raf); raf = null; clearTimeout(pulse); pulse = 0; },
+      stop() { running = false; core._tdisposed = true; /* v9.3.7: a wall-clock gépelő tisztítása */ if (raf) cancelAnimationFrame(raf); raf = null; clearTimeout(pulse); pulse = 0; },
       pause(p) { paused = !!p; },
       _frames: 0
     };
@@ -63,10 +73,15 @@
   function makeTyper(core, applyAction) {
     core._tq = [];
     core._tcount = 0;
+    /* v9.3.7: EMULÁLT-KÉPKOCKA-alapú gépelés — a makeLoop minden runFrame után hívja!
+       (a headless oldalak setInterval-jét a böngésző fojtja 1 s-1 percre, a régi
+       frame-arányos verzió meg a lassú rAF-et követte) — így a lépésköz a GÉP
+       saját idejében mérődik: core._tstep = press hossz emulált frame-ekben,
+       a ROM key-scanje mindig észreveszi a leütést. */
     core._processTyping = function () {
       if (!core._tq.length) return;
       core._tcount++;
-      if (core._tcount % 5) return; /* v9.3.6: lassabb gépelés — a TVC/Primo/Ent key-scan lemaradt a 3 frame-nél */
+      if (core._tcount % (core._tstep || 5)) return;
       const a = core._tq.shift();
       applyAction(a);
     };
@@ -170,7 +185,26 @@
         } else { addr = u8[0] | (u8[1] << 8); data = u8.subarray(2); }
         if (addr == null || !data) return 'ismeretlen fájlformátum';
         for (let i = 0; i < data.length && addr + i < 0x10000; i++) m.mem[(addr + i) & 0xFFFF] = data[i];
-        return name + ' betöltve a $' + addr.toString(16).toUpperCase() + ' címre (' + data.length + ' bájt)';
+        /* v9.3.7: BASIC-program felismerés + programpointerek + automatikus indítás.
+           Korábban a RUN üres programot futtatott: a KERNAL a $2D/$2F pointerek
+           alapján olvassa a programot, és a reset-utáni értékük $0801 (üres program),
+           tehát a RAM-ba másolt sorokat a RUN nem látta. */
+        let res = name + ' betöltve a $' + addr.toString(16).toUpperCase() + ' címre (' + data.length + ' bájt)';
+        const isB = addr === 0x0801 && data.length >= 6 &&
+          data[data.length - 2] === 0 && data[data.length - 1] === 0 &&
+          (data[0] & 1) === 0 && data[0] >= 2 && data[0] <= data.length &&
+          (data[2] | (data[3] << 8)) <= 63999;
+        if (isB) {
+          const end = (addr + data.length) & 0xFFFF;
+          m.mem[0x2D] = end & 0xFF; m.mem[0x2E] = end >> 8; /* program vége → változók kezdete */
+          m.mem[0x2F] = end & 0xFF; m.mem[0x30] = end >> 8; /* tömbterület vége */
+          setTimeout(() => { try { core.typeText('RUN\n'); } catch (e) {} }, 500);
+          res += ' — RUN elindítva';
+        } else {
+          setTimeout(() => { try { core.typeText('SYS' + addr + '\n'); } catch (e) {} }, 500);
+          res += ' — SYS' + addr + ' begépelve';
+        }
+        return res;
       },
       memRead(a) { return m.readMem(a & 0xFFFF); },
       memWrite(a, v) { m.mem[a & 0xFFFF] = v & 0xFF; },
@@ -289,7 +323,25 @@
         if (/\.prg$/i.test(name) || u8[0] === 0x01) {
           const addr = u8[0] | (u8[1] << 8), data = u8.subarray(2);
           for (let i = 0; i < data.length && addr + i < 0x10000; i++) m.mem[(addr + i) & 0xFFFF] = data[i];
-          return name + ' betöltve a $' + addr.toString(16).toUpperCase() + ' címre (' + data.length + ' bájt)';
+          /* v9.3.7: BASIC-program pointerek ($1001-es BASIC start) + automatikus
+             RUN — a C16-nál is ugyanaz a hiba volt: a RUN üres programot futtatott,
+             mert a $2D/$2F pointerek reset-utáni értéke $1001 maradt. */
+          let res = name + ' betöltve a $' + addr.toString(16).toUpperCase() + ' címre (' + data.length + ' bájt)';
+          const isB = addr === 0x1001 && data.length >= 6 &&
+            data[data.length - 2] === 0 && data[data.length - 1] === 0 &&
+            (data[0] & 1) === 0 && data[0] >= 2 && data[0] <= data.length &&
+            (data[2] | (data[3] << 8)) <= 63999;
+          if (isB) {
+            const end = (addr + data.length) & 0xFFFF;
+            m.mem[0x2D] = end & 0xFF; m.mem[0x2E] = end >> 8;
+            m.mem[0x2F] = end & 0xFF; m.mem[0x30] = end >> 8;
+            setTimeout(() => { try { core.typeText('RUN\n'); } catch (e) {} }, 500);
+            res += ' — RUN elindítva';
+          } else {
+            setTimeout(() => { try { core.typeText('SYS' + addr + '\n'); } catch (e) {} }, 500);
+            res += ' — SYS' + addr + ' begépelve';
+          }
+          return res;
         }
         return 'ismeretlen fájlformátum';
       },
@@ -506,7 +558,13 @@
       }
     };
     makeTyper(core, a => a.line != null ? (a.d ? m.keyDown(a.line, a.bit) : m.keyUp(a.line, a.bit)) : (a.d ? m.keyDown(a.r, a.c) : m.keyUp(a.r, a.c)));
+    core._tstep = 6; /* v9.3.7: TVC lépésköz emulált frame-ekben */
     core.typeText = str => {
+      /* v9.3.7: bemelegítés — a ROM szerkesztője az első ~7 leütést elnyeli;
+         a SHIFT (6,3) önmagában semmit nem ír és nem mozgat — 8 lenyomás */
+      const w = [];
+      for (let i = 0; i < 8; i++) w.push({ line: SHIFT.line, bit: SHIFT.bit, d: 1 }, { line: SHIFT.line, bit: SHIFT.bit, d: 0 });
+      pushChar(core, w);
       for (const ch of String(str)) {
         let p = cmap[ch] || cmap[ch.toUpperCase()];
         if (p) { pushChar(core, [{ line: p.line, bit: p.bit, d: 1 }, { line: p.line, bit: p.bit, d: 0 }]); continue; }
@@ -594,7 +652,10 @@
       screenWrite(y, x, code) { try { m.videoMem((y * 52 + x) & 0xFFFF, code & 0xFF); } catch (e) {} }
     };
     makeTyper(core, a => a.d ? m.keyDown(a.row != null ? a.row : a.r, a.row != null ? a.bit : a.c) : m.keyUp(a.row != null ? a.row : a.r, a.row != null ? a.bit : a.c));
+    core._tstep = 7; /* v9.3.7: IS-BASIC lépésköz emulált frame-ekben */
     core.typeText = str => {
+      /* v9.3.7: bemelegítés — az IS-BASIC az első leütéseket is elnyeli; SHIFT ×8 */
+      { const sh0 = SHIFTS[0]; const w = []; for (let i = 0; i < 8; i++) w.push({ row: sh0.row, bit: sh0.bit, d: 1 }, { row: sh0.row, bit: sh0.bit, d: 0 }); pushChar(core, w); }
       for (const ch of String(str)) {
         let p = cmap[ch] || cmap[ch.toUpperCase()];
         if (p) { pushChar(core, [{ row: p.row, bit: p.bit, d: 1 }, { row: p.row, bit: p.bit, d: 0 }]); continue; }

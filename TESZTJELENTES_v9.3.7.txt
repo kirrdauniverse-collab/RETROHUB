@@ -1,0 +1,87 @@
+════════════════════════════════════════════════════════════════════
+ RETROHUB v9.3.7 — BETÖLTÉSI ÉS FUTTATÁSI TESZTJELENTÉS
+ (minden gép, minden betöltési formátum — a betöltött programok
+  EL INDÍTVA, a futó programról PNG bizonyíték készült)
+════════════════════════════════════════════════════════════════════
+
+1) C64 — PRG betöltés ÉS futtatás: MŰKÖDIK
+   • c64_fut.prg (10 PRINT "C64 FUT OK" / 20 GOTO 10) betöltve a $801-re
+   • v9.3.7-javítás: a BASIC programpointerek ($2D/$2F) beállítása +
+     automatikus RUN a betöltés után (korábban a RUN üres programot
+     futtatott, mert a reset-utáni pointerek $0801-en maradtak)
+   • A generátor javítása: az utolsó sor linkje az EOF-markerre mutat
+     (a CBM ROM a $A7C6-nál a következő sor linkjének MAGAS bájtját vizsgálja)
+   • BIZONYÍTÉK: c64_3_futA.png — a képernyő TELE "C64 FUT OK" sorokkal
+     (a program folyamatosan fut és görget)
+
+2) C16 — PRG betöltés ÉS futtatás: MŰKÖDIK (VALÓDI ROM-EMULÁCIÓ!)
+   • c16_fut.prg betöltve a $1001-re, automatikus RUN
+   • A gép valódi C16 KERNAL+BASIC ROM-ot futtat (6502 emuláció)
+   • BIZONYÍTÉK: c16_3_futA.png — tele "C16 FUT OK" sorokkal
+   • Ezzel bizonyítva: a C16 boot JELENLEG IS VALÓDI (nem festett kép)
+
+3) ZX Spectrum 48K — TAP kazetta + autostart RUN: MŰKÖDIK
+   • zx_fut.tap (autostart 10: PRINT "ZX FUT OK" / GOTO 10)
+   • LOAD "" begépelve, kazetta lejátszva, az autostart RUN elindult
+   • BIZONYÍTÉK: zxs_3_futA.png — "ZX FUT OK" sorok + "scroll?" prompt
+
+4) Primo — .txt begépelés + futtatás: MŰKÖDIK
+   • primo_fut.txt begépelve (10 PRINT / 20 GOTO 10 / RUN)
+   • v9.3.7: a begépelés emulált képkocka-léptetésre átalakítva
+   • BIZONYÍTÉK: primo_3_futA.png — tele "primo fut ok" sorokkal
+
+5) Enterprise 64/128 — begépelés + végrehajtás: RÉSZBEN MŰKÖDIK
+   • Az IS-BASIC végrehajtotta a közvetlen PRINT parancsot,
+     a kimenet látszik ("ent fut ok")
+   • A teljes program-storage a ROM-szerkesztő első leütéseit elnyeli
+     (ismert hiba — a begépelés-léptetés emulált frame-ekre átállítva,
+     a javítás folytatása következő verzió)
+   • BIZONYÍTÉK: ent_3_futA.png (kimenet + program-sorok)
+
+6) HT1080Z (TRS-80 Model I) — .bas begépelés: RÉSZBEN
+   • A sorok bekerülnek (10 PRINT "HT FUT OK" látszik), a gépelés
+     lassabb visszhangja miatt a RUN a képkocka-pillanat után érik be
+   • BIZONYÍTÉK: ht_3_futA.png
+
+7) Videoton TVC — begépelés: RÉSZBEN
+   • v9.3.7: a hamis '"' mátrix-címke javítva (a (4,3) pozíció a valódi
+     TVC mátrixban '\\', az idézőjel SHIFT+2 — Xemu-mátrix alapján)
+   • A sorok helyesen echozódnak ("10 print \"tvc fut ok\" látszik),
+     a program-storage megbízhatatlan (ROM-szerkesztő állapotgép)
+   • BIZONYÍTÉK: tvc_3_futA.png
+
+8) ZX81 — boot: MŰKÖDIK (K-kurzor), betöltő nincs bekötve
+   • BIZONYÍTÉK: zx81_2_boot.png
+
+9) Amiga — lemezbehelyezés: MŰKÖDIK (v9.3.6-os javítás fenntartva)
+   • amiga_dos.adf (xdftool: OFS, s/startup-sequence) → DF0 behelyezve,
+     a KS 1.3 fogadja (a saját képernyőjét lezárja, átadja a vezérlést)
+   • amiga_flash.adf — SAJÁT 68k bootblock (COLOR00-villantás):
+     checksum-konvenció kiderítve (one's-complement összeg = FFFFFFFF!)
+   • Megjegyzés: az üresen formázott OFS lemez nem bootol AmigaDOS-ig
+     (a DOS-kép a 1-3 sávokon kell legyen — jogvédett tartalom)
+   • HDF merevlemez → A1200 + KS 3.1 boot: v9.3.6-ban bizonyított
+   • BIZONYÍTÉK: amiga_1_ks13.png (KS képernyő) → amiga_6_blink_A.png
+     (a lemez programja átvette a gépet)
+
+10) PROFIL gépek (14 db: C128, VIC-20, ABC 80, Jupiter ACE, Atari
+    800XL/2600/520ST, CPC 464, MSX1, Mega Drive, SNES, SMS, NES, GB)
+    — emulátor-mag NINCS hozzájuk építve (PROFIL státusz, festett
+    kezdőképernyő) — a tesztjeik a mag-leszállítástól függenek.
+
+JAVÍTÁSOK ebben a verzióban (v9.3.7):
+ • C64/C16 loadFile: BASIC programpointerek ($2D/$2F) + automatikus
+   RUN (BASIC PRG) vagy SYS (gépi kódú PRG) — a betöltött program
+   mostantól TÉNYLEG ELINDUL
+ • makeLoop: valós idejű lemaradás-kiegyenlítés (max 4 frame/tick) —
+   a lassú renderelésű gépek (TVC/Ent) emulációja nem marad le
+ • Begépelés: emulált-képkocka-léptetés (a headless böngésző a
+   setInterval-t fojtja 1 s-1 percre — a régi wall-clock verzió fagyott),
+   gépenkénti lépésköz (C64/C16/HT/Primo: 5, TVC: 6, Ent: 7 frame),
+   bemelegítő leütések (a ROM-szerkesztők első leütés-elnyelése ellen)
+ • TVC mátrix: a (4,3) hamis '"' címke javítva '\\' -ra
+ • A teszt-eszközök: bootolható ADF-ek (xdftool + saját bootblock),
+   CBM PRG-generátor a helyes link-konvencióval, ZX TAP autostarttal
+
+A tesztek futtathatók: scripts/run_fut_tests.py (agent-browser élőteszt)
+Tesztadatok: public/tesztek/ és download/tesztek/

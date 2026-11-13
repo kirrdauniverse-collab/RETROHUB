@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETROHUB v9.3.6 — Retro emulátor platform AI támogatással</title>
+<title>RETROHUB v9.3.7 — Retro emulátor platform AI támogatással</title>
 <style>
 :root{--bg:#0b0f0b;--panel:#101810;--line:#2a5a2a;--fg:#5dff7a;--dim:#2f9a45;--hi:#d8ffe0;--warn:#ffb000;--glow:0 0 6px rgba(93,255,122,.55);--screen:#031003;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -385,7 +385,7 @@ body.rh-joymode #crt{cursor:crosshair}
 <body>
 <div id="app">
 <header>
- <div class="logo">RETRO<b>HUB</b> <span style="font-size:18px;color:var(--dim)">v9.3.6</span></div>
+ <div class="logo">RETRO<b>HUB</b> <span style="font-size:18px;color:var(--dim)">v9.3.7</span></div>
  <div class="row"><span style="color:var(--dim)">SZÍN:</span>
   <button data-t="green" class="on">Zöld</button><button data-t="amber">Borostyán</button><button data-t="ice">Jég</button><button data-t="light">Papír</button>
   <button id="rh-aibtn" title="Globális AI-programozó beállítások">🤖 AI</button><button id="devbtn" disabled>Fejlesztői központ [F12]</button></div>
@@ -724,7 +724,7 @@ function tools(m){return (window.RHGEN?RHGEN.TOOLS:[]).slice();}
 var cur=null,loaded=null,filter='all',bootT=null,$=function(s){return document.querySelector(s)};
 var term=$('#term');
 function show(t,cursor){term.innerHTML='';term.appendChild(document.createTextNode(t));if(cursor!==false){var c=document.createElement('span');c.className='blk';term.appendChild(c)}}
-function home(){show('\n  RETROHUB  v9.3.6\n  ================\n\n  Válassz modult a bal oldali listából,\n  majd nyomd meg a ▶ gombot.\n\n  Moduláris, 8 és 16 bites gépekhez.\n\n  READY.\n')}
+function home(){show('\n  RETROHUB  v9.3.7\n  ================\n\n  Válassz modult a bal oldali listából,\n  majd nyomd meg a ▶ gombot.\n\n  Moduláris, 8 és 16 bites gépekhez.\n\n  READY.\n')}
 function renderList(){var l=$('#list');l.innerHTML='';MODS.filter(function(m){return filter==='all'||m.k===filter}).forEach(function(m){var d=document.createElement('div');d.className='mod'+(cur===m?' sel':'');
  d.innerHTML='<span class="n"></span><span class="badge"></span><span class="m"></span>';
  d.children[0].textContent=m.n;d.children[1].textContent=loaded===m?'FUT':(m.st||((m.k==='con'?'KONZOL':m.k+' BIT')));if(loaded===m)d.children[1].className='badge run';d.children[1].title=m.st||'';
@@ -7812,10 +7812,11 @@ const TVC_ROWS = [
     { label: 'K', line: 5, bit: 1 },
     { label: 'L', line: 5, bit: 2 },
     { label: ';', sub: ':', line: 2, bit: 3 },
-    { label: '"', sub: "'", line: 4, bit: 3 },
+    /* v9.3.7: a (4,3) pozíció a valódi TVC mátrixban a '\' (SHIFT: '|') —
+       a korábbi hamis '"' címke a begépelést '\'-re fordította; az igazi
+       idézőjel a SHIFT+2 (a sorszám-tábla sub mezője) */
     { label: '^', line: 1, bit: 0 },
-  ],
-  [
+  ],  [
     { label: 'SHIFT', line: 6, bit: 3, wide: true },
     { label: 'Y', line: 6, bit: 6 },
     { label: 'X', line: 6, bit: 2 },
@@ -78667,6 +78668,9 @@ function ScriptedAmigaEmulator() {
        és a teljes emuláció megfagy (a gép „nem indul el”). A 60 ms-os setTimeout-őr is erőlteti
        a futást (kb. 16 fps), ha az rAF nem tüzel; látható ablaknál az rAF dominál, a timer leselejtezik. */
     let pulse = 0;
+    /* v9.3.7: valós idejű catch-up — a lassú renderelés (nagy canvas) visszafogja az rAF-et,
+       és az emulált gép a valós idő alatt lemarad (a TVC/Ent ROM key-scanje „elveszi” a
+       gyors leütéseket). Ha a tick óta több mint egy képkocka idő telt el, több runFrame fut. */
     function tickWatchdog() { if (running) tick(performance.now()); }
     function tick(t) {
       if (!running) return;
@@ -78674,8 +78678,15 @@ function ScriptedAmigaEmulator() {
       raf = requestAnimationFrame(tick); pulse = setTimeout(tickWatchdog, 60);
       if (!running) return;
       if (!paused) {
-        try { machine.runFrame(); } catch (e) { RHGEN.log('maghiba: ' + e.message); running = false; }
-        core._processTyping();
+        /* v9.3.7: lemaradás-kiegyenlítés (max 4 frame / tick — a CPU ne ragadjon be) */
+        let n = 1;
+        if (lastT && t > lastT) {
+          const target = Math.min(4, Math.max(1, Math.round((t - lastT) / 20)));
+          n = target;
+        }
+        try {
+          for (let i = 0; i < n && running; i++) { machine.runFrame(); core._processTyping(); }
+        } catch (e) { RHGEN.log('maghiba: ' + e.message); running = false; }
       }
       if (renderFn) {
         try { renderFn(img.data); ctx.putImageData(img, 0, 0); } catch (e) {}
@@ -78692,7 +78703,7 @@ function ScriptedAmigaEmulator() {
     }
     core._ctl = {
       start() { if (raf === null && pulse === 0) { lastT = 0; raf = requestAnimationFrame(tick); pulse = setTimeout(tickWatchdog, 60); } running = true; },
-      stop() { running = false; if (raf) cancelAnimationFrame(raf); raf = null; clearTimeout(pulse); pulse = 0; },
+      stop() { running = false; core._tdisposed = true; /* v9.3.7: a wall-clock gépelő tisztítása */ if (raf) cancelAnimationFrame(raf); raf = null; clearTimeout(pulse); pulse = 0; },
       pause(p) { paused = !!p; },
       _frames: 0
     };
@@ -78704,10 +78715,15 @@ function ScriptedAmigaEmulator() {
   function makeTyper(core, applyAction) {
     core._tq = [];
     core._tcount = 0;
+    /* v9.3.7: EMULÁLT-KÉPKOCKA-alapú gépelés — a makeLoop minden runFrame után hívja!
+       (a headless oldalak setInterval-jét a böngésző fojtja 1 s-1 percre, a régi
+       frame-arányos verzió meg a lassú rAF-et követte) — így a lépésköz a GÉP
+       saját idejében mérődik: core._tstep = press hossz emulált frame-ekben,
+       a ROM key-scanje mindig észreveszi a leütést. */
     core._processTyping = function () {
       if (!core._tq.length) return;
       core._tcount++;
-      if (core._tcount % 5) return; /* v9.3.6: lassabb gépelés — a TVC/Primo/Ent key-scan lemaradt a 3 frame-nél */
+      if (core._tcount % (core._tstep || 5)) return;
       const a = core._tq.shift();
       applyAction(a);
     };
@@ -78811,7 +78827,26 @@ function ScriptedAmigaEmulator() {
         } else { addr = u8[0] | (u8[1] << 8); data = u8.subarray(2); }
         if (addr == null || !data) return 'ismeretlen fájlformátum';
         for (let i = 0; i < data.length && addr + i < 0x10000; i++) m.mem[(addr + i) & 0xFFFF] = data[i];
-        return name + ' betöltve a $' + addr.toString(16).toUpperCase() + ' címre (' + data.length + ' bájt)';
+        /* v9.3.7: BASIC-program felismerés + programpointerek + automatikus indítás.
+           Korábban a RUN üres programot futtatott: a KERNAL a $2D/$2F pointerek
+           alapján olvassa a programot, és a reset-utáni értékük $0801 (üres program),
+           tehát a RAM-ba másolt sorokat a RUN nem látta. */
+        let res = name + ' betöltve a $' + addr.toString(16).toUpperCase() + ' címre (' + data.length + ' bájt)';
+        const isB = addr === 0x0801 && data.length >= 6 &&
+          data[data.length - 2] === 0 && data[data.length - 1] === 0 &&
+          (data[0] & 1) === 0 && data[0] >= 2 && data[0] <= data.length &&
+          (data[2] | (data[3] << 8)) <= 63999;
+        if (isB) {
+          const end = (addr + data.length) & 0xFFFF;
+          m.mem[0x2D] = end & 0xFF; m.mem[0x2E] = end >> 8; /* program vége → változók kezdete */
+          m.mem[0x2F] = end & 0xFF; m.mem[0x30] = end >> 8; /* tömbterület vége */
+          setTimeout(() => { try { core.typeText('RUN\n'); } catch (e) {} }, 500);
+          res += ' — RUN elindítva';
+        } else {
+          setTimeout(() => { try { core.typeText('SYS' + addr + '\n'); } catch (e) {} }, 500);
+          res += ' — SYS' + addr + ' begépelve';
+        }
+        return res;
       },
       memRead(a) { return m.readMem(a & 0xFFFF); },
       memWrite(a, v) { m.mem[a & 0xFFFF] = v & 0xFF; },
@@ -78930,7 +78965,25 @@ function ScriptedAmigaEmulator() {
         if (/\.prg$/i.test(name) || u8[0] === 0x01) {
           const addr = u8[0] | (u8[1] << 8), data = u8.subarray(2);
           for (let i = 0; i < data.length && addr + i < 0x10000; i++) m.mem[(addr + i) & 0xFFFF] = data[i];
-          return name + ' betöltve a $' + addr.toString(16).toUpperCase() + ' címre (' + data.length + ' bájt)';
+          /* v9.3.7: BASIC-program pointerek ($1001-es BASIC start) + automatikus
+             RUN — a C16-nál is ugyanaz a hiba volt: a RUN üres programot futtatott,
+             mert a $2D/$2F pointerek reset-utáni értéke $1001 maradt. */
+          let res = name + ' betöltve a $' + addr.toString(16).toUpperCase() + ' címre (' + data.length + ' bájt)';
+          const isB = addr === 0x1001 && data.length >= 6 &&
+            data[data.length - 2] === 0 && data[data.length - 1] === 0 &&
+            (data[0] & 1) === 0 && data[0] >= 2 && data[0] <= data.length &&
+            (data[2] | (data[3] << 8)) <= 63999;
+          if (isB) {
+            const end = (addr + data.length) & 0xFFFF;
+            m.mem[0x2D] = end & 0xFF; m.mem[0x2E] = end >> 8;
+            m.mem[0x2F] = end & 0xFF; m.mem[0x30] = end >> 8;
+            setTimeout(() => { try { core.typeText('RUN\n'); } catch (e) {} }, 500);
+            res += ' — RUN elindítva';
+          } else {
+            setTimeout(() => { try { core.typeText('SYS' + addr + '\n'); } catch (e) {} }, 500);
+            res += ' — SYS' + addr + ' begépelve';
+          }
+          return res;
         }
         return 'ismeretlen fájlformátum';
       },
@@ -79147,7 +79200,13 @@ function ScriptedAmigaEmulator() {
       }
     };
     makeTyper(core, a => a.line != null ? (a.d ? m.keyDown(a.line, a.bit) : m.keyUp(a.line, a.bit)) : (a.d ? m.keyDown(a.r, a.c) : m.keyUp(a.r, a.c)));
+    core._tstep = 6; /* v9.3.7: TVC lépésköz emulált frame-ekben */
     core.typeText = str => {
+      /* v9.3.7: bemelegítés — a ROM szerkesztője az első ~7 leütést elnyeli;
+         a SHIFT (6,3) önmagában semmit nem ír és nem mozgat — 8 lenyomás */
+      const w = [];
+      for (let i = 0; i < 8; i++) w.push({ line: SHIFT.line, bit: SHIFT.bit, d: 1 }, { line: SHIFT.line, bit: SHIFT.bit, d: 0 });
+      pushChar(core, w);
       for (const ch of String(str)) {
         let p = cmap[ch] || cmap[ch.toUpperCase()];
         if (p) { pushChar(core, [{ line: p.line, bit: p.bit, d: 1 }, { line: p.line, bit: p.bit, d: 0 }]); continue; }
@@ -79235,7 +79294,10 @@ function ScriptedAmigaEmulator() {
       screenWrite(y, x, code) { try { m.videoMem((y * 52 + x) & 0xFFFF, code & 0xFF); } catch (e) {} }
     };
     makeTyper(core, a => a.d ? m.keyDown(a.row != null ? a.row : a.r, a.row != null ? a.bit : a.c) : m.keyUp(a.row != null ? a.row : a.r, a.row != null ? a.bit : a.c));
+    core._tstep = 7; /* v9.3.7: IS-BASIC lépésköz emulált frame-ekben */
     core.typeText = str => {
+      /* v9.3.7: bemelegítés — az IS-BASIC az első leütéseket is elnyeli; SHIFT ×8 */
+      { const sh0 = SHIFTS[0]; const w = []; for (let i = 0; i < 8; i++) w.push({ row: sh0.row, bit: sh0.bit, d: 1 }, { row: sh0.row, bit: sh0.bit, d: 0 }); pushChar(core, w); }
       for (const ch of String(str)) {
         let p = cmap[ch] || cmap[ch.toUpperCase()];
         if (p) { pushChar(core, [{ row: p.row, bit: p.bit, d: 1 }, { row: p.row, bit: p.bit, d: 0 }]); continue; }
@@ -80660,7 +80722,7 @@ function ScriptedAmigaEmulator() {
 
   /* ---------- v9 marker ---------- */
   RHGEN.log('[RH9] Központosított menürendszer, gépenkénti billentyűzetek, beágyazott ROM-ok és modelllista-javítások aktívak — 23 gép, 9 emulátor-mag.');
-  console.log('[RH9] RETROHUB v9.3.6 aktív: egységes menük + billentyűzetek + RHMS AI + pillanatkép-mentés — mobil: géplista fiókban');
+  console.log('[RH9] RETROHUB v9.3.7 aktív: egységes menük + billentyűzetek + RHMS AI + pillanatkép-mentés — mobil: géplista fiókban');
 })();
 
 </script>
