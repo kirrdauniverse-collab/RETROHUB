@@ -82894,6 +82894,12 @@ function ScriptedAmigaEmulator() {
 #rh-joypad .joy-right{grid-column:3;grid-row:2}
 #rh-joypad .joy-down{grid-column:2;grid-row:3}
 #rh-joypad .joy-exit{grid-column:3;grid-row:3;font-size:18px}
+/* v9.3.9: ZX81 kép kissé behúzva — magas ablaknál a 4:3 kép kitöltötte a CRT
+   szélességét, és a lekerekített sarok (60px/40px) letakarta a bal alsó
+   kurzort. A padding minden irányban ~2,8%-ot húz be, a tartalom ettől
+   object-fit:contain-nal arányosan kicsinyül; a Spectrum (#canvas-wrap) és a
+   többi gép érintetlen marad. */
+#z81-wrap{padding:2.8%}
 </style>
 <script>
 (function(){
