@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETROHUB v9.3.7 — Retro emulátor platform AI támogatással</title>
+<title>RETROHUB v9.4.0 — Retro emulátor platform AI támogatással</title>
 <style>
 :root{--bg:#0b0f0b;--panel:#101810;--line:#2a5a2a;--fg:#5dff7a;--dim:#2f9a45;--hi:#d8ffe0;--warn:#ffb000;--glow:0 0 6px rgba(93,255,122,.55);--screen:#031003;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -413,7 +413,7 @@ body.rh-joymode #crt{cursor:crosshair}
   </div>
  </aside>
  <section class="stage">
-  <div class="bezel"><div id="crt"><pre id="term"></pre><div class="zxscreen" id="canvas-wrap" hidden><canvas id="screen" width="320" height="240" tabindex="0"></canvas></div><div class="zxscreen" id="z81-wrap" hidden><canvas id="z81-screen" width="256" height="192"></canvas></div><div class="zxscreen" id="rh-wrap" hidden><canvas id="rh-canvas" width="384" height="288" tabindex="0"></canvas></div></div></div>
+  <div class="bezel"><div id="crt"><pre id="term"></pre><div class="zxscreen" id="canvas-wrap" hidden><canvas id="screen" width="320" height="240" tabindex="0"></canvas></div><div class="zxscreen" id="z81-wrap" hidden><canvas id="z81-screen" width="320" height="240"></canvas></div><div class="zxscreen" id="rh-wrap" hidden><canvas id="rh-canvas" width="384" height="288" tabindex="0"></canvas></div></div></div>
   <div id="rh-iconbar" hidden>
    <span class="rh-ledgrp"><i class="rh-led" id="rh-led-pwr"></i>PWR</span>
    <span class="rh-ledgrp"><i class="rh-led amber" id="rh-led-fdd"></i>FDD</span>
@@ -428,6 +428,9 @@ body.rh-joymode #crt{cursor:crosshair}
    <button id="ib-joy" class="ib-touch" title="Joystick mód ki/be">🕹</button>
    <button id="ib-file" title="Fájl / kazetta / lemez megnyitása">📁</button>
    <button id="ib-crt" title="CRT-effekt ki/be">🎛</button>
+   <button id="ib-snap" title="Pillanatkép mentése">💾</button>
+   <button id="ib-hw" title="Hardver beállítások">⚙</button>
+   <button id="ib-dev" title="Fejlesztői központ (F12)">🛠</button>
   </div>
   <div class="ctl">
    <div class="row"><button id="load" disabled>▶ Modul betöltése</button><button id="eject" disabled>⏏ Kiadás</button><button id="reset" disabled>⟲ Reset</button></div>
@@ -638,13 +641,13 @@ body.rh-joymode #crt{cursor:crosshair}
 <div class="row"><label>Szöveg:</label><input id="z81-pptext" value="HELLO" size="14"><select id="z81-ppscale"><option value="1">1×</option><option value="2">2×</option><option value="3">3×</option></select><label><input type="checkbox" id="z81-ppinv"> inverz</label><span class="help">(Szöveg eszköz: kattints a kezdőpontra – bármelyik képpontra)</span></div>
 <div class="row"><button id="z81-ppundo">↶ Vissza</button><button id="z81-ppredo">↷ Újra</button><button id="z81-ppclear">Törlés</button><button data-x="inv">Invertál</button><button data-x="fh">⇋</button><button data-x="fv">⇅</button><button data-x="l">←</button><button data-x="r">→</button><button data-x="u">↑</button><button data-x="d">↓</button><label><input type="checkbox" id="z81-ppgrid" checked> rács</label><span class="val" id="z81-pppos"></span></div>
 <canvas id="z81-ppx" width="512" height="352"></canvas>
-<div class="btn-row"><button class="primary" id="z81-ppapply">Képernyőre ▶</button><button id="z81-pphroff">Réteg ki</button><button id="z81-ppcap">◀ Képernyőről</button><button class="pp-plot" id="z81-ppprint">→ BASIC (PRINT AT)</button><button class="pp-plot" id="z81-ppplot">→ BASIC (PLOT)</button><button id="z81-ppscr">SCR mentés</button><button id="z81-pppng">PNG mentés</button></div>
+<div class="btn-row"><button class="primary" id="z81-ppapply">Képernyőre ▶</button><button id="z81-pphroff">Réteg ki</button><button id="z81-ppcap">◀ Képernyőről</button><button class="pp-plot" id="z81-ppprint">→ BASIC (PRINT AT)</button><button class="pp-plot" id="z81-ppplot">→ BASIC (PLOT)</button><button id="z81-ppscr">SCR mentés</button><button id="z81-pppng">PNG mentés</button><button id="z81-pptochars" title="A rajz 32×24 karakterekké alakítva a Karakterrajzban">→ Karakterrajz</button></div>
 <div class="row"><label>Kép importálása:</label><input type="file" id="z81-ppimg" accept="image/*"><label>küszöb</label><input type="range" id="z81-ppthr" min="40" max="215" value="128"><label><input type="checkbox" id="z81-ppdither"> raszter (dither)</label></div></section><section class="z81tool" id="z81t-chars">
  <p class="help"><b>Karakterrajz</b> (szövegmódú képernyő-szerkesztő; a pixeles rajzhoz használd a Paint fület): a ZX81 nem tud pixeles grafikát, ezért a kép 32×24 karaktercellából áll (betűk, számok, blokkgrafika). A hi-res mód nincs bekötve. ROM nélkül a betűképek közelítőek.</p>
  <div class="row"><label>Eszköz:</label><select id="z81-ch-ex"></select> <select id="z81-ptool"><option value="pen">Toll</option><option value="erase">Radír</option><option value="fill">Kitöltés</option><option value="pick">Mintavétel</option></select><label><input type="checkbox" id="z81-pinv"> inverz</label><button id="z81-pclear">Törlés</button></div>
  <canvas id="z81-ppal" width="448" height="112"></canvas><br>
  <canvas id="z81-pcv" width="512" height="384"></canvas>
- <div class="btn-row"><button class="primary" id="z81-papply">Képernyőre ▶</button><button id="z81-pcapture">◀ Képernyőről</button><button id="z81-pbasic">→ BASIC (PRINT AT)</button></div>
+ <div class="btn-row"><button class="primary" id="z81-papply">Képernyőre ▶</button><button id="z81-pcapture">◀ Képernyőről</button><button id="z81-pfrompp" title="A Paint aktuális rajza karakterekké alakítva">◀ Paint átvétele</button><button id="z81-pbasic">→ BASIC (PRINT AT)</button></div>
  <p class="help">A BASIC-export a 0–21. sort írja ki (a 22–23. a szerkesztősoré); az inverz karakterek normálként exportálódnak.</p>
 </section><section class="z81tool" id="z81t-music"><p class="help">A ZX81-nek alapból nincs hangja; a zene a <b>ZON X-81</b> AY-3-8912 kártyára készül (3 szólam + zaj). Jelölés: <b>TEMPO n</b> (képkocka/egység), <b>LOOP</b>, szólam-sorok <b>A: B: C:</b>, hang <b>C4 F#3 Bb2</b> (hossz <b>:n</b>), szünet <b>R</b>, hangerő <b>V0–V15</b>, hangszer <b>@PIANO</b>, dob <b>K S H T C</b> (kick, snare, hi-hat, tom, clap), saját hangszer: <b>INST név A= D= S= R= SW=féltón,kép VIB=mély%,ütem N=zaj F=Hz MIX=T/N/TN</b>.</p>
 <div class="row"><label>Példa:</label><select id="z81-mus-ex"></select></div><textarea id="z81-mus" class="mono" rows="9" spellcheck="false"></textarea>
@@ -654,7 +657,13 @@ body.rh-joymode #crt{cursor:crosshair}
 <div class="row"><canvas id="z81-inv" width="240" height="56"></canvas><button id="z81-instsave">Mentés a dalba (INST sor)</button></div>
 <div class="row"><b>Zongora / dobpadok</b><label><input type="checkbox" id="z81-rec"> felvétel a szólamba</label><select id="z81-recch"><option>A</option><option>B</option><option>C</option></select><label>hossz</label><select id="z81-reclen"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>6</option><option>8</option></select><button id="z81-instat">@ hangszer beszúrása</button></div>
 <div id="z81-piano" class="piano"></div>
-<div class="btn-row"><button data-d="K">KICK</button><button data-d="S">SNARE</button><button data-d="H">HI-HAT</button><button data-d="T">TOM</button><button data-d="C">CLAP</button></div></section><section class="z81tool" id="z81t-ai"><p class="help">AI programozó a ZX81-hez. Szolgáltató: <b id="z81-ai-prov"></b> (a Spectrum „Fejlesztés → AI” fülén állítható). A válasz kódja automatikusan a megfelelő szerkesztőbe kerül.</p>
+<div class="btn-row"><button data-d="K">KICK</button><button data-d="S">SNARE</button><button data-d="H">HI-HAT</button><button data-d="T">TOM</button><button data-d="C">CLAP</button></div>
+<details class="panel" id="z81-trkbox"><summary><b>Tracker — lépésrács + élő felvétel (v9.4.0)</b></summary>
+<div class="row"><label>Sáv:</label><select id="z81-trkch"><option>A</option><option>B</option><option>C</option></select><label>Oktáv:</label><select id="z81-trkoct"><option>2</option><option>3</option><option selected>4</option><option>5</option></select><label>Lépések:</label><select id="z81-trksteps"><option>32</option><option selected>64</option><option>96</option><option>128</option></select><label><input type="checkbox" id="z81-trkrec" checked> felvétel lejátszás közben</label></div>
+<div class="btn-row"><button class="primary" id="z81-trk-play">▶ Lejátszás + kursor</button><button id="z81-trk-stop">■</button><button id="z81-trk-clear">Sáv törlése</button><span class="help" id="z81-trk-info"></span></div>
+<div style="max-height:260px;overflow:auto"><table class="trk" id="z81-trkgrid"></table></div>
+<p class="help">A rács az A:/B:/C: szólamokat tükrözi: egy cella = egy egység. Kattintással kijelölöd a sort (üres cellára kattintva kijelöl, teli cellára töröl). A zongora és a dobpad gombjai a kijelölt sorra (lejátszás közben az aktuális lépésre) írnak, ha a „felvétel” be van pipálva — így a dobritmust lejátszva zongorázhatsz mellé, és a tracker rögzíti a sávba. Minden szerkesztés visszakerül a szöveges jelölésbe (A:/B:/C: sorok), tehát az exportok és a ZX81-en való lejátszás azonnal látják.</p>
+</details></section><section class="z81tool" id="z81t-ai"><p class="help">AI programozó a ZX81-hez. Szolgáltató: <b id="z81-ai-prov"></b> (a Spectrum „Fejlesztés → AI” fülén állítható). A válasz kódja automatikusan a megfelelő szerkesztőbe kerül.</p>
 <div class="row"><label>Cél:</label><select id="z81-ai-lang"><option value="basic">BASIC</option><option value="asm">Assembly</option><option value="forth">Forth</option><option value="hex">Gépi kód (hex)</option></select>
 <label><input type="checkbox" id="z81-ai-auto" checked> futtatás</label><label><input type="checkbox" id="z81-ai-fix" checked> önjavítás (max 3)</label></div>
 <div class="log z81ai" id="z81-ai-chat"></div><textarea id="z81-ai-in" rows="3" class="mono" placeholder="Mit írjak? (Enter = küldés, Shift+Enter = új sor)"></textarea>
@@ -3953,9 +3962,14 @@ function z81Layout(m, prog, df, hdr) {
   sv(0x400C, DF); sv(0x400E, DF + 1); sv(0x4010, VARS); sv(0x4012, 0); sv(0x4014, EL); sv(0x4016, EL + 2); sv(0x4018, 0); sv(0x401A, EL + 2); sv(0x401C, EL + 2);
   m.mem.set(hdr, 0x4009); m.mem.set(prog, PROG); m.mem.set(df, DF); m.mem[VARS] = 0x80; m.mem[EL] = 0x7F; m.mem[EL + 1] = 0x76;
 }
-function z81Inject(m, src) { z81Layout(m, z81BuildProgram(src), Z81.template.df); }
+function z81Inject(m, src) { if (!Z81.template) Z81.template = z81Snapshot(m); z81Layout(m, z81BuildProgram(src), Z81.template.df); }
 function z81Frame() {
-  const rgba = new Uint8ClampedArray(256 * 192 * 4); z81Render(rgba); const g = $('z81-screen').getContext('2d'), id = g.createImageData(256, 192); id.data.set(rgba); g.putImageData(id, 0, 0);
+  /* v9.4.0: fehér keret, mint a valódi gépen — a 256×192 kijelző középen, körülötte fehér szegély a 320×240-es képen */
+  const g = $('z81-screen').getContext('2d'), id = g.createImageData(320, 240), d = id.data;
+  for (let i = 0; i < 320 * 240; i++) { d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = 255; d[i * 4 + 3] = 255; }
+  const inner = new Uint8ClampedArray(256 * 192 * 4); z81Render(inner);
+  for (let y = 0; y < 192; y++) d.set(inner.subarray(y * 256 * 4, y * 256 * 4 + 256 * 4), ((y + 24) * 320 + 32) * 4);
+  g.putImageData(id, 0, 0);
 }
 /* v9.3.5: rAF-orvos — lásd a makeLoop-nál; rejtett lapon is fut a ZX81 */
 Z81.pulse = 0;
@@ -4274,7 +4288,7 @@ function z81FillEx(selId, list, load) {
   s.onchange = () => { if (s.value !== '') load(list[+s.value]); s.value = ''; };
 }
 function z81RemLine(bytes) { const len = bytes.length + 2; return [0, 1, len & 255, len >> 8, 0xEA, ...bytes, 0x76]; }
-function z81RunProg(prog, run) { try { z81Pause(); z81Fresh(); z81Layout(Z81.m, prog, Z81.template.df); if (run) Z81.m.type([{ keys: ['R'] }, { keys: ['ENTER'] }]); z81Start(); return true; } catch (e) { log('HIBA: ' + e.message); return false; } }
+function z81RunProg(prog, run) { try { z81Pause(); z81Fresh(); if (!Z81.template) Z81.template = z81Snapshot(Z81.m); z81Layout(Z81.m, prog, Z81.template.df); if (run) Z81.m.type([{ keys: ['R'] }, { keys: ['ENTER'] }]); z81Start(); return true; } catch (e) { log('HIBA: ' + e.message); return false; } }
 function z81RunMC(bytes, run, extra, slow) { return z81RunProg(z81RemLine(Array.from(bytes)).concat(z81BuildProgram((slow ? '2 SLOW\n3 RAND USR 16514' : '2 RAND USR 16514') + (extra ? '\n' + extra : ''))), run); }
 const Z81_PRCH0 = `PRCH: PUSH HL
  PUSH DE
@@ -4669,7 +4683,7 @@ function z81FthGo(mode) {
 const PPM = { plot: { w: 64, h: 44, s: 8 }, hires: { w: 256, h: 192, s: 2 } }, PP_GL = [' ', '▘', '▝', '▀', '▖', '▌', '▞', '▛', '▗', '▚', '▐', '▜', '▄', '▙', '▟', '█'];
 const PP = { mode: 'plot', bufs: { plot: new Uint8Array(64 * 44), hires: new Uint8Array(256 * 192) }, px: null, undo: [], redo: [], down: false, base: null, x0: 0, y0: 0 }; PP.px = PP.bufs.plot;
 const ppOff = document.createElement('canvas');
-PP.setMode = function (m) { PP.mode = m; PP.px = PP.bufs[m]; PP.undo = []; PP.redo = []; const d = PPM[m], cv = $('z81-ppx'); cv.width = d.w * d.s; cv.height = d.h * d.s; $('z81-ppmode').value = m; document.querySelectorAll('.pp-plot').forEach(e => e.hidden = m !== 'plot'); document.querySelectorAll('.pp-hires').forEach(e => e.hidden = m !== 'hires'); ppRender(); };
+PP.setMode = function (m) { PP.mode = m; PP.px = PP.bufs[m]; PP.undo = []; PP.redo = []; const d = PPM[m], cv = $('z81-ppx'); cv.width = d.w * d.s; cv.height = d.h * d.s; $('z81-ppmode').value = m; document.querySelectorAll('.pp-plot').forEach(e => e.hidden = m !== 'plot'); document.querySelectorAll('.pp-hires').forEach(e => e.hidden = m !== 'hires'); ppRender(); if (PP.img) ppApplyImage(); };
 function ppRender() {
   const d = PPM[PP.mode], cv = $('z81-ppx'), g = cv.getContext('2d'); ppOff.width = d.w; ppOff.height = d.h; const og = ppOff.getContext('2d'), id = og.createImageData(d.w, d.h);
   for (let i = 0; i < d.w * d.h; i++) { const v = PP.px[i] ? 0 : 255; id.data[i * 4] = id.data[i * 4 + 1] = id.data[i * 4 + 2] = v; id.data[i * 4 + 3] = 255; } og.putImageData(id, 0, 0); g.imageSmoothingEnabled = false; g.drawImage(ppOff, 0, 0, cv.width, cv.height);
@@ -4729,11 +4743,35 @@ function ppBasic(kind) {
   else for (let y = 0; y < 44; y++) { let x = 0; const yp = 43 - y; while (x < 64) { if (!px[y * 64 + x]) { x++; continue; } let e = x; while (e + 1 < 64 && px[y * 64 + e + 1]) e++; if (e - x < 2) for (let i = x; i <= e; i++) out.push(n++ + ' PLOT ' + i + ',' + yp); else out.push(n++ + ' FOR X=' + x + ' TO ' + e, n++ + ' PLOT X,' + yp, n++ + ' NEXT X'); x = e + 1; } }
   out.push('9000 PAUSE 40000'); if (n > 8990) log('Figyelem: a lista nagyon hosszú (' + out.length + ' sor)'); const ta = $('z81-basic'); ta.value = ta.value.replace(/\s+$/, '') + '\n' + out.join('\n'); log('A rajz BASIC-sorokként a BASIC fül végére került (' + out.length + ' sor)'); z81Tool('basic');
 }
+PP.img = null;
+function ppApplyImage() {                                           /* v9.4.0: a betöltött kép (újra)feldolgozása az AKTUÁLIS küszöbbel/raszterrel */
+  if (!PP.img) return; const bmp = PP.img, d = PPM[PP.mode]; const cv = document.createElement('canvas'); cv.width = d.w; cv.height = d.h; const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, d.w, d.h); const sc = Math.min(d.w / bmp.width, d.h / bmp.height), w = bmp.width * sc, h = bmp.height * sc; g.drawImage(bmp, (d.w - w) / 2, (d.h - h) / 2, w, h);
+  const id = g.getImageData(0, 0, d.w, d.h).data, dith = $('z81-ppdither').checked, B = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5], thr = +$('z81-ppthr').value;
+  for (let y = 0; y < d.h; y++) for (let x = 0; x < d.w; x++) { const i = y * d.w + x, l = .3 * id[i * 4] + .59 * id[i * 4 + 1] + .11 * id[i * 4 + 2], t = dith ? (B[(y & 3) * 4 + (x & 3)] + .5) * 16 + (thr - 128) : thr; PP.px[i] = l < t ? 1 : 0; }
+  ppRender();
+}
 async function ppImportImage(f) {
-  try { const bmp = await createImageBitmap(f), d = PPM[PP.mode]; ppPush(); const cv = document.createElement('canvas'); cv.width = d.w; cv.height = d.h; const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, d.w, d.h); const sc = Math.min(d.w / bmp.width, d.h / bmp.height), w = bmp.width * sc, h = bmp.height * sc; g.drawImage(bmp, (d.w - w) / 2, (d.h - h) / 2, w, h);
-    const id = g.getImageData(0, 0, d.w, d.h).data, dith = $('z81-ppdither').checked, B = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5], thr = +$('z81-ppthr').value;
-    for (let y = 0; y < d.h; y++) for (let x = 0; x < d.w; x++) { const i = y * d.w + x, l = .3 * id[i * 4] + .59 * id[i * 4 + 1] + .11 * id[i * 4 + 2], t = dith ? (B[(y & 3) * 4 + (x & 3)] + .5) * 16 + (thr - 128) : thr; PP.px[i] = l < t ? 1 : 0; } ppRender(); log('Kép beolvasva (' + bmp.width + '×' + bmp.height + ' → ' + d.w + '×' + d.h + ')'); }
+  try { const bmp = await createImageBitmap(f); ppPush(); PP.img = bmp; ppApplyImage(); log('Kép beolvasva (' + bmp.width + '×' + bmp.height + ' → ' + PPM[PP.mode].w + '×' + PPM[PP.mode].h + ') — a küszöb és a raszter élőben állítható'); }
   catch (e) { log('Kép-import hiba: ' + e.message); }
+}
+function ppPopcount(v) { v = v - (v >> 1 & 0x55); v = (v & 0x33) + (v >> 2 & 0x33); return (v + (v >> 4)) & 0x0F; }
+function ppToChars() {                                              /* v9.4.0: a rajz → 32×24 karakter (Karakterrajz) — legjobb egyezés a ROM-jelek / blokkgrafika közt */
+  const d = PPM[PP.mode], cands = [];
+  if (Z81.rom) { for (let c = 0; c < 64; c++) { const bits = []; for (let r = 0; r < 8; r++) bits.push(Z81.rom[0x1E00 + c * 8 + r]); cands.push({ code: c, bits }); } }
+  else { const P = { 1: [1], 2: [2], 3: [1, 2], 4: [4], 5: [1, 4], 6: [2, 4], 7: [1, 2, 4], 8: [8], 9: [1, 8], 10: [2, 8], 11: [1, 2, 8], 12: [4, 8], 13: [1, 4, 8], 14: [2, 4, 8], 15: [1, 2, 4, 8] }, QU = { 1: [0, 0], 2: [1, 0], 4: [0, 1], 8: [1, 1] };
+    for (let c = 0; c < 16; c++) { const bits = new Array(8).fill(0); (P[c] || []).forEach(q => { const qx = QU[q][0], qy = QU[q][1]; for (let r = 0; r < 4; r++) for (let x = 0; x < 4; x++) bits[qy * 4 + r] |= 0x80 >> (qx * 4 + x); }); cands.push({ code: Z81_CH[PP_GL[c]] ?? 0, bits, blk: 1 }); }
+    cands.push({ code: Z81_CH['█'] ?? 0x80, bits: [255, 255, 255, 255, 255, 255, 255, 255], blk: 1 }); }
+  for (let r = 0; r < 24; r++) for (let c2 = 0; c2 < 32; c2++) {
+    const bits = new Array(8).fill(0);
+    for (let y = 0; y < 8; y++) { const sy = Math.min(d.h - 1, Math.floor((r * 8 + y) * d.h / 192)); for (let x = 0; x < 8; x++) { const sx = Math.min(d.w - 1, Math.floor((c2 * 8 + x) * d.w / 256)); if (PP.px[sy * d.w + sx]) bits[y] |= 0x80 >> x; } }
+    let empty = true; for (let y = 0; y < 8; y++) if (bits[y]) { empty = false; break; }
+    if (empty) { ZP.g[r * 32 + c2] = 0; continue; }
+    let best = 0, bs = 1e9, inv = 0;
+    for (const k of cands) { let s = 0; for (let y = 0; y < 8; y++) s += ppPopcount(k.bits[y] ^ bits[y]); if (s < bs) { bs = s; best = k.code; inv = 0; }
+      if (!k.blk) { let s2 = 0; for (let y = 0; y < 8; y++) s2 += ppPopcount((k.bits[y] ^ 0xFF) ^ bits[y]); if (s2 < bs) { bs = s2; best = k.code; inv = 1; } } }
+    ZP.g[r * 32 + c2] = best | (inv ? 0x80 : 0);
+  }
+  zpRender();
 }
 function ppPng() { const d = PPM[PP.mode], sc = PP.mode === 'plot' ? 8 : 3, cv = document.createElement('canvas'); cv.width = d.w * sc; cv.height = d.h * sc; ppOff.width = d.w; ppOff.height = d.h; const og = ppOff.getContext('2d'), id = og.createImageData(d.w, d.h); for (let i = 0; i < d.w * d.h; i++) { const v = PP.px[i] ? 0 : 255; id.data[i * 4] = id.data[i * 4 + 1] = id.data[i * 4 + 2] = v; id.data[i * 4 + 3] = 255; } og.putImageData(id, 0, 0); const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(ppOff, 0, 0, cv.width, cv.height); cv.toBlob(bl => download('rajz.png', bl)); }
 const Z81_EX_PP = [
@@ -4987,6 +5025,9 @@ $('z81-ppapply').onclick = ppApply; $('z81-pphroff').onclick = () => { Z81.hrOn 
 $('z81-ppcap').onclick = ppCapture; $('z81-ppprint').onclick = () => ppBasic('print'); $('z81-ppplot').onclick = () => ppBasic('plot');
 $('z81-ppscr').onclick = () => { download('rajz.scr', z81PackScr(ppBits256())); log('Mentve: rajz.scr (256×192, 6144 bájt)'); }; $('z81-pppng').onclick = ppPng;
 $('z81-ppimg').onchange = function () { const f = this.files[0]; this.value = ''; if (f) ppImportImage(f); };
+$('z81-ppthr').oninput = () => ppApplyImage(); $('z81-ppdither').onchange = () => ppApplyImage();
+$('z81-pptochars').onclick = () => { ppToChars(); z81Tool('chars'); log('A rajz karakterekre alakítva — Karakterrajz'); };
+$('z81-pfrompp').onclick = () => { ppToChars(); log('Paint-rajz átvéve a Karakterrajzba'); };
 PP.setMode('plot');
 } catch (e) { console.error('Paint init', e); }
 // Memória + rendszerváltozók
@@ -5005,6 +5046,76 @@ $('z81-instsave').onclick = z81InstSave; $('z81-mus').oninput = () => z81InstLis
 document.querySelectorAll('[data-d]').forEach(b => { b.onclick = () => { try { z81InstPlay(Z81_DRUMKEY[b.dataset.d]); } catch (e) { log(e.message); } if ($('z81-rec').checked) z81MusAppend(b.dataset.d + ':' + $('z81-reclen').value); }; });
 $('z81-instat').onclick = () => z81MusAppend('@' + $('z81-instsel').value);
 } catch (e) { console.error('Music init', e); }
+
+// ===== v9.4.0: ZX81 tracker — lépésrács az A/B/C szólamokhoz + élő felvétel =====
+try {
+const ZT = { cells: { A: [], B: [], C: [] }, pfx: { A: '', B: '', C: '' }, steps: 64, sel: { A: 0, B: 0, C: 0 }, playing: false, t0: 0, timer: null, total: 0, tempo: 6 };
+function z81TrkLoad() {
+  ZT.tempo = 6; const rows = { A: [], B: [], C: [] }, pfx = { A: [], B: [], C: [] };
+  for (const raw of $('z81-mus').value.split('\n')) { const s = raw.replace(/;.*/, '').trim(); if (!s) continue; let m;
+    if ((m = /^TEMPO\s+(\d+)/i.exec(s))) { ZT.tempo = Math.max(1, +m[1]); continue; }
+    if (/^LOOP$/i.test(s) || /^INST/i.test(s)) continue;
+    if (!(m = /^([ABC])\s*:(.*)$/i.exec(s))) continue;
+    const k = m[1].toUpperCase(), arr = rows[k], pre = pfx[k]; let head = true;
+    for (const tok of m[2].split(/\s+/).filter(Boolean)) { if (tok === '|') continue; let t;
+      if ((t = /^V(\d+)$/i.exec(tok)) || (t = /^@([A-Z0-9_]+)$/i.exec(tok))) { if (head) pre.push(tok.toUpperCase()); continue; }
+      if ((t = /^([KSHTC]|R|[A-G][#b]?\d)(?::(\d+))?$/i.exec(tok))) { head = false; const n = t[2] ? Math.max(1, +t[2]) : 1; arr.push({ t: t[1].toUpperCase(), n: n }); for (let s2 = 1; s2 < n; s2++) arr.push(null); continue; }
+      throw new Error('Hibás zenei token: ' + tok); } }
+  ZT.cells = rows; ['A', 'B', 'C'].forEach(k => ZT.pfx[k] = pfx[k].join(' '));
+}
+function z81TrkToText() {
+  const lines = [];
+  for (const raw of $('z81-mus').value.split('\n')) { const s = raw.trim(); if (s && !/^[ABC]\s*:/i.test(s)) lines.push(s); }
+  ['A', 'B', 'C'].forEach(k => {
+    const a = ZT.cells[k]; if (!a.length) return; const toks = []; let i = 0;
+    while (i < a.length) {
+      if (a[i]) { toks.push(a[i].t + (a[i].n > 1 ? ':' + a[i].n : '')); i += a[i].n; }
+      else { let n = 0; while (i + n < a.length && !a[i + n]) n++; toks.push('R' + (n > 1 ? ':' + n : '')); i += n; } }
+    lines.push(k + ': ' + (ZT.pfx[k] ? ZT.pfx[k] + ' ' : '') + toks.join(' '));
+  });
+  $('z81-mus').value = lines.join('\n') + '\n';
+}
+function z81TrkCursor() { return ZT.playing ? Math.floor((performance.now() - ZT.t0) * 50 / ZT.tempo) % ZT.steps : -1; }
+function z81TrkRender() {
+  const g = $('z81-trkgrid'); if (!g) return; const cur = z81TrkCursor(); let h = '<tr><th>#</th><th>A</th><th>B</th><th>C</th></tr>';
+  for (let i = 0; i < ZT.steps; i++) {
+    h += '<tr' + (i === cur ? ' class="trkcur"' : (i % 8 === 7 ? ' class="trkbar"' : '')) + '><td>' + (i + 1) + '</td>';
+    ['A', 'B', 'C'].forEach(k => { const v = ZT.cells[k] && ZT.cells[k][i], s = ZT.sel[k] === i; h += '<td data-ch="' + k + '" data-i="' + i + '"' + (v ? ' class="trkon"' : '') + (s ? ' style="outline:2px solid var(--hi)"' : '') + '>' + (v ? v.t : '·') + '</td>'; });
+    h += '</tr>';
+  }
+  g.innerHTML = h; $('z81-trk-info').textContent = 'kijelölt sor: ' + ['A', 'B', 'C'].map(k => k + '=' + (ZT.sel[k] + 1)).join(' ') + (ZT.playing ? ' · lejátszás…' : '');
+}
+function z81TrkPut(ch, tok, len) {
+  const pos = ZT.playing ? z81TrkCursor() : ZT.sel[ch]; if (pos < 0) return;
+  len = Math.max(1, len | 0); const base = String(tok).split(':')[0].toUpperCase();     /* v9.4.0: a hossz csak egyszer áll a cellán */
+  const a = ZT.cells[ch] || (ZT.cells[ch] = []); while (a.length < ZT.steps) a.push(null);
+  a[pos] = { t: base, n: len }; for (let s = 1; s < len; s++) if (pos + s < ZT.steps) a[pos + s] = null;
+  ZT.sel[ch] = (pos + len) % ZT.steps; z81TrkToText(); z81TrkRender();
+}
+function z81TrkStop() { ZT.playing = false; if (ZT.timer) clearInterval(ZT.timer); ZT.timer = null; z81MusStop(); z81TrkRender(); }
+function z81TrkPlay() {
+  try { z81TrkToText(); const song = z81ParseMus($('z81-mus').value), { ev, total } = z81MusEvents(song);
+    ZT.playing = true; ZT.t0 = performance.now(); ZT.total = total; z81MusPlayEv(ev, total);
+    if (ZT.timer) clearInterval(ZT.timer); ZT.timer = setInterval(() => { if (!ZT.playing) return; const u = (performance.now() - ZT.t0) * 50 / ZT.tempo; if (u >= total) { z81TrkStop(); return; } z81TrkRender(); }, 40); z81TrkRender();
+  } catch (e) { log('Tracker: ' + e.message); }
+}
+$('z81-trk-play').onclick = z81TrkPlay; $('z81-trk-stop').onclick = z81TrkStop;
+$('z81-trk-clear').onclick = () => { const ch = $('z81-trkch').value; ZT.cells[ch] = new Array(ZT.steps).fill(null); z81TrkToText(); z81TrkRender(); };
+$('z81-trksteps').onchange = function () { ZT.steps = +this.value; ['A', 'B', 'C'].forEach(k => { while (ZT.cells[k].length < ZT.steps) ZT.cells[k].push(null); }); z81TrkToText(); z81TrkRender(); };
+$('z81-trkgrid').addEventListener('click', e => { const td = e.target.closest('td'); if (!td) return; const ch = td.dataset.ch, i = +td.dataset.i; if (ZT.cells[ch] && ZT.cells[ch][i]) { ZT.cells[ch][i] = null; z81TrkToText(); } ZT.sel[ch] = i; z81TrkRender(); });
+document.getElementById('z81-piano').addEventListener('click', e => {                       /* zongora → tracker (a z81-rec szöveg-rögzítést nem zavarja) */
+  const b = e.target.closest('button.pk'); if (!b || !$('z81-trkrec') || !$('z81-trkrec').checked) return;
+  const m = /^([A-G])(#?)(\d)$/.exec(b.title || ''); if (!m) return; const N = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  const midi = 12 * (+m[3] + 1) + N[m[1]] + (m[2] ? 1 : 0), f = 440 * Math.pow(2, (midi - 69) / 12);
+  z81TrkPut($('z81-trkch').value, m[1] + m[2] + m[3] + (+$('z81-reclen').value > 1 ? ':' + $('z81-reclen').value : ''), +$('z81-reclen').value || 1);
+  try { z81InstPlay($('z81-instsel').value, f); } catch (err) {}
+}, true);
+document.querySelectorAll('#z81t-music [data-d]').forEach(b => b.addEventListener('click', () => {  /* dobpad → tracker */
+  if (!$('z81-trkrec') || !$('z81-trkrec').checked) return;
+  z81TrkPut($('z81-trkch').value, b.dataset.d, 1);
+}, true));
+z81TrkLoad(); z81TrkRender();
+} catch (e) { console.error('Tracker init', e); }
 
 // === v9: beágyazott ZX81 ROM (ha a böngészőben nincs mentett) ===
 try { if (!Z81.rom && window.RH_ROMS && RH_ROMS.zx81) {
@@ -80723,7 +80834,7 @@ function ScriptedAmigaEmulator() {
 
   /* ---------- v9 marker ---------- */
   RHGEN.log('[RH9] Központosított menürendszer, gépenkénti billentyűzetek, beágyazott ROM-ok és modelllista-javítások aktívak — 23 gép, 9 emulátor-mag.');
-  console.log('[RH9] RETROHUB v9.3.7 aktív: egységes menük + billentyűzetek + RHMS AI + pillanatkép-mentés — mobil: géplista fiókban');
+  console.log('[RH9] RETROHUB v9.4.0 aktív: egységes menük + billentyűzetek + RHMS AI + pillanatkép-mentés — mobil: géplista fiókban');
 })();
 
 </script>
@@ -82875,6 +82986,10 @@ function ScriptedAmigaEmulator() {
     if (!pad) pad = buildJoy();
     pad.hidden = !onn;
   });
+  /* v9.4.0: ikonsor gombok — a megszűnt VEZÉRLÉS csoport funkciói itt élnek tovább */
+  on('ib-snap', function () { var b = document.getElementById('st-snap'); if (b) b.click(); });
+  on('ib-dev', function () { var b = document.getElementById('st-dev'); if (b) b.click(); });
+  on('ib-hw', function () { if (window.RH_HWTOGGLE) window.RH_HWTOGGLE(); });
 })();
 </script></script>
 <style>
@@ -82885,6 +83000,28 @@ function ScriptedAmigaEmulator() {
 #rh-hwpanel .rh-hw-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 #rh-hwpanel .rh-hw-grid button{background:var(--panel);color:var(--hi);border:2px solid var(--line);border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;text-align:left;font-family:inherit}
 #rh-hwpanel .rh-hw-grid button:hover{border-color:var(--fg)}
+#rh-hwpanel .rh-hw-joy{margin-top:9px;border-top:2px solid var(--line);padding-top:7px}
+#rh-hwpanel .rh-hw-joy > b{color:var(--hi);font-size:14px}
+/* v9.4.0: a VEZÉRLÉS csoport kikerül a felületről (a user kérésére) — a rejtett
+   st-* gombok működnek tovább (a Hardver panel és az ikonsor hívja őket) */
+#rh-sidetiles{display:none!important}
+/* v9.4.0: ZX81 tracker rács */
+#z81-trkgrid td,#z81-trkgrid th{padding:1px 8px;text-align:center;font-family:monospace;font-size:13px;cursor:pointer}
+#z81-trkgrid td:first-child{color:var(--dim);cursor:default}
+#z81-trkgrid tr.trkbar td{border-top:2px solid var(--line)}
+#z81-trkgrid tr.trkcur td{background:rgba(251,191,36,.18)}
+#z81-trkgrid td.trkon{color:var(--hi);font-weight:bold}
+/* v9.4.0: AI modell-választó panel */
+#ai-modlist{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:6px;margin-top:6px;background:var(--screen)}
+#ai-modlist .ai-mcat{color:var(--dim);font-size:.75em;margin:7px 0 2px;text-transform:uppercase;letter-spacing:.4px}
+#ai-modlist .ai-mrow{display:flex;align-items:center;gap:6px;padding:2px 0}
+#ai-modlist .ai-mrow .ai-mname{flex:1;cursor:pointer;color:var(--fg)}
+#ai-modlist .ai-mrow .ai-mname:hover{color:var(--hi)}
+#ai-modlist .ai-mrow .ai-fav{cursor:pointer;filter:grayscale(1);opacity:.55}
+#ai-modlist .ai-mrow .ai-fav.on{filter:none;opacity:1}
+#ai-modlist .ai-mrow .ai-free{color:#3fb950;font-size:.72em}
+#ai-modlist .ai-mrow .ai-test{font-size:.72em;color:var(--dim);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ai-modlist textarea{width:100%;font-size:.72em;margin-top:2px}
 #rh-joypad{position:fixed;right:16px;bottom:16px;z-index:9999;display:grid;grid-template-columns:repeat(3,58px);grid-auto-rows:58px;gap:6px;background:rgba(0,0,0,.6);border:2px solid var(--line);border-radius:14px;padding:10px;touch-action:none}
 #rh-joypad .joyb{font-size:24px;color:var(--hi);background:var(--panel);border:2px solid var(--line);border-radius:12px;cursor:pointer;user-select:none;-webkit-user-select:none;font-family:inherit}
 #rh-joypad .joyb.press{background:var(--hi);color:var(--screen)}
@@ -82936,9 +83073,52 @@ function ScriptedAmigaEmulator() {
     '<button data-act="st-nmi">⚡ NMI</button>' +
     '<button data-act="st-speed">⚡ Sebesség (1×→8×)</button>' +
     '<button data-act="st-crt">📺 CRT-effekt</button>' +
-    '</div>';
+    '</div>' +
+    '<div class="rh-hw-joy"><b>🕹 Joystick (billentyűk definiálása)</b>' +
+    '<div id="rh-joycfg"></div>' +
+    '<small style="color:var(--dim)">A joystick mód (🕹) bekapcsolásakor ezek a fizikai billentyűk vezérlik a gépet. Egy sorra kattintva új billentyű vehető fel.</small></div>';
   document.body.appendChild(hw);
+  /* v9.4.0: joystick-billentyű definíció — irányonként {key,code}, localStorage-ban */
+  var RK = { up: ['Fel', { key: 'ArrowUp', code: 'ArrowUp' }], down: ['Le', { key: 'ArrowDown', code: 'ArrowDown' }], left: ['Balra', { key: 'ArrowLeft', code: 'ArrowLeft' }], right: ['Jobbra', { key: 'ArrowRight', code: 'ArrowRight' }], fire: ['Tűz', { key: ' ', code: 'Space' }] };
+  var CANON = { up: { key: 'ArrowUp', code: 'ArrowUp' }, down: { key: 'ArrowDown', code: 'ArrowDown' }, left: { key: 'ArrowLeft', code: 'ArrowLeft' }, right: { key: 'ArrowRight', code: 'ArrowRight' }, fire: { key: ' ', code: 'Space' } };
+  function joyKeys() { try { return Object.assign(JSON.parse(JSON.stringify(CANON)), JSON.parse(localStorage.getItem('rh_joykeys') || '{}')); } catch (e) { return JSON.parse(JSON.stringify(CANON)); } }
+  function joySave(k) { try { localStorage.setItem('rh_joykeys', JSON.stringify(k)); } catch (e) {} }
+  var joyCap = null;
+  function joyCfgRender() {
+    var box = document.getElementById('rh-joycfg'); if (!box) return; var ks = joyKeys(); box.innerHTML = '';
+    Object.keys(RK).forEach(function (d) {
+      var r = document.createElement('div'); r.style.cssText = 'display:flex;align-items:center;gap:8px;margin:3px 0';
+      var l = document.createElement('span'); l.style.cssText = 'flex:1;color:var(--fg)'; l.textContent = RK[d][0] + ':';
+      var b = document.createElement('button'); b.style.cssText = 'background:var(--panel);color:var(--hi);border:2px solid var(--line);border-radius:6px;padding:3px 10px;cursor:pointer;min-width:86px;font-family:inherit';
+      var nm = function (k) { return k.code === 'Space' ? 'SZÓKÖZ' : (k.key || k.code).toUpperCase(); };
+      b.textContent = nm(ks[d]);
+      b.onclick = function () {
+        if (joyCap) { joyCap.el.style.borderColor = 'var(--line)'; }
+        joyCap = { dir: d, el: b }; b.textContent = 'Nyomj billentyűt…'; b.style.borderColor = 'var(--hi)';
+      };
+      r.appendChild(l); r.appendChild(b); box.appendChild(r);
+    });
+  }
+  window.addEventListener('keydown', function (e) {
+    if (joyCap) {                                                       /* új billentyű felvétele */
+      e.preventDefault(); e.stopPropagation();
+      if (e.key !== 'Escape') { var k = joyKeys(); k[joyCap.dir] = { key: e.key, code: e.code }; joySave(k); }
+      joyCap = null; joyCfgRender(); return;
+    }
+    if (!document.body.classList.contains('rh-joymode')) return;
+    if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    var ks = joyKeys(); for (var d in ks) {
+      if (e.code === ks[d].code) {                                      /* definiált joystick-billentyű → kanonikus gépbillentyű */
+        e.preventDefault(); e.stopPropagation();
+        var c = CANON[d];
+        (document.activeElement || document.body).dispatchEvent(new KeyboardEvent(e.type, { key: c.key, code: c.code, bubbles: true, cancelable: true }));
+        return;
+      }
+    }
+  }, true);
+  joyCfgRender();
   on('st-hw', function(){ hw.hidden = !hw.hidden; });
+  window.RH_HWTOGGLE = function(){ hw.hidden = !hw.hidden; joyCfgRender(); };
   on('rh-hw-close', function(){ hw.hidden = true; });
   hw.addEventListener('click', function(ev){
     var b = ev.target && ev.target.closest ? ev.target.closest('button[data-act]') : null;
@@ -83004,6 +83184,143 @@ function ScriptedAmigaEmulator() {
     kbdTile.innerHTML = joyIsOpen() ? '⌨ Billentyűzet' : (kbIsOpen() ? '🕹 Joystick' : '⌨ Billentyűzet');
   }
   setInterval(syncLabel, 500);
+})();
+</script>
+<script>
+/* ===== v9.4.0: AI programozó — új szolgáltatók (Google, Mistral, OpenRouter, Together,
+   Pollinations, Huggingface, Puter), kategorikus modell-lista, ingyenes kapcsoló,
+   rövid teszt, megjegyzések, kedvencek — minden a localStorage-ban megmarad ===== */
+(function(){
+'use strict';
+var Q = function(s){ return document.querySelector(s); };
+if (!Q('#dev-ai') || typeof AI_PRESETS === 'undefined') return;
+var store2 = { g:function(k,d){ try{ var v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }, s:function(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} } };
+
+/* ---- 1) új szolgáltató-előbeállítások (az OpenRouter már volt) ---- */
+AI_PRESETS.push(
+  { name:'Google (Gemini)', type:'gemini', url:'https://generativelanguage.googleapis.com', model:'gemini-2.0-flash' },
+  { name:'Mistral', type:'openai', url:'https://api.mistral.ai/v1', model:'mistral-small-latest' },
+  { name:'Together', type:'openai', url:'https://api.together.xyz/v1', model:'' },
+  { name:'Pollinations (kulcs nélkül is)', type:'pollinations', url:'https://text.pollinations.ai', model:'openai' },
+  { name:'Huggingface (router)', type:'openai', url:'https://router.huggingface.co/v1', model:'' },
+  { name:'Puter (bejelentkezéssel, kulcs nélkül)', type:'puter', url:'', model:'' }
+);
+var psel = Q('#ai-preset'); if (psel) psel.innerHTML = AI_PRESETS.map(function(p,i){ return '<option value="'+i+'">'+p.name+'</option>'; }).join('');
+var tysel = Q('#ai-type'); if (tysel) ['gemini','pollinations','puter'].forEach(function(t){ if (![].some.call(tysel.options,function(o){return o.value===t;})) { var o=document.createElement('option'); o.value=t; o.textContent=t; tysel.appendChild(o); } });
+
+/* ---- 2) llm() kiterjesztés az új típusokra ---- */
+var _llm_v940 = llm;
+llm = async function(system, msgs, maxTok){
+  var p = cur(); if (!p) throw new Error('Előbb adj hozzá szolgáltatót az „AI programozó" panelen.'); if (!p.model) throw new Error('Válassz modellt az „AI programozó" panelen.');
+  try { if (typeof stAbort !== 'undefined' && !stAbort) stAbort = new AbortController(); } catch(e) {}   /* v9.4.0: önmagában hívott llm() is működjön */
+  var sig = (typeof stAbort !== 'undefined' && stAbort) ? stAbort.signal : undefined;
+  if (p.type === 'gemini') {
+    var root = (p.url||'https://generativelanguage.googleapis.com').replace(/\/+$/,'');
+    var j = await jfetch(root + '/v1beta/models/' + encodeURIComponent(p.model) + ':generateContent?key=' + encodeURIComponent(p.key || ''), { method:'POST', headers:{'Content-Type':'application/json'}, signal:sig, body: JSON.stringify({ system_instruction:{parts:[{text:system}]}, contents: msgs.map(function(m){ return { role: m.role === 'assistant' ? 'model' : 'user', parts:[{text:m.text}] }; }), generationConfig:{ maxOutputTokens: maxTok || 4096 } }) }, 600000);
+    return ((j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) || []).map(function(x){ return x.text || ''; }).join('');
+  }
+  if (p.type === 'pollinations') {
+    var u = (p.url||'https://text.pollinations.ai').replace(/\/+$/,'');
+    var h = {'Content-Type':'application/json'}; if (p.key) h.Authorization = 'Bearer ' + p.key;
+    var j2 = await jfetch(u + '/openai', { method:'POST', headers:h, signal:sig, body: JSON.stringify({ model: p.model || 'openai', messages: [{role:'system',content:system}].concat(msgs.map(function(m){ return {role:m.role,content:m.text}; })) }) }, 600000);
+    return j2.choices[0].message.content || '';
+  }
+  if (p.type === 'puter') {
+    await new Promise(function(res,rej){ if (window.puter) return res(); var s=document.createElement('script'); s.src='https://js.puter.com/v2/'; s.onload=res; s.onerror=function(){ rej(new Error('A Puter SDK nem töltődött be (nincs internet?)')); }; document.head.appendChild(s); });
+    var arr = [{role:'system',content:system}].concat(msgs.map(function(m){ return {role:m.role,content:m.text}; }));
+    var r = await window.puter.ai.chat(arr, p.model ? { model: p.model } : undefined);
+    function pt(x){ try { if (x==null) return ''; if (typeof x === 'string') return x; if (x.message && typeof x.message.content === 'string') return x.message.content; if (x.message && Array.isArray(x.message.content)) return x.message.content.map(function(b){ return b.text || ''; }).join(''); if (Array.isArray(x)) return x.map(pt).join(''); if (typeof x.text === 'string') return x.text; return String(x); } catch(e){ return ''; } }
+    return pt(r);
+  }
+  return _llm_v940(system, msgs, maxTok);
+};
+
+/* ---- 3) modell-lista lekérés szolgáltatónként ---- */
+function aiCat(id){ if (!id) return 'egyéb'; if (id.indexOf('/') > 0) return id.split('/')[0]; var m = /^(gemini|gpt|o\d|claude|mistral|deepseek|qwen|llama|phi|gemma|command)/i.exec(id); return m ? m[1].toLowerCase() : 'egyéb'; }
+function aiIsFree(p, m){ if (m.free) return true; if (m.pricing) { try { return +m.pricing.prompt === 0 && +m.pricing.completion === 0; } catch(e){} } return false; }
+async function aiFetchModels(p){
+  if (p.type === 'pollinations') { const j = await jfetch('https://text.pollinations.ai/models', {}, 60000); const arr = Array.isArray(j) ? j : (j.models || []); return arr.map(function(m){ var id = typeof m === 'string' ? m : (m.name || m.id || ''); return { id: id, cat: aiCat(id), free: true, pricing: null, desc: (typeof m === 'object' && (m.description || m.uncensored !== undefined)) ? (m.description || '') : '' }; }); }
+  if (p.type === 'gemini') { const root = (p.url||'https://generativelanguage.googleapis.com').replace(/\/+$/,''); const j = await jfetch(root + '/v1beta/models?pageSize=200&key=' + encodeURIComponent(p.key || ''), {}, 60000); return (j.models || []).filter(function(m){ return (m.supportedGenerationMethods || []).indexOf('generateContent') >= 0; }).map(function(m){ var id = m.name.replace(/^models\//, ''); return { id: id, cat: aiCat(id), free: false, pricing: null, desc: m.displayName || '' }; }); }
+  if (p.type === 'puter') {
+    var out = [];
+    try { if (window.puter && puter.ai && puter.ai.listModels) { const r = await puter.ai.listModels(); if (r && typeof r === 'object') { Object.keys(r).forEach(function(grp){ (Array.isArray(r[grp]) ? r[grp] : []).forEach(function(id){ out.push({ id: id, cat: grp, free: true, pricing: null, desc: '' }); }); }); } } } catch(e){}
+    if (!out.length) { try { const j = await jfetch('https://api.puter.com/puterai/chat/models', {}, 60000); const a2 = Array.isArray(j) ? j : (j.models || []); a2.forEach(function(m){ var id = typeof m === 'string' ? m : (m.id || m.model || ''); if (id) out.push({ id: id, cat: aiCat(id), free: true, pricing: null, desc: '' }); }); } catch(e){} }
+    if (!out.length) throw new Error('A Puter modell-listája nem elérhető — írd be kézzel (pl. gpt-4.1-nano).');
+    return out;
+  }
+  const u = (p.url||'').replace(/\/+$/,''); if (!u) throw new Error('Előbb add meg az API alapcímet.');
+  try { const j = await jfetch(u + '/models', p.key ? { headers: { Authorization: 'Bearer ' + p.key } } : {}, 60000); const a = j.data || j; return (Array.isArray(a) ? a : []).map(function(m){ var id = m.id || m.modelId || m.name || ''; return { id: id, cat: aiCat(id), free: false, pricing: m.pricing || null, desc: '' }; }).filter(function(m){ return m.id; }); }
+  catch(e) { if (/huggingface\.co/.test(u)) { const j2 = await jfetch('https://huggingface.co/api/models?sort=likes&direction=-1&limit=80&filter=text-generation-inference', {}, 60000); return (Array.isArray(j2) ? j2 : []).map(function(m){ var id = m.modelId || m.id || ''; return { id: id, cat: aiCat(id), free: false, pricing: null, desc: '' }; }).filter(function(m){ return m.id; }); } throw e; }
+}
+
+/* ---- 4) felület: lista + teszt + megjegyzés + kedvencek ---- */
+var aiMeta = store2.g('ai_meta', {});
+function aiMetaKey(p, model){ return (p && p.name ? p.name : '?') + '|' + model; }
+function aiMetaSave(){ store2.s('ai_meta', aiMeta); }
+var ml = document.createElement('div'); ml.id = 'ai-modlist'; ml.style.display = 'none';
+var modRow = Q('#ai-model'); if (modRow) { var row = modRow.closest('.row') || modRow.parentElement; if (row && row.parentElement) row.parentElement.insertBefore(ml, row.nextSibling); }
+ml.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><b style="font-size:.78em">Modellek</b><label style="font-size:.75em;display:flex;align-items:center;gap:3px"><input type="checkbox" id="ai-freeonly"> csak ingyenesek</label><span style="flex:1"></span><button id="ai-modclose" title="Bezárás" style="padding:0 8px">✕</button></div><div id="ai-modrows"></div>';
+var noteBox = document.createElement('div'); noteBox.style.marginTop = '4px';
+noteBox.innerHTML = '<textarea id="ai-note" rows="2" placeholder="Saját megjegyzés a kiválasztott modellhez (automatikusan mentődik)" style="width:100%;font-size:.75em"></textarea>';
+if (ml.parentElement) ml.parentElement.insertBefore(noteBox, ml.nextSibling);
+var aiTesting = false;
+async function aiTestModel(p, model, rowInfoEl) {
+  if (aiTesting) return; aiTesting = true;
+  var oldModel = p.model; p.model = model; var t0 = performance.now(); var rec = aiMeta[aiMetaKey(p, model)] = aiMeta[aiMetaKey(p, model)] || {};
+  if (rowInfoEl) rowInfoEl.textContent = '⏳ teszt…';
+  try { const ans = await llm('A válaszod egyetlen rövid sor legyen, felesleges szöveg nélkül.', [{ role:'user', text: 'Hívd magad élesben: írj egyetlen számot 1 és 10 között!' }], 60);
+    var ms = Math.round(performance.now() - t0);
+    rec.test = { ok: true, ms: ms, answer: (ans || '').trim().slice(0, 60), date: new Date().toLocaleString('hu-HU') };
+    if (rowInfoEl) rowInfoEl.textContent = '✓ ' + ms + ' ms — ' + rec.test.answer;
+    log('AI teszt [' + p.name + ' / ' + model + ']: ✓ ' + ms + ' ms — ' + rec.test.answer);
+  } catch(e) { rec.test = { ok: false, ms: Math.round(performance.now() - t0), err: (e.message || String(e)).slice(0, 120), date: new Date().toLocaleString('hu-HU') }; if (rowInfoEl) rowInfoEl.textContent = '✗ ' + rec.test.err; log('AI teszt [' + p.name + ' / ' + model + ']: ✗ ' + rec.test.err); }
+  finally { aiTesting = false; p.model = oldModel; aiMetaSave(); aiRender(); }
+}
+function aiRenderModList() {
+  var p = cur(); var rows = Q('#ai-modrows'); if (!p || !rows) return;
+  var list = (p._mlist || []).slice();
+  if (Q('#ai-freeonly') && Q('#ai-freeonly').checked) list = list.filter(function(m){ return aiIsFree(p, m); });
+  var byCat = {}; list.forEach(function(m){ (byCat[m.cat || 'egyéb'] = byCat[m.cat || 'egyéb'] || []).push(m); });
+  var cats = Object.keys(byCat).sort(function(a,b){ return byCat[b].length - byCat[a].length; });
+  var favs = list.filter(function(m){ var r = aiMeta[aiMetaKey(p, m.id)]; return r && r.fav; });
+  var h = '';
+  if (favs.length) { h += '<div class="ai-mcat">★ Kedvencek</div>'; favs.forEach(function(m){ h += aiModRowHTML(p, m); }); }
+  cats.forEach(function(c){ h += '<div class="ai-mcat">' + c + ' (' + byCat[c].length + ')</div>'; byCat[c].forEach(function(m){ h += aiModRowHTML(p, m); }); });
+  rows.innerHTML = h || '<div class="ai-mcat">Nincs találat (kapcsold ki az ingyenes szűrőt, vagy adj meg kulcsot).</div>';
+  var sel = p.model || '';
+  rows.querySelectorAll('.ai-mname').forEach(function(el){ if (el.dataset.id === sel) el.style.color = 'var(--hi)'; });
+}
+function aiModRowHTML(p, m) {
+  var rec = aiMeta[aiMetaKey(p, m.id)] || {};
+  var tst = rec.test ? (rec.test.ok ? '✓ ' + rec.test.ms + ' ms' : '✗ hiba') : '';
+  return '<div class="ai-mrow" data-model="' + m.id.replace(/"/g,'&quot;') + '">' +
+    '<span class="ai-fav' + (rec.fav ? ' on' : '') + '" title="Kedvencnek jelölés">★</span>' +
+    '<span class="ai-mname" data-id="' + m.id.replace(/"/g,'&quot;') + '" title="' + (m.desc || '') + '">' + m.id + '</span>' +
+    (aiIsFree(p, m) ? '<span class="ai-free">ingyenes</span>' : '') +
+    '<span class="ai-test" title="' + (rec.test ? ((rec.test.ok ? '✓ ' + rec.test.ms + ' ms — ' : '✗ ') + (rec.test.answer || rec.test.err || '') + ' (' + rec.test.date + ')') : '') + '">' + tst + '</span>' +
+    '<button class="ai-mtest" title="Rövid éles teszt" style="padding:0 6px">▶</button></div>';
+}
+Q('#ai-modclose').onclick = function(){ ml.style.display = 'none'; };
+Q('#ai-freeonly').onchange = aiRenderModList;
+ml.addEventListener('click', function(e){
+  var p = cur(); if (!p) return; var rowEl = e.target.closest('.ai-mrow'); if (!rowEl) return; var model = rowEl.dataset.model;
+  if (e.target.classList.contains('ai-fav')) { var rec = aiMeta[aiMetaKey(p, model)] = aiMeta[aiMetaKey(p, model)] || {}; rec.fav = !rec.fav; if (!rec.fav && !rec.note && !rec.test) delete aiMeta[aiMetaKey(p, model)]; aiMetaSave(); aiRenderModList(); return; }
+  if (e.target.classList.contains('ai-mtest')) { aiTestModel(p, model, rowEl.querySelector('.ai-test')); return; }
+  if (e.target.classList.contains('ai-mname')) { p.model = model; $('ai-model').value = model; aiSave(); aiRenderModList(); loadNote(); log('Modell kiválasztva: ' + model); }
+});
+function loadNote(){ var p = cur(); var n = Q('#ai-note'); if (!n) return; n.value = p && p.model && aiMeta[aiMetaKey(p, p.model)] ? (aiMeta[aiMetaKey(p, p.model)].note || '') : ''; }
+Q('#ai-note').addEventListener('input', function(){ var p = cur(); if (!p || !p.model) return; var k = aiMetaKey(p, p.model); aiMeta[k] = aiMeta[k] || {}; aiMeta[k].note = this.value; if (!aiMeta[k].fav && !aiMeta[k].test && !this.value) delete aiMeta[k]; aiMetaSave(); });
+
+var listBtn = Q('#ai-list'); if (listBtn) listBtn.onclick = async function(){
+  var p = cur(); if (!p) return log('Előbb adj hozzá szolgáltatót.');
+  if (ml.style.display !== 'none' && p._mlist) { ml.style.display = 'none'; return; }
+  ml.style.display = ''; Q('#ai-modrows').innerHTML = '<div class="ai-mcat">⏳ modell-lista letöltése…</div>';
+  try { p._mlist = await aiFetchModels(p); if (!p._mlist.length) throw new Error('A szolgáltató üres listát adott.');
+    p.models = p._mlist.map(function(m){ return m.id; }); aiSave(); aiRender(); aiRenderModList(); loadNote(); log(p.name + ': ' + p._mlist.length + ' modell');
+  } catch(e) { Q('#ai-modrows').innerHTML = '<div class="ai-mcat">Hiba: ' + (e.message || e) + '</div>'; }
+};
+var oldAiRenderNotes = null;
+Q('#ai-model').addEventListener('change', function(){ setTimeout(loadNote, 30); });
 })();
 </script>
 </body>
