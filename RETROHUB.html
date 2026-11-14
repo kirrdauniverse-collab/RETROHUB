@@ -3780,7 +3780,12 @@ class ZX81 {
     if (a < 0x4000) return -1; const sz = this.ramKB * 1024;
     if (this.ramKB > 16) return (a - 0x4000) < sz ? a : -1;
     const off = (a & 0x7FFF) - 0x4000; if (off < 0) return -1;
-    if (off < sz) return 0x4000 + off; return this.mirrorSmall ? 0x4000 + (off % sz) : -1;
+    if (off < sz) return 0x4000 + off;
+    /* v9.4.1: a tükrözés CSAK 16 KB-nál jöhet szóba (a valódi gépen a 16K RAM-pack
+       A14/A15 dekódolás nélküli; ettől kisebb packoknál NINCS tükör — a fölötte lévő
+       terület olvasása 0xFF). Az 1K ROM memória-tesztje a tükör miatt körbeért és
+       RAMTOP=0-t mért, így 1 KB-on a gép sosem bootolt el. */
+    return (this.ramKB === 16 && this.mirrorSmall) ? 0x4000 + (off % sz) : -1;
   }
   rd(a) {
     a &= 0xFFFF; if (a >= 0x8000 && this.ramKB <= 16) a &= 0x7FFF;
@@ -3853,8 +3858,9 @@ class ZX81 {
     for (let ln = 0; ln < Z81_LINES; ln++) {
       this.lineStart = base + ln * Z81_LINE; const end = this.lineStart + Z81_LINE;
       if (this.nmiOn) cpu.nmi();
-      while (cpu.t < end) { if (!(cpu.r & 0x40)) cpu.interrupt(); cpu.step(); }
+      while (cpu.t < end) { if (this.vsync || !(cpu.r & 0x40)) cpu.interrupt(); cpu.step(); }   /* v9.4.1: vsync alatt az INT aktív (valódi ULA) — a HALT-ból így ébred a CPU */
       this.vline++; this.lc = this.vsync ? 0 : (this.lc + 1) & 7;
+      if (this.vsync && this.cpu.t - this.vsStartT > 3 * Z81_LINE) this.endVsync();             /* v9.4.1: az ULA a vsync-et ~3 sor (~64 µs) után magától lezárja — korábban csak portIn-ra zárt, HALT alatt örökre fennállhatott */
     }
     this.lineStart = base + Z81_LINES * Z81_LINE; this.sinceSync++; this.hasShown = true;
   }
@@ -3942,6 +3948,7 @@ function z81KbBuild() {
   });
 }
 const z81Held = new Map();
+window.__z81Dbg = function () { const m = Z81.m; if (!m) return null; const c = m.cpu; return { pc: c.pc, halted: c.halted, i: c.i, r: c.r & 255, im: c.im, iff1: c.iff1, t: c.t, ramtop: m.mem[0x4004] | m.mem[0x4005] << 8, eline: m.mem[0x4014] | m.mem[0x4015] << 8, vline: m.vline, vsync: m.vsync, cal: m.cal ? 1 : 0, vidHold: m.vidHold, spec: m.spec, rd: m.rd.bind(m), dfile: m.mem[0x400C] | m.mem[0x400D] << 8, vars: m.mem[0x4010] | m.mem[0x4011] << 8, err: m.mem[0x4000], ppc: m.mem[0x4007] | m.mem[0x4008] << 8 }; };
 function z81Recompute() { if (!Z81.m) return; Z81.m.kb.fill(0x1F); for (const ks of z81Held.values()) for (const k of ks) { const p = Z81_KEYPOS[k]; if (p) Z81.m.kb[p[0]] &= ~(1 << p[1]); } }
 function z81HeldSet(tag, keys) { z81Held.set(tag, keys); z81Recompute(); }
 function z81HeldClear(tag) { z81Held.delete(tag); z81Recompute(); }
@@ -3956,11 +3963,20 @@ function z81Snapshot(m) {                                         // a boot utá
   return { hdr: Uint8Array.from(m.mem.slice(0x4009, 0x407D)), df };
 }
 function z81Layout(m, prog, df, hdr) {
+  /* v9.4.1: az eredeti sorrend: PROG → D_FILE → VARS → E_LINE (ez egységes a .P-betöltéssel).
+     1–2 KB-os RAM-nál a valódi géphez híven KOMPRESSZÁLT kijelzőt használunk
+     (25×0x76 = 25 bájt — a ZX81 1K-ban így spórol; a sorok igény szerint bővülnek),
+     nagyobbnál a template teljes D_FILE-ja (793 bájt) marad. */
+  if (Z81.ram <= 2) df = new Uint8Array(25).fill(0x76);
   const PROG = 0x407D, DF = PROG + prog.length, VARS = DF + df.length, EL = VARS + 1;
   if (EL + 2 + 0x60 > z81RamTop()) throw new Error('A program (' + prog.length + ' bájt) nem fér el a ' + Z81.ram + ' KB-os memóriában – válassz nagyobb RAM-ot a Hardveren.');
   hdr = Uint8Array.from(hdr || Z81.template.hdr); const sv = (a, v) => { hdr[a - 0x4009] = v & 255; hdr[a - 0x4009 + 1] = (v >> 8) & 255; };
   sv(0x400C, DF); sv(0x400E, DF + 1); sv(0x4010, VARS); sv(0x4012, 0); sv(0x4014, EL); sv(0x4016, EL + 2); sv(0x4018, 0); sv(0x401A, EL + 2); sv(0x401C, EL + 2);
+  sv(0x4029, PROG); sv(0x402B, 0); sv(0x4000, 0xFF); sv(0x4006, 0);   /* NXTLIN a program elejére, hibakód törölve, K-mód */
   m.mem.set(hdr, 0x4009); m.mem.set(prog, PROG); m.mem.set(df, DF); m.mem[VARS] = 0x80; m.mem[EL] = 0x7F; m.mem[EL + 1] = 0x76;
+  /* v9.4.1: a csendes boot 1–2 KB-os gépen HALT-ban ragadhat; a beillesztés után a CPU-t a
+     ROM fő ciklusába ébresztjük (MAIN-1 = 0x04C1, EI-vel), különben a begépelt RUN nem dolgozódik fel. */
+  m.cpu.halted = false; m.cpu.pc = 0x04C1; m.cpu.iff1 = 1; m.cpu.iff2 = 1; m.cpu.sp = Math.min(z81RamTop(), 0x10000); m.cpu.t += 8;
 }
 function z81Inject(m, src) { if (!Z81.template) Z81.template = z81Snapshot(m); z81Layout(m, z81BuildProgram(src), Z81.template.df); }
 function z81Frame() {
