@@ -82900,6 +82900,20 @@ function ScriptedAmigaEmulator() {
    object-fit:contain-nal arányosan kicsinyül; a Spectrum (#canvas-wrap) és a
    többi gép érintetlen marad. */
 #z81-wrap{padding:2.8%}
+/* v9.3.10: a géplista MINDEN képernyőn látszik. ≤820px-en eddig az oldalsáv
+   ki volt véve a folyamból (v9.2.5 fiók), és csak a kis "☰ Gépek" gombbal
+   volt elérhető — így tűnt el a lista. Most: az aside visszatér a folyamba,
+   a TV ALATT jelenik meg saját görgetéssel; a fiók-mechanika (☰ gomb,
+   GÉPVÁLASZTÓ fejléc) és a drawerben újra felbukkanó régi szín/AI/Fejlesztői
+   központ gombok kikapcsolnak, a többi nézeten semmi nem változik. */
+@media (max-width:820px){
+  main{flex-direction:column!important;overflow-y:auto!important}
+  main > aside{display:flex!important;position:static!important;width:100%!important;flex:0 0 auto!important;order:2;max-height:46vh;border-right:0!important;border-top:2px solid var(--line)}
+  section.stage{height:auto!important;flex:0 0 auto!important}
+  #rh-moblist{display:none!important}
+  main > aside .rh-drawer-h{display:none!important}
+  main > aside .rh-drawer-tools{display:none!important}
+}
 </style>
 <script>
 (function(){
