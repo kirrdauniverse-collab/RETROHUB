@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETROHUB v9.4.0 — Retro emulátor platform AI támogatással</title>
+<title>RETROHUB v9.4.4 — Retro emulátor platform AI támogatással</title>
 <style>
 :root{--bg:#0b0f0b;--panel:#101810;--line:#2a5a2a;--fg:#5dff7a;--dim:#2f9a45;--hi:#d8ffe0;--warn:#ffb000;--glow:0 0 6px rgba(93,255,122,.55);--screen:#031003;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -697,7 +697,7 @@ body.rh-joymode #crt{cursor:crosshair}
 <div class="help" id="z81-svmap"></div><div id="z81-svtab" class="svtab"></div></section><section class="z81tool" id="z81t-files"><p class="help"><b>Megnyitás:</b> .p / .81 (nyers memóriakép 0x4009-től), .p81 (névvel), .t81, .z81, .scr, ROM (8 KB), képek (PNG/JPG a Paint-be). A betöltő a program hosszát az E_LINE mezőből veszi, mint a valódi LOAD.</p>
 <div class="row"><button id="z81-romopen">ROM betöltése…</button><span>(8 KB-os ZX81 ROM, bármilyen kiterjesztéssel; a böngésző megjegyzi)</span></div>
 <div class="row"><input type="file" id="z81-open"></div>
-<div class="row"><label>Betöltés módja:</label><select id="z81-loadmode"><option value="fast">Gyors (memóriába, mint a LOAD)</option><option value="tape">Szalag (valódi ROM LOAD "")</option></select>
+<div class="row"><label>Betöltés módja:</label><select id="z81-loadmode"><option value="fast">Gyors (memóriába, mint a LOAD)</option><option value="tape" selected>Szalag (valódi ROM LOAD "")</option></select>
 <label><input type="checkbox" id="z81-soft"> SOFT: nincs újraindítás – a futó gép RAM-állapotát és RAMTOP-ját megtartja (előtte pl. POKE 16388,…; NEW)</label></div>
 <div class="row"><label>Indítás betöltés után:</label><select id="z81-autorun"><option value="auto">Automatikus (GOTO a mentett NXTLIN sorra, különben RUN)</option><option value="run">Mindig RUN</option><option value="none">Semmi (kézzel)</option></select><label><input type="checkbox" id="z81-tapeinv" checked> szalag: fordított polaritás először</label></div>
 <div class="row"><select id="z81-t81sel" hidden></select><button id="z81-t81load">Kiválasztott program betöltése</button></div>
@@ -887,7 +887,7 @@ class Z80 {
     this.b2 = this.c2 = this.d2 = this.e2 = this.h2 = this.l2 = 0;
     this.ix = 0; this.iy = 0;
     this.sp = 0xFFFF; this.pc = 0;
-    this.i = 0; this.r = 0;
+    this.i = 0; this.r = 0; this.rEdge = false;
     this.iff1 = 0; this.iff2 = 0; this.im = 0;
     this.halted = false; this.eiPending = false;
     this.t = 0;
@@ -3766,7 +3766,7 @@ function tkPiano() {
 // ===== ZX81 gép: Z80-mag M1/R-pontos változata + ULA (NMI, INT az R-ből, kijelző-lehívás, szinkron) =====
 class Z81CPU extends Z80 {
   constructor(mach) { super(mach.bus); this.mach = mach; }
-  incR() { this.r = (this.r & 0x80) | ((this.r + 1) & 0x7F); }
+  incR() { const regi6 = this.r & 0x40; this.r = (this.r & 0x80) | ((this.r + 1) & 0x7F); if (regi6 && !(this.r & 0x40)) this.rEdge = true; }   // v9.4.4: az ULA az R bit6 1→0 esénél ad INT-et (élső-kapcsolt!)
   fetch() { const v = this.rd(this.pc); this.pc = (this.pc + 1) & 0xFFFF; return v; }          // csak adat-lehívás: R nem nő
   m1() {
     const pc = this.pc, rb = this.r; this.pc = (pc + 1) & 0xFFFF; this.incR();
@@ -3794,7 +3794,7 @@ class ZX81 {
     this.bus = { read: a => this.rd(a), write: (a, v) => this.wr(a, v), in: p => this.portIn(p), out: (p, v) => this.portOut(p, v) };
     this.cpu = new Z81CPU(this); this.ay = new AY(); this.ayOn = false; this.ayEvents = []; this.ayReg = 0;
     this.fb = new Uint8Array(Z81_W * Z81_H); this.shown = new Uint8Array(Z81_W * Z81_H); this.hasShown = false; this.sinceSync = 0; this.sound = true;
-    this.nmiOn = false; this.vsync = false; this.vsStartT = 0; this.vline = 0; this.lc = 0; this.lineStart = 0; this.beepEvents = []; this.beepStart = 0; this.frameStart = 0;
+    this.nmiOn = false; this.nmiGen = true; this.vsync = false;   /* v9.4.4: a NMI-gépezet BE — képkockánkénti re-sync a HL-nek */ this.vsStartT = 0; this.vline = 0; this.lc = 0; this.lineStart = 0; this.beepEvents = []; this.beepStart = 0; this.frameStart = 0;
     this.hrg = 'none'; this.fx0 = 1e9; this.fy0 = 1e9; this.fy1 = 0; this.spec = 0; this.vidHold = 0; this.cal = null; this.tape = null; this.ear = 0; this.X0 = 0; this.hz60 = false; this.lastLevel = 0; this.syncLines = 0;
   }
   loadRom(b) { if (b.length !== 8192) throw new Error('A ZX81 ROM 8192 bájt legyen (kaptam: ' + b.length + ')'); this.rom = Uint8Array.from(b); }
@@ -3880,12 +3880,13 @@ class ZX81 {
     const base = this.lineStart;
     for (let ln = 0; ln < Z81_LINES; ln++) {
       this.lineStart = base + ln * Z81_LINE; const end = this.lineStart + Z81_LINE;
-      if (this.nmiOn) cpu.nmi();
-      while (cpu.t < end) { if (!(cpu.r & 0x40)) cpu.interrupt(); cpu.step(); }
+      if (this.nmiGen && this.nmiOn && ln === 0) cpu.nmi();   // v9.4.4: a valódi NMI-gépezet (PUSH×4+HALT+D_FILE-végrehajtás) kapcsolóval — alapesetben KI, mert a gépi kódú játékok stackje elcsúszik benne
+      while (cpu.t < end) { if (cpu.rEdge) { cpu.rEdge = false; cpu.interrupt(); } cpu.step(); }
       this.vline++; this.lc = this.vsync ? 0 : (this.lc + 1) & 7;
       if (this.vsync && this.cpu.t - this.vsStartT > 3 * Z81_LINE) this.endVsync();   /* v9.4.1: az ULA a vsync-et ~3 sor (~64 µs) után magától lezárja — ez marad */
     }
     this.lineStart = base + Z81_LINES * Z81_LINE; this.sinceSync++; this.hasShown = true;
+    { const f = this.mem[0x4034] | this.mem[0x4035] << 8 | this.mem[0x4036] << 16; if (f) { const g = (f - 1) & 0xFFFFFF; this.mem[0x4034] = g & 255; this.mem[0x4035] = (g >> 8) & 255; this.mem[0x4036] = (g >> 16) & 255; } }   /* v9.4.4: FRAMES-leosztás szimulálva (a RAND-mag és PAUSE éljen) */
   }
   stepScript() { this.sk.fill(0x1F); const s = this.script[0]; if (!s) return; if (s.t < s.hold) for (const k of s.keys) { const p = Z81_KEYPOS[k]; if (p) this.sk[p[0]] &= ~(1 << p[1]); } if (++s.t >= s.hold + s.gap) this.script.shift(); }
   type(steps) { for (const s of steps) this.script.push({ keys: s.keys, hold: s.hold || 4, gap: s.gap || 6, t: 0 }); }
@@ -3980,7 +3981,7 @@ function z81KbBuild() {
   });
 }
 const z81Held = new Map();
-window.__z81Dbg = function () { const m = Z81.m; if (!m) return null; const c = m.cpu; return { pc: c.pc, sp: c.sp, ix: c.ix, iy: c.iy, halted: c.halted, i: c.i, r: c.r & 255, im: c.im, iff1: c.iff1, t: c.t, ramtop: m.mem[0x4004] | m.mem[0x4005] << 8, eline: m.mem[0x4014] | m.mem[0x4015] << 8, vline: m.vline, vsync: m.vsync, nmiOn: m.nmiOn, cal: m.cal ? 1 : 0, vidHold: m.vidHold, spec: m.spec, rd: m.rd.bind(m), dfile: m.mem[0x400C] | m.mem[0x400D] << 8, vars: m.mem[0x4010] | m.mem[0x4011] << 8, err: m.mem[0x4000], ppc: m.mem[0x4007] | m.mem[0x4008] << 8, type: steps => m.type(steps), txt: () => z81ScreenText() }; };
+window.__z81Dbg = function () { const m = Z81.m; if (!m) return null; const c = m.cpu; return { pc: c.pc, sp: c.sp, ix: c.ix, iy: c.iy, halted: c.halted, i: c.i, r: c.r & 255, im: c.im, iff1: c.iff1, t: c.t, ramtop: m.mem[0x4004] | m.mem[0x4005] << 8, eline: m.mem[0x4014] | m.mem[0x4015] << 8, vline: m.vline, vsync: m.vsync, nmiOn: m.nmiOn, cal: m.cal ? 1 : 0, vidHold: m.vidHold, spec: m.spec, rd: m.rd.bind(m), dfile: m.mem[0x400C] | m.mem[0x400D] << 8, vars: m.mem[0x4010] | m.mem[0x4011] << 8, err: m.mem[0x4000], ppc: m.mem[0x4007] | m.mem[0x4008] << 8, type: steps => m.type(steps), txt: () => z81ScreenText(), step: n => { for (let i = 0; i < (n || 1); i++) m.cpu.step(); }, nmi: () => m.cpu.nmi(), int0: () => m.cpu.interrupt(), paused: () => !Z81.running, pause: () => z81Pause(), resume: () => z81Start() }; };
 function z81Recompute() { if (!Z81.m) return; Z81.m.kb.fill(0x1F); for (const ks of z81Held.values()) for (const k of ks) { const p = Z81_KEYPOS[k]; if (p) Z81.m.kb[p[0]] &= ~(1 << p[1]); } }
 function z81HeldSet(tag, keys) { z81Held.set(tag, keys); z81Recompute(); }
 function z81HeldClear(tag) { z81Held.delete(tag); z81Recompute(); }
@@ -4180,6 +4181,17 @@ function z81FastLoad(b, name, soft) {
   if (b.length > room) { log('NEM FÉR EL: a fájl ' + b.length + ' bájt, de a RAMTOP (0x' + top.toString(16).toUpperCase() + ') alatt csak ' + room + ' bájt szabad. ' + (soft ? 'Emeld a RAMTOP-ot (POKE 16388,…; NEW) vagy állíts nagyobb RAM-ot.' : 'Állíts nagyobb RAM-ot a Hardver fülön, vagy próbáld soft módban.')); return false; }
   m.mem.set(b, 0x4009); const el = z81W(m, 0x4014), sv = (a, v) => { m.mem[a] = v & 255; m.mem[a + 1] = v >> 8; };
   m.mem[el] = 0x7F; m.mem[el + 1] = 0x76; sv(0x4016, el + 2); sv(0x4012, 0); sv(0x4018, 0); sv(0x401A, el + 2); sv(0x401C, el + 2);   // a ROM SET-MIN rutinja is ezt teszi az üres szerkesztősorral
+  /* v9.4.4-KRITIKUS: a boot képgeneráló gépezete a D_FILE bájtokat utasításként
+     hajtja végre (0xC0xx tükör, bit6=1-es bájtok valódi kódként!) — a mem.set
+     után a régi HL-címek a JÁTÉK gépi kódjára mutatnak, amit a gépezet
+     utasításokként futtatna → stack-káosz. Ezért a CPU-t kiemeljük a
+     D_FILE-végrehajtásból, és tiszta szerkesztő-állapotra tesszük: */
+  m.cpu.pc = 0x18; m.cpu.sp = 0x7FF8; m.cpu.halted = false; m.cpu.iff1 = 1; m.cpu.iff2 = 1; m.cpu.im = 1; m.cpu.i = 0x1E;
+  /* biztonsági RET-háló: a boot gépezete a stackre hagyhat maradék címet (pl. 0xC108=D_FILE) —
+     a GET-CHAR RET NZ-e ezt felvenné és a játékkódot futtatná → káosz. A stack tetején
+     '1C 00' címpárok: bármely véletlen RET az editor GET-CHAR hurokjába (0x001C) tér vissza! */
+  for (let z = 0x7FF6; z < 0x8000; z += 2) { m.mem[z] = 0x1C; m.mem[z + 1] = 0x00; }
+  for (let z = el + 2; z < el + 40; z++) m.mem[z] = 0;   // üres csatorna-puffer (a GET-CHAR-járás nem talál be idegen bájtokat)
   const how = z81Auto(m, b, $('z81-autorun').value); z81Frame(); z81Start(); log((soft ? 'SOFT' : 'HARD') + ' betöltés: ' + name + ' (' + b.length + ' bájt, RAMTOP 0x' + top.toString(16).toUpperCase() + ') – indítás: ' + how); return true;
 }
 /* v9.4.3: biztonsági háló gépi kódú játékokhoz — ha a GOTO/RUN után ~1,5 mp-
@@ -4211,7 +4223,7 @@ function z81TapeLoad(b, name, inv, soft) {
 function z81TapeTick() {
   const m = Z81.m; if (!m.tape || m.cpu.t < Z81.tapeEnd + 2 * m.cpuHz) return false;
   const b = Z81.tapeFile; Z81.turbo = false; m.tape = null; audio.aySync = true; let ok = b.length > 116; for (let i = 0; i < Math.min(64, b.length - 116); i++) if (m.mem[0x4009 + 116 + i] !== b[116 + i]) ok = false;
-  if (ok) { log('Szalag betöltve: ' + Z81.tapeName); if ($('z81-autorun').value === 'run') m.type([{ keys: ['R'] }, { keys: ['ENTER'] }]); }
+  if (ok) { log('Szalag betöltve: ' + Z81.tapeName); const au = $('z81-autorun').value; if (au === 'run' || au === 'auto') m.type([{ keys: ['R'] }, { keys: ['ENTER'] }]);   /* v9.4.4: 'auto' módban is futtat a szalagbetöltés után */ }
   else if (Z81.tapeTry === 1) { log('A betöltés nem sikerült – újrapróbálom fordított polaritással'); z81TapeLoad(b, Z81.tapeName, !Z81.tapeInv, Z81.tapeSoft); }
   else log('A szalagbetöltés nem sikerült mindkét polaritással – próbáld a „Gyors (memóriába)” módot');
   return true;
