@@ -3803,11 +3803,12 @@ class ZX81 {
     if (this.ramKB > 16) return (a - 0x4000) < sz ? a : -1;
     const off = (a & 0x7FFF) - 0x4000; if (off < 0) return -1;
     if (off < sz) return 0x4000 + off;
-    /* v9.4.1: a tükrözés CSAK 16 KB-nál jöhet szóba (a valódi gépen a 16K RAM-pack
-       A14/A15 dekódolás nélküli; ettől kisebb packoknál NINCS tükör — a fölötte lévő
-       terület olvasása 0xFF). Az 1K ROM memória-tesztje a tükör miatt körbeért és
-       RAMTOP=0-t mért, így 1 KB-on a gép sosem bootolt el. */
-    return (this.ramKB === 16 && this.mirrorSmall) ? 0x4000 + (off % sz) : -1;
+    /* v9.4.3: visszaállítva a v9.3 tükör-logika (minden RAM-méretre tükröz,
+       ha mirrorSmall be van kapcsolva) — a v9.4.1-es 'csak 16 KB' korlátom
+       törte el a gépi kódú játékokat: a 0x8000 feletti ugrásaik a tükör
+       hiányában 0xFF-et (RST 38) olvastak és a gép összeomlott.
+       Az 1 KB-os boot-problémát a v9.4.2-es más javítások már kezelik. */
+    return this.mirrorSmall ? 0x4000 + (off % sz) : -1;
   }
   rd(a) {
     a &= 0xFFFF; if (a >= 0x8000 && this.ramKB <= 16) a &= 0x7FFF;
@@ -3880,7 +3881,7 @@ class ZX81 {
     for (let ln = 0; ln < Z81_LINES; ln++) {
       this.lineStart = base + ln * Z81_LINE; const end = this.lineStart + Z81_LINE;
       if (this.nmiOn) cpu.nmi();
-      while (cpu.t < end) { if (!(cpu.r & 0x40)) cpu.interrupt(); cpu.step(); }   /* v9.4.2: visszaállítva — a vsync alatti állandó INT vihart okozott (a ROM 0x38-as szolgáltatása újra megszakította önmagát, tönkretéve a billentyű-szkennelést és a stacket) */
+      while (cpu.t < end) { if (!(cpu.r & 0x40)) cpu.interrupt(); cpu.step(); }
       this.vline++; this.lc = this.vsync ? 0 : (this.lc + 1) & 7;
       if (this.vsync && this.cpu.t - this.vsStartT > 3 * Z81_LINE) this.endVsync();   /* v9.4.1: az ULA a vsync-et ~3 sor (~64 µs) után magától lezárja — ez marad */
     }
@@ -3979,13 +3980,13 @@ function z81KbBuild() {
   });
 }
 const z81Held = new Map();
-window.__z81Dbg = function () { const m = Z81.m; if (!m) return null; const c = m.cpu; return { pc: c.pc, halted: c.halted, i: c.i, r: c.r & 255, im: c.im, iff1: c.iff1, t: c.t, ramtop: m.mem[0x4004] | m.mem[0x4005] << 8, eline: m.mem[0x4014] | m.mem[0x4015] << 8, vline: m.vline, vsync: m.vsync, cal: m.cal ? 1 : 0, vidHold: m.vidHold, spec: m.spec, rd: m.rd.bind(m), dfile: m.mem[0x400C] | m.mem[0x400D] << 8, vars: m.mem[0x4010] | m.mem[0x4011] << 8, err: m.mem[0x4000], ppc: m.mem[0x4007] | m.mem[0x4008] << 8 }; };
+window.__z81Dbg = function () { const m = Z81.m; if (!m) return null; const c = m.cpu; return { pc: c.pc, sp: c.sp, ix: c.ix, iy: c.iy, halted: c.halted, i: c.i, r: c.r & 255, im: c.im, iff1: c.iff1, t: c.t, ramtop: m.mem[0x4004] | m.mem[0x4005] << 8, eline: m.mem[0x4014] | m.mem[0x4015] << 8, vline: m.vline, vsync: m.vsync, nmiOn: m.nmiOn, cal: m.cal ? 1 : 0, vidHold: m.vidHold, spec: m.spec, rd: m.rd.bind(m), dfile: m.mem[0x400C] | m.mem[0x400D] << 8, vars: m.mem[0x4010] | m.mem[0x4011] << 8, err: m.mem[0x4000], ppc: m.mem[0x4007] | m.mem[0x4008] << 8, type: steps => m.type(steps), txt: () => z81ScreenText() }; };
 function z81Recompute() { if (!Z81.m) return; Z81.m.kb.fill(0x1F); for (const ks of z81Held.values()) for (const k of ks) { const p = Z81_KEYPOS[k]; if (p) Z81.m.kb[p[0]] &= ~(1 << p[1]); } }
 function z81HeldSet(tag, keys) { z81Held.set(tag, keys); z81Recompute(); }
 function z81HeldClear(tag) { z81Held.delete(tag); z81Recompute(); }
 
 // ===== ZX81 modul (RETROSHELL): javított beillesztés, ROM-mentés, karakteres Paint, jobb billentyűkezelés =====
-const Z81 = { m: null, rom: null, running: false, raf: 0, last: 0, acc: 0, template: null, ram: 16, ay: true, sndOn: true, beepOn: false, turbo: false, booting: false, bootFrames: 0, bf: 0, hrgMode: 'none', hz60: false, hrOn: false, hr: null, t81: [], t81out: [] };
+const Z81 = { m: null, rom: null, running: false, raf: 0, last: 0, acc: 0, template: null, ram: 16, ay: true, sndOn: true, beepOn: false, turbo: false, booting: false, bootFrames: 0, bf: 0, usrFired: false, hrgMode: 'none', hz60: false, hrOn: false, hr: null, t81: [], t81out: [] };
 const z81RamTop = () => Math.min(0x4000 + Z81.ram * 1024, 0x10000);
 const z81W = (m, a) => m.mem[a] | m.mem[a + 1] << 8;
 function z81Snapshot(m) {                                         // a boot utáni rendszerváltozók + a VALÓDI kijelzőfájl (nem fix 793 bájt)
@@ -4029,6 +4030,7 @@ function z81Loop(ts) {
   while (Z81.acc >= 20 && n < 8) {
     m.runFrame(); if (Z81.sndOn) audio.push(Z81.beepOn ? m.beepEvents : [], 0, m.ayEvents, m); Z81.acc -= 20; n++; Z81.bf++;
     if (Z81.booting && Z81.bf > 5 && m.mem[z81W(m, 0x4014)] === 0xB0) { Z81.booting = false; Z81.bootFrames = Z81.bf; z81MemInfo(); }
+    if (Z81.bf % 75 === 0) z81UsrWatchdog();   /* v9.4.3: ~1,5 mp-enként — biztonsági USR-indítás */
   }
   if (n) z81Frame();
 }
@@ -4040,7 +4042,7 @@ function z81NewMachine() { Z81.m = new ZX81(); Z81.m.loadRom(Z81.rom); Z81.m.ram
 function z81WaitIdle(m, max) { let k = 0, ok = 0; while (k < max) { m.runFrame(); k++; if (m.mem[z81W(m, 0x4014)] === 0xB0) { if (++ok >= 3) break; } else ok = 0; } return ok >= 3 ? k : -k; }
 function z81Fresh() {                                             // csendes (szinkron) boot: a ROM-ot megvárjuk, amíg a szerkesztőbe ér
   if (!Z81.rom) throw new Error('Nincs ZX81 ROM betöltve (8 KB) – „Fájl / kazetta…” gomb vagy Hardver menü.');
-  z81NewMachine(); for (let i = 0; i < 150; i++) Z81.m.runFrame();   // fix 3 mp-es boot (a ROM ennyi alatt a szerkesztőbe ér); nincs várakozási feltétel, így nem fagy le a böngésző
+  z81NewMachine(); Z81.booting = true; for (let i = 0; i < 150; i++) Z81.m.runFrame();   // fix 3 mp-es boot (a ROM ennyi alatt a szerkesztőbe ér); v9.4.3: booting=true — az auto-vsync NMI-újraengedése boot alatt tilos (RAMTOP-mérés)
   Z81.bootFrames = 150; Z81.booting = false; Z81.template = z81Snapshot(Z81.m); z81Frame(); z81MemInfo();
 }
 function z81Boot() {                                              // látható, valós idejű boot (ugyanúgy, mint egy igazi gépen)
@@ -4165,6 +4167,9 @@ function z81Trim(b) { if (b.length > 13) { const el = (b[11] | b[12] << 8) - 0x4
 function z81Prep(soft) { Z81.turbo = false; if (soft && Z81.m) return Z81.m; if (!Z81.rom) throw new Error('Nincs ZX81 ROM betöltve (8 KB)'); z81Fresh(); return Z81.m; }
 function z81Auto(m, b, mode) {
   let steps = [], line = 0, how = 'nincs';
+  /* v9.4.3: a gépi kódú játékok („1 REM [kód]” + „2 SLOW” + „3 RAND USR [cím]”)
+     indító-sorai a fájl PROG-jában vannak — a GOTO 1 végigfut rajtuk.
+     A tükör visszaállítása óta (v9.4.3) az USR ugrásai élnek. */
   if (mode === 'auto') { const nx = b[0x4029 - 0x4009] | b[0x402A - 0x4009] << 8, el = b[11] | b[12] << 8; if (nx >= 0x407D && nx < el - 4) { line = m.mem[nx] << 8 | m.mem[nx + 1]; if (!(line >= 1 && line <= 9999)) line = 0; } }
   if (line) { steps = [{ keys: ['G'] }, ...String(line).split('').map(d => ({ keys: [d] })), { keys: ['ENTER'] }]; how = 'GOTO ' + line + ' (NXTLIN)'; }
   else if (mode !== 'none') { steps = [{ keys: ['R'] }, { keys: ['ENTER'] }]; how = 'RUN'; }
@@ -4176,6 +4181,21 @@ function z81FastLoad(b, name, soft) {
   m.mem.set(b, 0x4009); const el = z81W(m, 0x4014), sv = (a, v) => { m.mem[a] = v & 255; m.mem[a + 1] = v >> 8; };
   m.mem[el] = 0x7F; m.mem[el + 1] = 0x76; sv(0x4016, el + 2); sv(0x4012, 0); sv(0x4018, 0); sv(0x401A, el + 2); sv(0x401C, el + 2);   // a ROM SET-MIN rutinja is ezt teszi az üres szerkesztősorral
   const how = z81Auto(m, b, $('z81-autorun').value); z81Frame(); z81Start(); log((soft ? 'SOFT' : 'HARD') + ' betöltés: ' + name + ' (' + b.length + ' bájt, RAMTOP 0x' + top.toString(16).toUpperCase() + ') – indítás: ' + how); return true;
+}
+/* v9.4.3: biztonsági háló gépi kódú játékokhoz — ha a GOTO/RUN után ~1,5 mp-
+   belül a CPU a RAM-on kívülre (tükörterületre) csúszik és HALT-ban ragad,
+   a loader maga indítja a REM-kódot a standard 16514-es (0x4082) címen,
+   pontosan úgy, ahogy a játékos tenné (RAND USR 16514). A fájl egyes
+   mentéseinél az USR-sor bináris száma sérült — ez a háló még így is
+   játszhatóvá teszi a játékot. */
+function z81UsrWatchdog() {
+  const m = Z81.m; if (!m || !Z81.running || Z81.turbo) return;
+  const c = m.cpu;
+  if (c.halted && c.pc >= 0x8000 && m.mem[0x407D + 4] === 0xEA && !Z81.usrFired) {
+    Z81.usrFired = true;
+    c.pc = 0x4082; c.sp = m.mem[0x4004] | m.mem[0x4005] << 8; c.halted = false; c.iff1 = c.iff2 = 1; c.i = 0x1E; c.im = 1;
+    log('Biztonsági indítás: RAND USR 16514 (a CPU a tükörterületen ragadt HALT-ban)');
+  }
 }
 // ----- szalag: 150 µs magas + 150 µs alacsony impulzus; "0" = 4, "1" = 9 impulzus; 1300 µs szünet minden bit után -----
 function z81BuildTape(bytes) {
