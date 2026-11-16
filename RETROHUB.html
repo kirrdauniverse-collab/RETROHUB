@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETROHUB v9.4.6 — Retro emulátor platform AI támogatással</title>
+<title>RETROHUB v9.4.7 — Retro emulátor platform AI támogatással</title>
 <style>
 :root{--bg:#0b0f0b;--panel:#101810;--line:#2a5a2a;--fg:#5dff7a;--dim:#2f9a45;--hi:#d8ffe0;--warn:#ffb000;--glow:0 0 6px rgba(93,255,122,.55);--screen:#031003;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -37,6 +37,11 @@ section.stage{display:flex;flex-direction:column;min-height:0;padding:12px;gap:1
 /* v9.4.2: beállítások-panel nyitva → a CRT zsugorodik, hogy ne takarja a panel — minden gépen */
 body.panelopen .bezel{flex:0 0 auto;min-height:0;height:min(46vh,420px);padding:8px}
 body.panelopen #crt canvas{max-height:100%;width:auto}
+/* v9.4.7: kézi CRT-zsugorítás (méret-ciklus: teljes → közepes → kicsi) */
+body.crt-mid .bezel{flex:0 0 auto;min-height:0;height:min(66vh,600px);padding:10px}
+body.crt-mid #crt canvas{max-height:100%;width:auto}
+body.crt-small .bezel{flex:0 0 auto;min-height:0;height:min(46vh,420px);padding:8px}
+body.crt-small #crt canvas{max-height:100%;width:auto}
 #crt{flex:1;position:relative;overflow:hidden;border-radius:60px/40px;background:var(--screen);box-shadow:inset 0 0 70px #000c,inset 0 0 12px var(--line)}
 #crt::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:3;background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px);animation:fl 5s infinite}
 #crt::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:3;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55))}
@@ -455,7 +460,7 @@ body.rh-joymode #crt{cursor:crosshair}
    <button id="ib-kb" class="ib-touch" title="Billentyűzet ki/be">⌨</button>
    <button id="ib-joy" class="ib-touch" title="Joystick mód ki/be">🕹</button>
    <button id="ib-file" title="Fájl / kazetta / lemez megnyitása">📁</button>
-   <button id="ib-crt" title="CRT-effekt ki/be">🎛</button>
+   <button id="ib-crt" title="CRT-effekt ki/be">🎛</button><button id="ib-crtsize" title="Kijelző mérete (zsugorítás): teljes → közepes → kicsi">⤢</button>
    <button id="ib-snap" title="Pillanatkép mentése">💾</button>
    <button id="ib-hw" title="Hardver beállítások">⚙</button>
    <button id="ib-dev" title="Fejlesztői központ (F12)">🛠</button>
@@ -513,7 +518,10 @@ body.rh-joymode #crt{cursor:crosshair}
 <div class="btn-row"><button id="trd-tomem">→ Memóriába</button><button id="trd-totap">→ TAP</button><button id="trd-add">+ Memóriából (cím,hossz a Memória fülön)</button></div>
 <p class="help"><b>Őszinte állapot:</b> a TRD lemezképeket fájlszinten kezeli (listázás, kimentés, hozzáadás) – a TR-DOS/Beta Disk és az Interface 1 (microdrive, RS232) hardveres emulációjához a saját ROM-juk és egy lemezvezérlő-emuláció kellene, ez még nincs benne.</p>
 <div class="jbox" style="margin-top:8px"><h4>🕹 Joystick / vezérlés (billentyűk definiálása)</h4><div id="rh-joycfg-hw"></div><small style="color:var(--dim)">A joystick mód (🕹 az ikonsoron) bekapcsolásakor ezek a fizikai billentyűk vezérlik a gépet. Egy sorra kattintva új billentyű vehető fel. (v9.4.2: innen állítható, a régi bal-oldali panel megszűnt.)</small></div>
-</div></section>
+</div>
+<h4 style="margin:10px 0 4px;color:var(--hi);font-size:.8em">Vezérlés <span style="color:var(--dim);font-weight:normal">(v9.4.7 — a VEZÉRLÉS csoport funkciói)</span></h4>
+<div class="btn-row"><button id="hw-joypad">🕹 Joystick-pad ki/be</button><button id="hw-gamepad">🎮 Gamepad-teszt</button></div>
+<p class="help">A joystick-pad a képernyő jobb alsó sarkában jelenik meg; a fizikai gamepad-t gombjai és tengelyei a naplóba íródnak.</p></section>
 <section class="tool" id="tool-dev">
 <div class="tabs" id="dev-tabs"><button data-tab="basic">BASIC</button><button data-tab="asm">Assembler</button><button data-tab="mem">Memória</button><button data-tab="ai">AI programozó</button><button data-tab="studio">Játékstúdió</button></div>
 <div class="tab" id="dev-basic">
@@ -692,7 +700,7 @@ body.rh-joymode #crt{cursor:crosshair}
 <div style="max-height:260px;overflow:auto"><table class="trk" id="z81-trkgrid"></table></div>
 <p class="help">A rács az A:/B:/C: szólamokat tükrözi: egy cella = egy egység. Kattintással kijelölöd a sort (üres cellára kattintva kijelöl, teli cellára töröl). A zongora és a dobpad gombjai a kijelölt sorra (lejátszás közben az aktuális lépésre) írnak, ha a „felvétel” be van pipálva — így a dobritmust lejátszva zongorázhatsz mellé, és a tracker rögzíti a sávba. Minden szerkesztés visszakerül a szöveges jelölésbe (A:/B:/C: sorok), tehát az exportok és a ZX81-en való lejátszás azonnal látják.</p>
 </details></section><section class="z81tool" id="z81t-ai"><p class="help">AI programozó a ZX81-hez. A szolgáltató itt és a Spectrum „Fejlesztés → AI” fülén is állítható — a kettő közös (mindkettő ugyanazt a listát használja). A válasz kódja automatikusan a megfelelő szerkesztőbe kerül.</p>
-<div class="row"><label>Szolgáltató:</label><select id="z81ai-prov" style="flex:1"></select><button id="z81ai-refresh" title="Frissítés">⟳</button></div>
+<div class="row"><label>Új szolgáltató:</label><select id="z81ai-preset" style="flex:1"></select><button id="z81ai-add">＋ Hozzáad</button></div><div class="row"><label>Szolgáltató:</label><select id="z81ai-prov" style="flex:1"></select><button id="z81ai-refresh" title="Frissítés">⟳</button></div>
 <div class="row"><input id="z81ai-model" list="z81ai-models" placeholder="modell" style="flex:1" type="text"/><datalist id="z81ai-models"></datalist><button id="z81ai-list">Modellek</button></div>
 <div class="row"><input id="z81ai-key" placeholder="API kulcs (beépített/helyi modellnél nem kell)" style="flex:1" type="password"/><span id="z81ai-provname" style="color:var(--dim)"></span></div>
 <div class="help" id="z81ai-note">Ha a lista üres: adj hozzá szolgáltatót a „Fejlesztés → AI” fülön (＋ Hozzáad), vagy adj meg modellnevet kézzel. A kulcs csak ebben a böngészőben marad meg, ha ott a „megjegyzés” be van pipálva.</div>
@@ -3735,6 +3743,10 @@ $('trd-file').onchange = async function () { const f = this.files[0]; if (f) trd
 $('trd-new').onclick = () => { trd = trdNew('ZXSTUDIO'); trdSel = -1; trdRender(); log('Új üres lemez'); };
 $('trd-save').onclick = () => { if (trd) download('lemez.trd', trd); };
 const trdCur = () => trd && trdList(trd).find(e => e.idx === trdSel);
+
+/* v9.4.7: Vezérlés a Hardver eszközben */
+$('hw-joypad').onclick = () => { const ibj = document.getElementById('ib-joy'); if (ibj) ibj.click(); };
+$('hw-gamepad').onclick = () => { const gps = navigator.getGamepads ? navigator.getGamepads() : []; const g = [...gps].find(x => x); log(g ? ('Gamepad: ' + g.id + ' — ' + g.buttons.length + ' gomb, ' + g.axes.length + ' tengely') : 'Nincs csatlakoztatott gamepad.'); };
 $('trd-tomem').onclick = () => { const e = trdCur(); if (!e) return log('Jelölj ki egy fájlt'); const d = trdExtract(trd, e), a = e.ext === 'C' || e.ext === 'c' ? e.start : hx('mem-addr'); d.forEach((v, i) => pokeB(a + i, v)); log(e.name + ' → memória @' + hex4(a) + ' (' + d.length + ' bájt)'); };
 $('trd-totap').onclick = () => { const e = trdCur(); if (!e) return log('Jelölj ki egy fájlt'); download(e.name.trim() + '.tap', new Uint8Array(tapCodeBlocks(e.name.trim().slice(0, 10), 3, trdExtract(trd, e), e.start, 32768))); };
 $('trd-add').onclick = () => { try { if (!trd) trd = trdNew('ZXSTUDIO'); const { a, l } = memRange(); trdAdd(trd, ($('mem-name').value || 'code').slice(0, 8), 'C', a, engine.mem.slice(a, a + l)); trdRender(); log('Hozzáadva: ' + $('mem-name').value + ' (' + l + ' bájt @' + a + ')'); } catch (e) { log('Hiba: ' + e.message); } };
@@ -4987,6 +4999,8 @@ function z81AiInit() {
   /* v9.4.2: saját szolgáltató/modell/kulcs UI a ZX81 AI-eszközben — a globális
      aiProv listával közös (bármelyik oldalon állítva, mindkettő látja). */
   const sel = $('z81ai-prov'); if (!sel) return;
+  const zp = $('z81ai-preset');
+  if (zp) { zp.innerHTML = AI_PRESETS.map((p, i) => '<option value="' + i + '">' + p.name + '</option>').join(''); $('z81ai-add').onclick = () => { aiProv.push(Object.assign({ key: '', models: [] }, AI_PRESETS[+$('z81ai-preset').value])); aiSel = aiProv.length - 1; aiSave(); z81AiInit(); log('AI szolgáltató hozzáadva: ' + aiProv[aiSel].name); }; }
   sel.innerHTML = aiProv.map((p, i) => '<option value="' + i + '">' + p.name + '</option>').join('') || '<option value="">— nincs szolgáltató —</option>';
   if (aiSel >= aiProv.length) aiSel = 0; sel.value = String(aiSel);
   const p = cur(); $('z81ai-provname').textContent = p ? p.name : '';
@@ -79614,7 +79628,7 @@ function ScriptedAmigaEmulator() {
           return err;
         }).then(err => {
           if (stale()) { try { sae.stop(); } catch (e) {} throw new Error('elavult SAE start megszakítva'); }
-          if (err === 0) { self._running = true; say('Amiga elindult — Kickstart képernyő. ADF lemez a VEZÉRLÉS csoportban helyezhető be.'); }
+          if (err === 0) { self._running = true; say('Amiga elindult — Kickstart képernyő. ADF lemez a HARDVER panelen (Vezérlés) helyezhető be, vagy a lemez-ikonokkal.'); }
           else say('SAE hiba: ' + err);
         }).catch(e => { const msg = e && e.message || String(e); if (msg.indexOf('elavult') < 0) say('SAE hiba: ' + msg); });
       } catch (e) { say('Amiga boot hiba: ' + (e && e.message || e)); }
@@ -79860,7 +79874,8 @@ function ScriptedAmigaEmulator() {
 /* ================================================================
    RETROHUB v9 — RHGEN központi menümotor
    Minden gépen AZONOS menüszerkezet (a Spectrum-modell szerint):
-   VEZÉRLÉS · HARDVER · FEJLESZTÉS · PAINT · HANG · NAPLÓ
+   HARDVER · FEJLESZTÉS · PAINT · HANG · NAPLÓ
+   (v9.4.7: a VEZÉRLÉS csoport az ikonsoron és a HARDVER panelen él tovább)
    ================================================================ */
 (function () {
   'use strict';
@@ -79874,7 +79889,6 @@ function ScriptedAmigaEmulator() {
 
   /* ---------------- egységes eszközcsoportok ---------------- */
   const TOOLS = [
-    { id: 'ctrl', n: 'VEZÉRLÉS', d: 'Fájl/kazetta/lemez, begépelés, joystick/gamepad, reset' },
     { id: 'hw', n: 'HARDVER', d: 'RAM, ROM, grafika, hang és gépspecifikus jellemzők' },
     { id: 'dev', n: 'FEJLESZTÉS', d: 'BASIC · Assembler · Memória · AI programozó · Játékstúdió' },
     { id: 'paint', n: 'PAINT', d: 'Karakteres/pixel rajzoló a gép grafikája szerint' },
@@ -79886,12 +79900,12 @@ function ScriptedAmigaEmulator() {
   const CFG = {
     zx81: { n: 'Sinclair ZX81' },
     zxs: { n: 'ZX Spectrum 48K' },
-    c64: { n: 'Commodore 64', fileAcc: '.prg,.p00,.t64', fileN: 'PRG / P00 / T64 programfájl', saveNote: 'C64: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — PRG-betöltés és begépelés szintén.' },
-    c16: { n: 'Commodore 16 / Plus/4', fileAcc: '.prg', fileN: 'PRG programfájl', saveNote: 'C16: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — PRG-betöltés és begépelés szintén.' },
-    ht: { n: 'HT1080Z (TRS-80 Model I)', fileAcc: '.cmd,.cas,.bas,.txt', fileN: 'CMD (system) / CAS / BASIC forrás', saveNote: 'HT1080Z: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — CMD/BAS betöltés és begépelés szintén.' },
-    tvc: { n: 'Videoton TVC 64+', fileAcc: '.cas,.txt', fileN: 'CAS kazettafájl', saveNote: 'TVC: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — CAS-betöltés és begépelés szintén.' },
-    primo: { n: 'Primo B-64', fileAcc: '.pp,.ptp,.txt', fileN: 'PP quickload / PTP kazetta', saveNote: 'Primo: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — PP quickload és begépelés szintén.' },
-    ent: { n: 'Enterprise 64/128', fileAcc: '.tap,.txt', fileN: 'TAP kazettafájl', saveNote: 'Enterprise: pillanatkép mentés/betöltés él (VEZÉRLÉS csoport, v9.3) — begépelés szintén.' },
+    c64: { n: 'Commodore 64', fileAcc: '.prg,.p00,.t64', fileN: 'PRG / P00 / T64 programfájl', saveNote: 'C64: pillanatkép mentés/betöltés él (ikonosor, v9.3) — PRG-betöltés és begépelés szintén.' },
+    c16: { n: 'Commodore 16 / Plus/4', fileAcc: '.prg', fileN: 'PRG programfájl', saveNote: 'C16: pillanatkép mentés/betöltés él (ikonosor, v9.3) — PRG-betöltés és begépelés szintén.' },
+    ht: { n: 'HT1080Z (TRS-80 Model I)', fileAcc: '.cmd,.cas,.bas,.txt', fileN: 'CMD (system) / CAS / BASIC forrás', saveNote: 'HT1080Z: pillanatkép mentés/betöltés él (ikonosor, v9.3) — CMD/BAS betöltés és begépelés szintén.' },
+    tvc: { n: 'Videoton TVC 64+', fileAcc: '.cas,.txt', fileN: 'CAS kazettafájl', saveNote: 'TVC: pillanatkép mentés/betöltés él (ikonosor, v9.3) — CAS-betöltés és begépelés szintén.' },
+    primo: { n: 'Primo B-64', fileAcc: '.pp,.ptp,.txt', fileN: 'PP quickload / PTP kazetta', saveNote: 'Primo: pillanatkép mentés/betöltés él (ikonosor, v9.3) — PP quickload és begépelés szintén.' },
+    ent: { n: 'Enterprise 64/128', fileAcc: '.tap,.txt', fileN: 'TAP kazettafájl', saveNote: 'Enterprise: pillanatkép mentés/betöltés él (ikonosor, v9.3) — begépelés szintén.' },
     amiga: { n: 'Commodore Amiga 500 (SAE mag)', fileAcc: '.adf,.adz,.adf.gz,.hdf,.vhd,.hd0', fileN: 'ADF/ADZ lemez (DF0) vagy HDF merevlemez (IDE0)', saveNote: 'Amiga: a lemezműveletek élnek (ADF → DF0, HDF → IDE0/A1200), pillanatkép nem.' }
   };
 
@@ -79907,7 +79921,7 @@ function ScriptedAmigaEmulator() {
   }
 
   /* ================= csoport-tartalom ================= */
-  let curMid = null, curGroup = 'ctrl';
+  let curMid = null, curGroup = 'hw';   /* v9.4.7: a VEZÉRLÉS csoport megszűnt */
 
   function modOf(mid) { return (window.RetroShell && RetroShell.modules || []).find(x => x.id === mid); }
   function coreOf(mid) { return mid === 'amiga' ? null : (window.RH && RH.coreOf[mid]) || null; }
@@ -79917,49 +79931,6 @@ function ScriptedAmigaEmulator() {
     const c = coreOf(mid);
     if (!c || !c.typeText) return false;
     c.typeText(txt); return true;
-  }
-
-  /* ---- VEZÉRLÉS ---- */
-  function pCtrl(mid) {
-    const c = CFG[mid] || {}, fr = document.createDocumentFragment();
-    const core = hasCore(mid);
-    fr.append(el('h3', null, 'Vezérlés — ' + c.n));
-    if (core) {
-      const fi = el('input'); fi.type = 'file'; fi.style.display = 'none';
-      if (c.fileAcc) fi.accept = c.fileAcc;
-      fi.onchange = () => {
-        const f = fi.files[0]; if (!f) return;
-        f.arrayBuffer().then(ab => {
-          if (mid === 'amiga') log('Amiga DF0: ' + RH.AMIGA.insertDisk(f.name, new Uint8Array(ab)));
-          else { const co = coreOf(mid); log(c.n + ': ' + (co ? co.loadFile(f.name, new Uint8Array(ab)) : 'mag nincs betöltve')); }
-        });
-      };
-      fr.append(fi);
-      fr.append(row(btn('📁 ' + (c.fileN || 'Fájl megnyitása…'), () => fi.click(), 'primary')));
-      if (mid === 'amiga') fr.append(row(btn('⏏ Lemez kiadása (DF0)', () => log(RH.AMIGA.ejectDisk()))));
-    }
-    /* begépelés */
-    const ti = el('input'); ti.type = 'text'; ti.placeholder = 'Begépelendő sor (pl. PRINT 2+2)';
-    ti.style.flex = '1';
-    const tbtn = btn('⌨ Begépelés', () => {
-      const v = ti.value; if (!v) return;
-      if (typeTo(mid, v + '\n')) log('Begépelve: ' + v);
-      else note('Begépeléshez futó emulátor-mag kell (▶ gomb).');
-      ti.value = '';
-    }, 'primary');
-    fr.append(row(ti, tbtn));
-    /* joystick / gamepad */
-    const jbtn = btn('🎮 Gamepad-teszt', () => {
-      const gps = navigator.getGamepads ? navigator.getGamepads() : [];
-      const g = [...gps].find(x => x);
-      log(g ? ('Gamepad: ' + g.id + ' — ' + g.buttons.length + ' gomb, ' + g.axes.length + ' tengely') : 'Nincs csatlakoztatott gamepad.');
-    });
-    fr.append(row(jbtn));
-    if (core) fr.append(row(btn('↻ Reset', () => { mid === 'amiga' ? RH.AMIGA.reset() : RH.doReset(mid); }, 'primary')));
-    /* v9.3 — pillanatkép: a futó mag állapotának mentése/betöltése (böngésző vagy .rhsnap fájl) */
-    if (window.RH_SNAP) RH_SNAP.ctrlPane(fr, mid, { el: el, btn: btn, row: row, note: note, help: help });
-    fr.append(help('A fájl megnyitása a képernyő alatti FÁJL / KAZETTA gombbal is elérhető; a begépelés a gép saját ROM-jába üti be a karaktereket.'));
-    return fr;
   }
 
   /* ---- HARDVER ---- */
@@ -79982,6 +79953,28 @@ function ScriptedAmigaEmulator() {
       let n = 0; kb.rows.forEach(r => n += r.length);
       fr.append(el('p', 'help', 'Virtuális billentyűzet: ' + n + ' gomb (' + kb.rows.length + ' sor), a képernyő alatt mindig az aktuális gépé látszik.'));
     }
+    /* v9.4.7: a megszűnt VEZÉRLÉS csoport átvett funkciói */
+    const vez = el('div');
+    vez.append(el('h3', null, 'Vezérlés'));
+    const ti = el('input'); ti.type = 'text'; ti.placeholder = 'Begépelendő sor (pl. PRINT 2+2)';
+    ti.style.flex = '1';
+    const tbtn = btn('⌨ Begépelés', () => {
+      const v = ti.value; if (!v) return;
+      if (typeTo(mid, v + '\n')) log('Begépelve: ' + v);
+      else note('Begépeléshez futó emulátor-mag kell (▶ gomb).');
+      ti.value = '';
+    }, 'primary');
+    vez.append(row(ti, tbtn));
+    vez.append(row(btn('🕹 Joystick-pad ki/be', () => { const ibj = document.getElementById('ib-joy'); if (ibj) ibj.click(); })));
+    vez.append(row(btn('🎮 Gamepad-teszt', () => {
+      const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+      const g = [...gps].find(x => x);
+      log(g ? ('Gamepad: ' + g.id + ' — ' + g.buttons.length + ' gomb, ' + g.axes.length + ' tengely') : 'Nincs csatlakoztatott gamepad.');
+    })));
+    if (mid === 'amiga') vez.append(row(btn('⏏ Lemez kiadása (DF0)', () => log(RH.AMIGA.ejectDisk()))));
+    if (window.RH_SNAP) RH_SNAP.ctrlPane(vez, mid, { el: el, btn: btn, row: row, note: note, help: help });
+    vez.append(help('A fájl megnyitása a képernyő alatti ikonsoron (📁 Fájl / kazetta) is elérhető; a begépelés a gép saját ROM-jába üti be a karaktereket.'));
+    fr.append(vez);
     if (!hasCore(mid)) fr.append(note('Ennél a gépnél nincs emulátor-mag: a hardver adatlap a fejlesztői funkciók (AI, tracker, rajzoló) mellett tájékoztató.'));
     return fr;
   }
@@ -80282,7 +80275,6 @@ function ScriptedAmigaEmulator() {
 
   function grpBody(mid, gid) {
     switch (gid) {
-      case 'ctrl': return pCtrl(mid);
       case 'hw': return pHw(mid);
       case 'dev': return pDev(mid);
       case 'paint': return pPaint(mid);
@@ -83021,6 +83013,12 @@ function ScriptedAmigaEmulator() {
   on('ib-nmi',   function () { chain(['btn-nmi']); });
   on('ib-file',  function () { chain(['open', 'load']); });
   on('ib-crt',   function () { chain(['fx']); });
+  on('ib-crtsize', function () {   /* v9.4.7: kézi CRT-zsugorítás */
+    var b = document.body;
+    if (b.classList.contains('crt-mid')) { b.classList.remove('crt-mid'); b.classList.add('crt-small'); log('Kijelző: kicsi (zsugorított)'); }
+    else if (b.classList.contains('crt-small')) { b.classList.remove('crt-small'); log('Kijelző: teljes méret'); }
+    else { b.classList.add('crt-mid'); log('Kijelző: közepes'); }
+  });
   on('ib-kb',    function () { ctx({ zxs: 'kbtoggle', zx81: 'z81-kbtoggle', rh: 'rh-kbtoggle' }); });
 
   /* ---- LED-ek ---- */
