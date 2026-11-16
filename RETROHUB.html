@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETROHUB v9.4.8 — Retro emulátor platform AI támogatással</title>
+<title>RETROHUB v9.4.9 — Retro emulátor platform AI támogatással</title>
 <style>
 :root{--bg:#0b0f0b;--panel:#101810;--line:#2a5a2a;--fg:#5dff7a;--dim:#2f9a45;--hi:#d8ffe0;--warn:#ffb000;--glow:0 0 6px rgba(93,255,122,.55);--screen:#031003;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -123,17 +123,17 @@ footer > span:last-of-type{display:none}
 .zx .kb-key{background:var(--panel);color:var(--hi);border:2px solid var(--line);border-radius:6px;padding:2px 2px;min-height:66px;min-width:0;flex:1;cursor:pointer;user-select:none;touch-action:none;font-family:inherit;display:flex;flex-direction:column;align-items:stretch;overflow:hidden;line-height:1.1}
 /* v9.4.8: a fotó-háttér elhagyva (a user kérése) — tiszta sötét ZX81-matrac; a gombok számított, tökéletesen egyenes 4×10 rácsban ülnek (soronként/oszloponként átlagolt fotó-koordináták) */
 #z81-kb-grid.z81-foto{position:relative;display:block;width:100%;max-width:920px;margin:0 auto;aspect-ratio:736/283;background:linear-gradient(165deg,#303030,#181818);border-radius:10px;border:2px solid #0a0a0a;padding:0;gap:0}
-#z81-kb-grid.z81-foto .kb-key{position:absolute;display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;margin:0;padding:1px 2px;min-height:0;flex:none;background:rgba(224,228,222,.87);border:1px solid rgba(35,40,35,.65);border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.55);overflow:hidden;touch-action:none;user-select:none;cursor:pointer;font-family:inherit;line-height:1.05}
+#z81-kb-grid.z81-foto .kb-cell{position:absolute;display:block;min-height:0}
+#z81-kb-grid.z81-foto .kt-above{position:absolute;left:0;right:0;top:0;height:21%;text-align:center;color:#fff;font-size:.72em;line-height:1.5;white-space:nowrap;overflow:hidden}
+#z81-kb-grid.z81-foto .kf-below{position:absolute;left:0;right:0;bottom:0;height:21%;text-align:center;color:#e02b2b;font-weight:bold;font-size:.72em;line-height:1.2;white-space:nowrap;overflow:hidden}
+#z81-kb-grid.z81-foto .kb-key{position:absolute;left:0;right:0;top:23%;bottom:23%;display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;margin:0;padding:1px 2px;min-height:0;flex:none;background:rgba(224,228,222,.9);border:1px solid rgba(35,40,35,.65);border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.55);overflow:hidden;touch-action:none;user-select:none;cursor:pointer;font-family:inherit;line-height:1.05}
 #z81-kb-grid.z81-foto .kb-key:active,#z81-kb-grid.z81-foto .kb-key.pressed{background:rgba(180,255,180,.9);border-color:#1a7a1a}
-#z81-kb-grid.z81-foto .kb-key .kt{height:auto;font-size:.7em;white-space:nowrap;overflow:hidden;text-align:center}
-#z81-kb-grid.z81-foto .kb-key .km{display:flex;justify-content:space-between;align-items:center;padding:0 2px;flex:1;min-height:0}
-#z81-kb-grid.z81-foto .kb-key .km b{color:#171717;font-size:1.18em}
-#z81-kb-grid.z81-foto .kb-key .km b.lbl{font-size:.78em;letter-spacing:0}
-#z81-kb-grid.z81-foto .kb-key .gk{color:#2b2b2b;font-size:.68em;opacity:.85}
-#z81-kb-grid.z81-foto .kb-key .kk{display:flex;justify-content:space-between;gap:1px;padding:0 2px;height:auto;font-size:.7em;white-space:nowrap;overflow:hidden}
-#z81-kb-grid.z81-foto .kb-key .red{color:#c82020;font-weight:bold}
-#z81-kb-grid.z81-foto .kb-key .kf,#z81-kb-grid.z81-foto .kb-key .ks{line-height:1.15}
-#z81-kb-grid.z81-foto .kb-key .ke{display:none}
+#z81-kb-grid.z81-foto .kb-key .km{display:flex;justify-content:space-between;align-items:center;padding:0 3px;flex:1;min-height:0}
+#z81-kb-grid.z81-foto .kb-key .km b{color:#171717;font-size:1.15em}
+#z81-kb-grid.z81-foto .kb-key .km b.lbl{font-size:.68em;letter-spacing:0;white-space:nowrap}
+#z81-kb-grid.z81-foto .kb-key .gk{color:#171717;font-size:.72em;opacity:.8}
+#z81-kb-grid.z81-foto .kb-key .kk{display:flex;justify-content:flex-end;gap:1px;padding:0 3px;height:auto;font-size:.66em;white-space:nowrap;overflow:hidden}
+#z81-kb-grid.z81-foto .kb-key .kk .ks{color:#3a3a3a;font-weight:bold;line-height:1.1}
 
 .zx .kb-key:hover{background:#efefef}
 .zx .kb-key.pressed{transform:scale(.95);background:#d8d8d8}
@@ -3973,43 +3973,43 @@ function z81BuildProgram(src) {
 /* v9.4.6: a fotón lemért + lokális súlyponttal korrigált 40 gomb-közeppont (eredeti fotó-koordináták) */
 const Z81_KBGEO = {
   crop: [148, 843, 884, 1126],
-  keys: [
-    /* v9.4.8: soronként és oszloponként átlagolt, tökéletesen egyenes rács — a 4×10 elrendezés és a fotó-koordinátarendszer maradt */
-    [207.2, 890.1], [275, 890.1], [345.2, 890.1], [415.8, 890.1], [484, 890.1], [552.5, 890.1], [622.2, 890.1], [692.2, 890.1], [760.5, 890.1], [832.5, 890.1],
-    [207.2, 951], [275, 951], [345.2, 951], [415.8, 951], [484, 951], [552.5, 951], [622.2, 951], [692.2, 951], [760.5, 951], [832.5, 951],
-    [207.2, 1009.2], [275, 1009.2], [345.2, 1009.2], [415.8, 1009.2], [484, 1009.2], [552.5, 1009.2], [622.2, 1009.2], [692.2, 1009.2], [760.5, 1009.2], [832.5, 1009.2],
-    [207.2, 1067.8], [275, 1067.8], [345.2, 1067.8], [415.8, 1067.8], [484, 1067.8], [552.5, 1067.8], [622.2, 1067.8], [692.2, 1067.8], [760.5, 1067.8], [832.5, 1067.8]
-  ],
-  kw: 54, kh: 52
+  /* v9.4.9: a valódi ZX81 lépcsős sorai — a 2. és 3. sor kb fél gombbal jobbra kezdődik,
+     az utolsó (SHIFT) sor visszatér a legfelső szélességére; [sor_kezdő_x, oszlop_lépés] */
+  rowx: [[182, 70.3], [219, 70.1], [221, 69.1], [182, 71.1]],
+  rowy: [890.1, 951, 1009.2, 1067.8],
+  kw: 54, cellh: 56
 };
-const Z81_KB = [   /* v9.4.6: a FIZIKAI 4×10 kiosztásban (mint a valódi ZX81); k[3]=kulcsszó(felül,piros), k[4]=SHIFT-szimbólum(alul-jobb,piros), k[5]=grafikus kvadráns, k[8]=F-függvény(alul-bal,piros) — mind fotó- és ROM-igazolt */
-  [['1', 3, 0, 'EDIT', '', '', '', '', ''], ['2', 3, 1, 'AND', '', '', '', '', ''], ['3', 3, 2, 'THEN', '', '', '', '', ''], ['4', 3, 3, 'TO', '', '', '', '', ''], ['5', 3, 4, '←', '', '', '', '', ''], ['6', 4, 4, '↓', '', '', '', '', ''], ['7', 4, 3, '↑', '', '', '', '', ''], ['8', 4, 2, '→', '', '', '', '', ''], ['9', 4, 1, 'GRAPHICS', '', '', '', '', ''], ['0', 4, 0, 'DELETE', '', '', '', '', '']],
+const Z81_KB = [   /* v9.4.9: a valódi ZX81 szerint — k[3]=utasítás(felül a gomb felett, FEHÉR), k[4]=SHIFT-szimbólum(a gombon, fehér), k[5]=grafikus jel(a gombon), k[8]=függvény(alul a gomb alatt, PIROS); a számokon, a SHIFT-en, a NEW LINE-on és a ponton nincs felirat; a SPACE felett BREAK */
+  /* v9.4.9: a számokon NEM szerepel szöveges leírás — a grafikus jelek (kvadránsok, nyilak) a gombokon */
+  [['1', 3, 0, '', '', '▘', '', '', ''], ['2', 3, 1, '', '', '▝', '', '', ''], ['3', 3, 2, '', '', '▀', '', '', ''], ['4', 3, 3, '', '', '▌', '', '', ''], ['5', 3, 4, '', '', '←', '', '', ''], ['6', 4, 4, '', '', '↓', '', '', ''], ['7', 4, 3, '', '', '↑', '', '', ''], ['8', 4, 2, '', '', '→', '', '', ''], ['9', 4, 1, '', '', '▟', '', '', ''], ['0', 4, 0, '', '', '▔', '', '', '']],
   [['Q', 2, 0, 'PLOT', '""', '▘', '', '', 'SIN'], ['W', 2, 1, 'UNPLOT', 'OR', '▝', '', '', 'COS'], ['E', 2, 2, 'REM', 'STEP', '▀', '', '', 'TAN'], ['R', 2, 3, 'RUN', '<=', '▌', '', '', 'INT'], ['T', 2, 4, 'RAND', '<>', '▜', '', '', 'RND'], ['Y', 5, 4, 'RETURN', '>=', '▛', '', '', 'STR$'], ['U', 5, 3, 'IF', '$', '▞', '', '', 'CHR$'], ['I', 5, 2, 'INPUT', '(', '▙', '', '', 'CODE'], ['O', 5, 1, 'POKE', ')', '▟', '', '', 'PEEK'], ['P', 5, 0, 'PRINT', '"', '▔', '', '', 'TAB']],
-  [['A', 1, 0, 'NEW', 'STOP', '▖', '', '', 'ASN'], ['S', 1, 1, 'SAVE', 'LPRINT', '▗', '', '', 'ACS'], ['D', 1, 2, 'DIM', 'SLOW', '▍', '', '', 'ATN'], ['F', 1, 3, 'FOR', 'FAST', '▊', '', '', 'SGN'], ['G', 1, 4, 'GOTO', 'LLIST', '▉', '', '', 'ABS'], ['H', 6, 4, 'GOSUB', '**', '▌', '', '', 'SQR'], ['J', 6, 3, 'LOAD', '-', '▒', '', '', 'VAL'], ['K', 6, 2, 'LIST', '+', '░', '', '', 'LEN'], ['L', 6, 1, 'LET', '=', '│', '', '', 'USR'], ['ENTER', 6, 0, 'FUNCTION', 'BREAK', '', '', '', 'NEWLINE']],
-  [['SHIFT', 0, 0, '', '', '', '', 'SHIFT', ''], ['Z', 0, 1, 'COPY', ':', '▁', '', '', 'LN'], ['X', 0, 2, 'CLEAR', ';', '▂', '', '', 'EXP'], ['C', 0, 3, 'CONT', '?', '▃', '', '', 'AT'], ['V', 0, 4, 'CLS', '/', '▄', '', '', ''], ['B', 7, 4, 'SCROLL', '*', '▅', '', '', 'INKEY$'], ['N', 7, 3, 'NEXT', '<', '▆', '', '', 'NOT'], ['M', 7, 2, 'PAUSE', '>', '▇', '', '', 'PI'], ['.', 7, 1, '', ',', '', '', '', ''], ['SPACE', 7, 0, '', '£', '', '', '', '']]
+  [['A', 1, 0, 'NEW', 'STOP', '▖', '', '', 'ASN'], ['S', 1, 1, 'SAVE', 'LPRINT', '▗', '', '', 'ACS'], ['D', 1, 2, 'DIM', 'SLOW', '▍', '', '', 'ATN'], ['F', 1, 3, 'FOR', 'FAST', '▊', '', '', 'SGN'], ['G', 1, 4, 'GOTO', 'LLIST', '▉', '', '', 'ABS'], ['H', 6, 4, 'GOSUB', '**', '▌', '', '', 'SQR'], ['J', 6, 3, 'LOAD', '-', '▒', '', '', 'VAL'], ['K', 6, 2, 'LIST', '+', '░', '', '', 'LEN'], ['L', 6, 1, 'LET', '=', '│', '', '', 'USR'], ['NEW LINE', 6, 0, '', '', '', '', '', '']],
+  [['SHIFT', 0, 0, '', '', '', '', 'SHIFT', ''], ['Z', 0, 1, 'COPY', ':', '▁', '', '', 'LN'], ['X', 0, 2, 'CLEAR', ';', '▂', '', '', 'EXP'], ['C', 0, 3, 'CONT', '?', '▃', '', '', 'AT'], ['V', 0, 4, 'CLS', '/', '▄', '', '', ''], ['B', 7, 4, 'SCROLL', '*', '▅', '', '', 'INKEY$'], ['N', 7, 3, 'NEXT', '<', '▆', '', '', 'NOT'], ['M', 7, 2, 'PAUSE', '>', '▇', '', '', 'PI'], ['.', 7, 1, '', ',', '', '', '', ''], ['SPACE', 7, 0, 'BREAK', '£', '', '', '', '']]
 ];
 const Z81_LAT = { SHIFT: false };
 function z81KbBuild() {
   const grid = $('z81-kb-grid'); if (!grid) return; grid.innerHTML = '';
   grid.classList.add('z81-foto');
   const G = Z81_KBGEO, W = G.crop[2] - G.crop[0], H = G.crop[3] - G.crop[1];
+  /* v9.4.9: cella = utasítás (gomb felett, fehér) + gomb (alacsonyabb felület) + függvény (gomb alatt, piros) */
   Z81_KB.forEach((row, ri) => row.forEach((k, ci) => {
-    const g = G.keys[ri * 10 + ci];
+    const gx = G.rowx[ri][0] + ci * G.rowx[ri][1], gy = G.rowy[ri];
+    const cell = document.createElement('div'); cell.className = 'kb-cell';
+    cell.style.left = ((gx - G.kw / 2 - G.crop[0]) / W * 100).toFixed(3) + '%';
+    cell.style.top = ((gy - G.cellh / 2 - G.crop[1]) / H * 100).toFixed(3) + '%';
+    cell.style.width = (G.kw / W * 100).toFixed(3) + '%';
+    cell.style.height = (G.cellh / H * 100).toFixed(3) + '%';
+    if (k[3]) { const t = document.createElement('div'); t.className = 'kt-above'; t.textContent = k[3]; cell.appendChild(t); }
+    if (k[8]) { const f = document.createElement('div'); f.className = 'kf-below'; f.textContent = k[8]; cell.appendChild(f); }
     const btn = document.createElement('button'); btn.className = 'kb-key';
     if (k[7]) btn.dataset.mod = k[7];
-    btn.style.left = ((g[0] - G.kw / 2 - G.crop[0]) / W * 100).toFixed(3) + '%';
-    btn.style.top = ((g[1] - G.kh / 2 - G.crop[1]) / H * 100).toFixed(3) + '%';
-    btn.style.width = (G.kw / W * 100).toFixed(3) + '%';
-    btn.style.height = (G.kh / H * 100).toFixed(3) + '%';
-    let h = '<div class="kt">' + (k[3] ? '<span class="red">' + k[3] + '</span>' : '') + '</div>';
-    h += '<div class="km"><b' + (k[0].length > 1 ? ' class="lbl"' : '') + '>' + k[0] + '</b>' + (k[5] ? '<span class="gk">' + k[5] + '</span>' : '') + '</div>';
-    h += '<div class="kk"><span class="red kf">' + (k[8] || '') + '</span><span class="red ks">' + (k[4] || '') + '</span></div><div class="ke"></div>';
-    btn.innerHTML = h;
+    btn.innerHTML = '<div class="km"><b' + (k[0].length > 1 ? ' class="lbl"' : '') + '>' + k[0] + '</b>' + (k[5] ? '<span class="gk">' + k[5] + '</span>' : '') + '</div><div class="kk"><span class="ks">' + (k[4] || '') + '</span></div>';
     let rel = null;
     const down = e => { e.preventDefault(); if (k[7]) { Z81_LAT.SHIFT = !Z81_LAT.SHIFT; btn.classList.toggle('pressed', Z81_LAT.SHIFT); return; } const keys = [k[0]]; if (Z81_LAT.SHIFT) keys.push('SHIFT'); z81HeldSet(btn, keys); btn.classList.add('pressed'); rel = () => setTimeout(() => { z81HeldClear(btn); btn.classList.remove('pressed'); if (!k[7]) { Z81_LAT.SHIFT = false; grid.querySelectorAll('[data-mod]').forEach(b => b.classList.remove('pressed')); } }, 60); };
     const up = () => { if (rel) { rel(); rel = null; } };
     btn.addEventListener('pointerdown', down); btn.addEventListener('pointerup', up); btn.addEventListener('pointercancel', up); btn.addEventListener('pointerleave', up);
-    grid.appendChild(btn);
+    cell.appendChild(btn);
+    grid.appendChild(cell);
   }));
   const fs = () => { grid.style.fontSize = Math.max(5.5, grid.clientWidth * 0.0165) + 'px'; };
   fs();
