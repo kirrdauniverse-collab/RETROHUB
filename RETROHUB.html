@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETROHUB v9.4.10 — Retro emulátor platform AI támogatással</title>
+<title>RETROHUB v9.4.11 — Retro emulátor platform AI támogatással</title>
 <style>
 :root{--bg:#0b0f0b;--panel:#101810;--line:#2a5a2a;--fg:#5dff7a;--dim:#2f9a45;--hi:#d8ffe0;--warn:#ffb000;--glow:0 0 6px rgba(93,255,122,.55);--screen:#031003;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -79201,22 +79201,55 @@ function ScriptedAmigaEmulator() {
       unmount() { core._ctl.stop(); },
       reset() { m.reset(); },
       matrix(r, c, down) { m.setKey(r, c, down); },
+      /* v9.4.11: .t64 szalag-konténer (VICE manual 17.2 szerint) + a BASIC-felismerés
+         link-lánccal: a klasszikus hibrid játékok ('10 SYS xxxx' + gépi kód) páratlan
+         linkbájttal kezdődnek, a régi paritás-heurisztika SYS 4097-et gépelt rájuk és lefagytak */
       loadFile(name, u8) {
-        if (/\.prg$/i.test(name) || u8[0] === 0x01) {
-          const addr = u8[0] | (u8[1] << 8), data = u8.subarray(2);
+        let blob = u8, nev = name;
+        if (/\.t64$/i.test(name)) {
+          const szo = (o) => u8[o] | (u8[o + 1] << 8);
+          if (u8.length < 0x60 || String.fromCharCode(u8[0], u8[1], u8[2], u8[3]) !== 'C64S') return 'nem T64 szalagkép';
+          const haszn = szo(0x24) || szo(0x22);
+          for (let i = 0; i < Math.min(haszn || 1, 63); i++) {
+            const b = 0x40 + i * 32;
+            if (b + 32 > u8.length) break;
+            if (u8[b] === 1 && u8[b + 1] === 0x82) { /* normál szalagfájl, PRG */
+              const off = u8[b + 8] | (u8[b + 9] << 8) | (u8[b + 10] << 16) | (u8[b + 11] << 24);
+              const start = szo(b + 2), end = szo(b + 4);
+              let hossz = (end > start && end - start + 2 <= u8.length - off) ? (end - start + 2) : (u8.length - off);
+              if (off >= 0x40 && off + hossz <= u8.length) {
+                const ut_nev = String.fromCharCode.apply(null, u8.subarray(b + 16, b + 32)).replace(/ +$/, '');
+                blob = u8.subarray(off, off + hossz); nev = name + ' → ' + (ut_nev || 'PRG');
+                break;
+              }
+            }
+          }
+          if (blob === u8) return 'T64: nincs olvasható PRG-bejegyzés';
+        }
+        if (/\.t64$/i.test(name) || /\.prg$/i.test(nev) || blob[0] === 0x01) {
+          const addr = blob[0] | (blob[1] << 8), data = blob.subarray(2);
           for (let i = 0; i < data.length && addr + i < 0x10000; i++) m.mem[(addr + i) & 0xFFFF] = data[i];
-          /* v9.3.7: BASIC-program pointerek ($1001-es BASIC start) + automatikus
-             RUN — a C16-nál is ugyanaz a hiba volt: a RUN üres programot futtatott,
-             mert a $2D/$2F pointerek reset-utáni értéke $1001 maradt. */
-          let res = name + ' betöltve a $' + addr.toString(16).toUpperCase() + ' címre (' + data.length + ' bájt)';
-          const isB = addr === 0x1001 && data.length >= 6 &&
-            data[data.length - 2] === 0 && data[data.length - 1] === 0 &&
-            (data[0] & 1) === 0 && data[0] >= 2 && data[0] <= data.length &&
-            (data[2] | (data[3] << 8)) <= 63999;
+          let res = nev + ' betöltve a $' + addr.toString(16).toUpperCase() + ' címre (' + data.length + ' bájt)';
+          /* BASIC-felismerés: a $1001-es link-lánc bejárása — linkparitástól függetlenül helyes */
+          let isB = addr === 0x1001 && data.length >= 6;
+          if (isB) {
+            let p = 0, sor = 0, vegjel = false;
+            while (p + 2 <= data.length) {
+              const link = data[p] | (data[p + 1] << 8);
+              if (link === 0) { p += 2; vegjel = true; break; }
+              const kov = link - addr;
+              if (link < addr + 5 || kov <= p || kov > data.length) { isB = false; break; }
+              p = kov; sor++;
+              if (sor > 3000) { isB = false; break; }
+            }
+            /* a 0000-terminátor után gépi kód-farok is állhat (hibrid játék) — az megengedett */
+            if (isB) isB = vegjel && sor > 0;
+          }
           if (isB) {
             const end = (addr + data.length) & 0xFFFF;
             m.mem[0x2D] = end & 0xFF; m.mem[0x2E] = end >> 8;
             m.mem[0x2F] = end & 0xFF; m.mem[0x30] = end >> 8;
+            m.mem[0x31] = end & 0xFF; m.mem[0x32] = end >> 8;
             setTimeout(() => { try { core.typeText('RUN\n'); } catch (e) {} }, 500);
             res += ' — RUN elindítva';
           } else {
@@ -79235,11 +79268,16 @@ function ScriptedAmigaEmulator() {
       }
     };
     makeTyper(core, a => m.setKey(a.r, a.c, !!a.d));
+    /* v9.4.11: a TED-szerkesztő ~11 átvizsgálás/s-t csinál (nem 50), az 5 frame-es
+       lenyomást gyakran átlátja — a C16 gépelése 8 frame-es lépésközzel megbízható */
+    core._tstep = 8;
     core.typeText = str => {
       const cc = window.RH && RH.c16Coord;
       for (const ch of String(str)) {
-        let p = cc ? cc(ch) : null;
-        if (!p) { p = cc ? cc(String(ch).toUpperCase()) : null; }
+        /* v9.4.11: a CR (13) is RETURN — a táblában csak LF szerepelt, a \r néma kihagyás volt */
+        const c0 = ch === '\r' ? '\n' : ch;
+        let p = cc ? cc(c0) : null;
+        if (!p) { p = cc ? cc(String(c0).toUpperCase()) : null; }
         if (!p) continue;
         const steps = [];
         if (p.sh) steps.push({ r: 1, c: 7, d: 1 }); /* SHIFT lenyomva */
@@ -79903,7 +79941,7 @@ function ScriptedAmigaEmulator() {
     zx81: { n: 'Sinclair ZX81' },
     zxs: { n: 'ZX Spectrum 48K' },
     c64: { n: 'Commodore 64', fileAcc: '.prg,.p00,.t64', fileN: 'PRG / P00 / T64 programfájl', saveNote: 'C64: pillanatkép mentés/betöltés él (ikonosor, v9.3) — PRG-betöltés és begépelés szintén.' },
-    c16: { n: 'Commodore 16 / Plus/4', fileAcc: '.prg', fileN: 'PRG programfájl', saveNote: 'C16: pillanatkép mentés/betöltés él (ikonosor, v9.3) — PRG-betöltés és begépelés szintén.' },
+    c16: { n: 'Commodore 16 / Plus/4', fileAcc: '.prg,.t64', fileN: 'PRG programfájl / T64 szalagkép', saveNote: 'C16: pillanatkép mentés/betöltés él (ikonosor, v9.3) — PRG-betöltés és begépelés szintén.' },
     ht: { n: 'HT1080Z (TRS-80 Model I)', fileAcc: '.cmd,.cas,.bas,.txt', fileN: 'CMD (system) / CAS / BASIC forrás', saveNote: 'HT1080Z: pillanatkép mentés/betöltés él (ikonosor, v9.3) — CMD/BAS betöltés és begépelés szintén.' },
     tvc: { n: 'Videoton TVC 64+', fileAcc: '.cas,.txt', fileN: 'CAS kazettafájl', saveNote: 'TVC: pillanatkép mentés/betöltés él (ikonosor, v9.3) — CAS-betöltés és begépelés szintén.' },
     primo: { n: 'Primo B-64', fileAcc: '.pp,.ptp,.txt', fileN: 'PP quickload / PTP kazetta', saveNote: 'Primo: pillanatkép mentés/betöltés él (ikonosor, v9.3) — PP quickload és begépelés szintén.' },
