@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETROHUB v9.4.11 — Retro emulátor platform AI támogatással</title>
+<title>RETROHUB v9.4.12 — Retro emulátor platform AI támogatással</title>
 <style>
 :root{--bg:#0b0f0b;--panel:#101810;--line:#2a5a2a;--fg:#5dff7a;--dim:#2f9a45;--hi:#d8ffe0;--warn:#ffb000;--glow:0 0 6px rgba(93,255,122,.55);--screen:#031003;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -4024,7 +4024,7 @@ function z81HeldSet(tag, keys) { z81Held.set(tag, keys); z81Recompute(); }
 function z81HeldClear(tag) { z81Held.delete(tag); z81Recompute(); }
 
 // ===== ZX81 modul (RETROSHELL): javított beillesztés, ROM-mentés, karakteres Paint, jobb billentyűkezelés =====
-const Z81 = { m: null, rom: null, running: false, raf: 0, last: 0, acc: 0, template: null, ram: 16, ay: true, sndOn: true, beepOn: false, turbo: false, booting: false, bootFrames: 0, bf: 0, usrFired: false, hrgMode: 'none', hz60: false, hrOn: false, hr: null, t81: [], t81out: [] };
+const Z81 = { m: null, rom: null, running: false, raf: 0, last: 0, acc: 0, template: null, ram: 16, ay: true, sndOn: true, beepOn: false, turbo: false, booting: false, bootFrames: 0, bootLastEl: -1, bootSame: 0, bf: 0, usrFired: false, hrgMode: 'none', hz60: false, hrOn: false, hr: null, t81: [], t81out: [] };
 const z81RamTop = () => Math.min(0x4000 + Z81.ram * 1024, 0x10000);
 const z81W = (m, a) => m.mem[a] | m.mem[a + 1] << 8;
 function z81Snapshot(m) {                                         // a boot utáni rendszerváltozók + a VALÓDI kijelzőfájl (nem fix 793 bájt)
@@ -4067,7 +4067,7 @@ function z81Loop(ts) {
   Z81.acc += Math.min(ts - Z81.last, 100); Z81.last = ts; let n = 0;
   while (Z81.acc >= 20 && n < 8) {
     m.runFrame(); if (Z81.sndOn) audio.push(Z81.beepOn ? m.beepEvents : [], 0, m.ayEvents, m); Z81.acc -= 20; n++; Z81.bf++;
-    if (Z81.booting && Z81.bf > 5 && m.mem[z81W(m, 0x4014)] === 0xB0) { Z81.booting = false; Z81.bootFrames = Z81.bf; z81MemInfo(); }
+    if (Z81.booting) { const __el = z81W(m, 0x4014); if (z81EditorReady(m) && __el === Z81.bootLastEl) { if (++Z81.bootSame >= 5) { Z81.booting = false; Z81.bootFrames = Z81.bf; z81MemInfo(); } } else Z81.bootSame = 0; Z81.bootLastEl = __el; }   // v9.4.12: kész-jelzés az E_LINE megnyugvásával (RAM-teszt + kijelzőfájl-bővítés után) — a régi 0xB0-s teszt sosem teljesült, a boot-infó "folyamatban…"-nél ragadt
     if (Z81.bf % 75 === 0) z81UsrWatchdog();   /* v9.4.3: ~1,5 mp-enként — biztonsági USR-indítás */
   }
   if (n) z81Frame();
@@ -4076,12 +4076,18 @@ function z81Start() { if (!Z81.m) return log('A ZX81 nincs felkészítve (tölts
 function z81Pause() { Z81.running = false; cancelAnimationFrame(Z81.raf); clearTimeout(Z81.pulse); Z81.pulse = 0; $('z81-status').textContent = Z81.m ? 'Szünet' : 'Idle'; }
 function z81Placeholder(msg) { const g = $('z81-screen').getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 256, 192); g.fillStyle = '#000'; g.font = '12px monospace'; g.textAlign = 'center'; msg.split('\n').forEach((s, i) => g.fillText(s, 128, 64 + i * 16)); }
 const Z81_NOROM = 'ZX81 ROM nincs betöltve.\n\nKattints: „Fájl / kazetta…”\nés válaszd ki a ROM-ot (8 KB),\nvagy húzd ide a fájlt.';
-function z81NewMachine() { Z81.m = new ZX81(); Z81.m.loadRom(Z81.rom); Z81.m.ramKB = Z81.ram; z81ApplyHw(Z81.m); Z81.hrOn = false; Z81.m.ayOn = Z81.ay; Z81.m.reset(); z81Held.clear(); Z81.turbo = false; Z81.bf = 0; }
+function z81NewMachine() { Z81.m = new ZX81(); Z81.m.loadRom(Z81.rom); Z81.m.ramKB = Z81.ram; z81ApplyHw(Z81.m); Z81.hrOn = false; Z81.m.ayOn = Z81.ay; Z81.m.reset(); z81Held.clear(); Z81.turbo = false; Z81.bf = 0; Z81.usrFired = false; Z81.bootLastEl = -1; Z81.bootSame = 0; }
 function z81WaitIdle(m, max) { let k = 0, ok = 0; while (k < max) { m.runFrame(); k++; if (m.mem[z81W(m, 0x4014)] === 0xB0) { if (++ok >= 3) break; } else ok = 0; } return ok >= 3 ? k : -k; }
+function z81EditorReady(m) {                                        // szerkesztő-kész: E_LINE a RAM-ban, a rendszerterület után; a régi 0x4014==0xB0 jelzés boot után sosem teljesült (E_LINE a munkaterületre mutat)
+// v9.4.12: ZX81 RAM-bővítés hűsége — a fizikai modell (16K tükör A15 nélkül / 32K 0x8000–0xBFFF / 64K teljes felső tartomány) és a ROM 0x7FFF-nél megálló RAMTOP-keresője változatlan; a javítás: a csendes boot (z81Fresh) a fix 150 kocka helyett a szerkesztő készenlétét várja, így a menet RAM-függő (1K ~10, 16K ~30 kép), és a kész-jelzés is valódi (E_LINE a RAM-ban).
+  const el = z81W(m, 0x4014), df = z81W(m, 0x400C);
+  return el >= 0x4009 && el < 0x8000 && df > 0x407C;
+}
 function z81Fresh() {                                             // csendes (szinkron) boot: a ROM-ot megvárjuk, amíg a szerkesztőbe ér
   if (!Z81.rom) throw new Error('Nincs ZX81 ROM betöltve (8 KB) – „Fájl / kazetta…” gomb vagy Hardver menü.');
-  z81NewMachine(); Z81.booting = true; for (let i = 0; i < 150; i++) Z81.m.runFrame();   // fix 3 mp-es boot (a ROM ennyi alatt a szerkesztőbe ér); v9.4.3: booting=true — az auto-vsync NMI-újraengedése boot alatt tilos (RAMTOP-mérés)
-  Z81.bootFrames = 150; Z81.booting = false; Z81.template = z81Snapshot(Z81.m); z81Frame(); z81MemInfo();
+  z81NewMachine(); Z81.booting = true; let __i = 0, __last = -1, __same = 0;   // v9.4.12: a fix 150 kocka helyett a szerkesztő megnyugvásáig futunk: a RAM-teszt menete a RAM méretétől függ (1K ~10, 16K ~30 kép), utána a ROM ~26 kockán át bővíti a kijelzőfájlt (E_LINE folyamatosan mozog) — a kész-jelzés az E_LINE 5 kockás állása, így a boot a valódi gép tempóját követi, de a template a kibővített képernyőt rögzíti; v9.4.3: booting=true — az auto-vsync NMI-újraengedése boot alatt tilos (RAMTOP-mérés)
+  for (; __i < 150; __i++) { Z81.m.runFrame(); const __el = z81W(Z81.m, 0x4014); if (z81EditorReady(Z81.m) && __el === __last) { if (++__same >= 5) break; } else __same = 0; __last = __el; }
+  Z81.bootFrames = __i + 1; Z81.bf = 0; Z81.booting = false; Z81.template = z81Snapshot(Z81.m); z81Frame(); z81MemInfo();
 }
 function z81Boot() {                                              // látható, valós idejű boot (ugyanúgy, mint egy igazi gépen)
   if (!Z81.rom) { log('Előbb töltsd be a ZX81 ROM-ot (8 KB)'); z81Placeholder(Z81_NOROM); return false; }
